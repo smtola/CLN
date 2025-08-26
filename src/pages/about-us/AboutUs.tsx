@@ -11,15 +11,16 @@ const AboutCLN: React.FC = () => {
   return (
     <>
       <SEO
-              title="CLN | ABOUT US"
-              description="CLN Cambodia provides international and domestic logistics, sea freight, air freight, and cross-border land transport services with 20 years of experience."
-              keywords="CLN Cambodia, logistics, transportation, sea freight, air freight, cross-border transport, warehousing, customs clearance"
-              author="CLN Cambodia"
-              ogTitle="CLN | Services"
-              ogDescription="Offering international and domestic logistics services with 20 years of experience."
-              ogImage="/assets/image/bg_head.jpg"
-            
+        title="CLN | ABOUT US"
+        description="CLN Cambodia provides international and domestic logistics, sea freight, air freight, and cross-border land transport services with 20 years of experience."
+        keywords="CLN Cambodia, logistics, transportation, sea freight, air freight, cross-border transport, warehousing, customs clearance"
+        author="CLN Cambodia"
+        ogTitle="CLN | ABOUT US"
+        ogDescription="Offering international and domestic logistics services with 20 years of experience."
+        ogImage="/assets/image/bg_head.jpg"
+        url="https://cln-tan.vercel.app/about-us"
       />
+
       {/* ABOUT CLN SECTION */}
       <section className="w-full h-fit bg-gradient-to-t md:bg-gradient-to-r from-[#EE3A23] to-[#4fb748] overflow-hidden">
         <div className="flex flex-col md:flex-row md:gap-5 p-4 xl:max-w-screen-xl mx-auto">
