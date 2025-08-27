@@ -76,7 +76,7 @@ const Service: React.FC = () => {
       title: "Door To Door Service",
       description:
         "CLN Logistics has full capability in handling shipment for customers from A to Z...",
-      image: "/assets/image/door_to_door.jpg",
+      image: "/assets/image/door_to_door.png",
     },
   ];
 

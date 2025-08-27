@@ -189,7 +189,7 @@ const AboutCLN: React.FC = () => {
           data-aos="fade-left"
           data-aos-offset="300"
           data-aos-easing="ease-in-sine"
-          className="w-full md:w-[70%] px-3 flex flex-col justify-center"
+          className="w-full md:w-[70%] px-3 flex flex-col justify-start"
         >
           <h2 className="text-[18px] md:text-[24px] font-bold text-black">Sample of P.Shipment</h2>
           <p className="text-[14px] md:text-[22px] font-light text-justify text-black hyphens-auto mt-2">

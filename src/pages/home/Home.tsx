@@ -16,7 +16,7 @@ const services: Service[] = [
   { title: 'Packing & Warehouse', image: 'assets/image/warehouse.jpg' },
   { title: 'International Express Courier', image: 'assets/image/international express.jpg' },
   { title: 'Consolidation', image: 'assets/image/consolidation.jpg' },
-  { title: 'Door to Door Service', image: 'assets/image/door_to_door.jpg' },
+  { title: 'Door to Door Service', image: 'assets/image/door_to_door.png' },
 ];
 
 const Home: React.FC = () => {
@@ -36,15 +36,16 @@ const Home: React.FC = () => {
 
   return (
     <>
-       <SEO 
-        title="CLN (CAMBODIA) CO.,LTD."
+      <SEO
+        title="CLN | ABOUT US"
         description="CLN Cambodia provides international and domestic logistics, sea freight, air freight, and cross-border land transport services with 20 years of experience."
         keywords="CLN Cambodia, logistics, transportation, sea freight, air freight, cross-border transport, warehousing, customs clearance"
         author="CLN Cambodia"
-        ogTitle="CLN (CAMBODIA) CO.,LTD."
+        ogTitle="CLN | ABOUT US"
         ogDescription="Offering international and domestic logistics services with 20 years of experience."
-        ogImage="/assets/image/bg_head.jpg"
-       />
+        ogImage="https://via.placeholder.com/1200x630.png"
+        url="https://cln-tan.vercel.app/about-us"
+      />
       
       <section className="relative">
         <div className="md:hidden w-full h-[3px] bg-gradient-to-l from-[#ffffff] to-[#4F9748]" />
