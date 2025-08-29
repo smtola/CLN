@@ -172,7 +172,7 @@ const Home: React.FC = () => {
         data-aos-easing="ease-in-sine" className="w-full md:w-[60%] md:order-first">
             <p className="text-[14px] md:text-[18px] font-[300] text-justify hyphens-auto text-[#000]">
                 <span className="font-semibold">CLN Cambodia logistics</span>
-                is the registration company, established its own office in Cambodia in 2015.
+                &nbsp;is the registration company, established its own office in Cambodia in 2015.
                 Currently, we have our own office in Phnom Penh and joined with many shipping companies in both
                 local and oversea.
             

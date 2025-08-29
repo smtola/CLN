@@ -26,56 +26,81 @@ const Service: React.FC = () => {
       key: "custom",
       title: "Custom Clearance",
       description:
-        "CLN Logistics has full capability in handling shipment for customers from A to Z...",
+        "We offer certified customs brokerage services throughout nationwide customs points. Our specialist who certified by Thai Customs department will assist importers and exporters the entry procedures, admissibility requirements, classification, valuation, and the rates of duty and applicable taxes and fees.",
       image: "/assets/image/custom clearance.jpg",
     },
     {
       key: "land",
       title: "Cross Border (Land Transport)",
       description:
-        "CLN Logistics has full capability in handling shipment for customers from A to Z...",
+        `
+        Cross Border (Land Transport) refers to the movement of goods and passengers between two or more countries using road-based transportation, typically by trucks, buses, or private vehicles. It involves crossing international boundaries via designated land checkpoints, where customs, immigration, and security procedures are carried out.
+
+This mode of transport plays a vital role in international trade and regional connectivity, especially in areas with shared land borders. Cross-border land transport facilitates:
+
+Trade & Logistics – enabling efficient import and export of goods, including bulk cargo, perishable products, and consumer goods.
+
+Passenger Mobility – providing convenient travel for tourists, workers, and business travelers.
+
+Regional Integration – supporting economic growth, cultural exchange, and cooperation between neighboring countries.
+
+However, cross-border land transport also requires compliance with various regulations such as customs clearance, vehicle permits, driver documentation, and safety standards. Efficient management of these processes is essential to ensure smooth operations, minimize delays, and enhance supply chain efficiency.
+        `,
       image: "/assets/image/cross.png",
-    },
-    {
-      key: "air",
-      title: "Air Freight",
-      description:
-        "CLN Logistics has full capability in handling shipment for customers from A to Z...",
-      image: "/assets/image/airplan.png",
     },
     {
       key: "sea",
       title: "Sea Freight",
       description:
-        "CLN Logistics has full capability in handling shipment for customers from A to Z...",
+      `Sea freight is the transportation of goods by cargo ships across international waters. It is one of the most cost-effective and reliable methods for moving large volumes of goods over long distances. Businesses choose sea freight when shipping bulk cargo, raw materials, or products that are not time-sensitive.
+      `,
       image: "/assets/image/ship.png",
+    },
+    {
+      key: "air",
+      title: "Air Freight",
+      description:
+        `Air freight is the transportation of goods via aircraft, offering the fastest and most efficient solution for international and domestic shipping. It is ideal for time-sensitive, high-value, or perishable cargo that requires quick delivery across long distances.
+        `,
+      image: "/assets/image/airplan.png",
     },
     {
       key: "packing",
       title: "Packing & Warehouse",
       description:
-        "CLN Logistics has full capability in handling shipment for customers from A to Z...",
+        `<b class="font-[500]">Packing Services</b>
+Proper packing is essential to protect goods during transportation and storage. Professional packing ensures products are secured, labeled, and prepared according to international shipping standards.
+Customized Solutions: Packing tailored to the type, size, and fragility of goods.
+<b class="font-[500]">Materials Used</b>: Wooden crates, pallets, cartons, bubble wrap, shrink wrap, and protective coverings.
+<b class="font-[500]">Export Compliance</b>: Ensures packaging meets customs and international trade requirements.
+<b class="font-[500]">Benefits</b>: Reduced risk of damage, easier handling, and cost efficiency in shipping.
+<b class="font-[500]">Warehouse Services</b>
+Warehousing provides safe storage and efficient management of goods before distribution or shipping.
+<b class="font-[500]">Storage Options</b>: Short-term and long-term storage solutions.
+<b class="font-[500]">Inventory Management</b>: Tracking and monitoring of goods for accuracy and efficiency.
+<b class="font-[500]">Value-Added Services</b>: Sorting, labeling, repacking, cross-docking, and order fulfillment.
+<b class="font-[500]">Security & Safety</b>: Controlled environments, CCTV monitoring, and safety standards for goods.`,
       image: "/assets/image/warehouse.jpg",
     },
     {
       key: "iec",
       title: "International Express Courier",
       description:
-        "CLN Logistics has full capability in handling shipment for customers from A to Z...",
+        "International Express Courier services provide fast and reliable delivery of documents, parcels, and goods across borders. This service is ideal for businesses and individuals who require urgent, time-definite shipping with door-to-door convenience.",
       image: "/assets/image/international express.jpg",
     },
     {
       key: "consolidation",
       title: "Consolidation",
       description:
-        "CLN Logistics has full capability in handling shipment for customers from A to Z...",
+        "Consolidation is a shipping method where multiple smaller shipments from different shippers are combined into a single larger shipment. By grouping goods together, businesses can reduce transportation costs, optimize container usage, and improve overall supply chain efficiency.",
       image: "/assets/image/consolidation.jpg",
     },
     {
       key: "door2door",
       title: "Door To Door Service",
       description:
-        "CLN Logistics has full capability in handling shipment for customers from A to Z...",
+        "Door-to-Door Service provides a complete logistics solution where goods are picked up directly from the sender’s location and delivered straight to the recipient’s address. This hassle-free service eliminates the need for shippers and consignees to manage multiple transportation steps, offering end-to-end convenience and efficiency.",
       image: "/assets/image/door_to_door.png",
     },
   ];
@@ -147,20 +172,23 @@ const Service: React.FC = () => {
         {services.map(
           (service) =>
             activeTab === service.key && (
-              <div key={service.key} className="mb-6">
-                <div className="mb-2">
+              <div key={service.key} className="flex flex-wrap lg:flex-nowrap gap-2 mb-6">
+                <div className="w-full mb-2">
                   <img
                     src={service.image}
                     alt={service.title}
                     className="w-full h-full object-cover object-center"
                   />
                 </div>
-                <h2 className="text-[18px] md:text-[22px] font-bold text-black">
-                  {service.title}
-                </h2>
-                <p className="text-[14px] md:text-[18px] font-light text-justify text-black hyphens-auto">
-                  {service.description}
-                </p>
+                <div className="w-full">
+                  <h2 className="text-[18px] md:text-[22px] font-bold text-black">
+                    {service.title}
+                  </h2>
+                  <p
+                    className="text-[14px] md:text-[18px] font-light text-justify text-black hyphens-auto whitespace-pre-line"
+                    dangerouslySetInnerHTML={{ __html: service.description }}
+                  ></p>
+                </div>
               </div>
             )
         )}

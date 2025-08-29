@@ -46,7 +46,7 @@ const AboutCLN: React.FC = () => {
               ABOUT CLN
             </h1>
             <p className="text-[16px] font-light text-justify text-white hyphens-auto mt-2">
-              <span className="font-semibold">CLN Cambodia logistics</span> is the registration company, established its own office in Cambodia in 2015. Currently, we have our own office in Phnom Penh and joined with many shipping companies in both local and overseas.
+              <span className="font-semibold">CLN Cambodia logistics </span>&nbsp;is the registration company, established its own office in Cambodia in 2015. Currently, we have our own office in Phnom Penh and joined with many shipping companies in both local and overseas.
               <br />
               <br />
               With our quality staff with more than 20 years experiences of handling logistics and advanced information technology, we are dedicated to offering the best international and domestic logistics services and networks that enable our customers to make “All the Possible Movesˮ in their supply chains. We also comply with Cambodia labor law and commit to provide the best services to our customers as their expectation.
@@ -98,9 +98,9 @@ const AboutCLN: React.FC = () => {
                         </defs>
                         </svg>    
               </span>
-              <h2 className="text-[18px] font-bold text-black">OUR VISION</h2>
+              <h2 className="text-[18px] md:text-[24px] font-bold text-black">OUR VISION</h2>
             </div>
-            <p className="text-[14px] font-light text-justify text-black hyphens-auto">
+            <p className="text-[14px] md:text-[22px] font-light text-justify text-black hyphens-auto">
               CLN Logistics aim to provide the logistics process, striving to integrate all aspects of physical cargo movement, vendor and document management, information flow and visibility for customers.
               <br />
               <br />
@@ -133,9 +133,9 @@ const AboutCLN: React.FC = () => {
                         </defs>
                         </svg>
               </span>
-              <h2 className="text-[18px] font-bold text-black">OUR MISSION</h2>
+              <h2 className="text-[18px] md:text-[24px] font-bold text-black">OUR MISSION</h2>
             </div>
-            <p className="text-[14px] font-light text-justify text-black whitespace-pre-line">
+            <p className="text-[14px] md:text-[22px] font-light text-justify text-black whitespace-pre-line">
               We provide our customers with full control and visibility both in choosing the best-in-class service providers and in managing their own supply chains. Our reward comes from the satisfaction of our customers, their customers, and associates; and we strive to become a trust link in our customers' business success.
             </p>
           </div>
@@ -195,6 +195,33 @@ const AboutCLN: React.FC = () => {
           <p className="text-[14px] md:text-[22px] font-light text-justify text-black hyphens-auto mt-2">
             CLN Logistics has a full capability in handling shipment for customers from A to Z with full correspondence of backup, feedback, and responsibility. We have successfully handled customersʼ shipments with different commodities and delivery times, as illustrated in the attached images.
           </p>
+        </div>
+      </section>
+
+          {/* FCL - LCL SHIPPING */}
+      <section className="flex flex-col md:flex-row w-full h-fit overflow-hidden p-3 xl:max-w-screen-xl mx-auto gap-3">
+      <div
+          data-aos="fade-right"
+          data-aos-offset="300"
+          data-aos-easing="ease-in-sine"
+          className="w-full md:w-[70%] px-3 flex flex-col justify-start"
+        >
+          <h2 className="text-[18px] md:text-[24px] font-bold text-black">FCL - LCL SHIPPING</h2>
+          <p className="text-[14px] md:text-[22px] font-light text-justify text-black hyphens-auto mt-2">
+            CLN Logistics has a full capability in handling shipment for customers from A to Z with full correspondence of backup, feedback, and responsibility. We have successfully handled customersʼ shipments with different commodities and delivery times, as illustrated in the attached images.
+          </p>
+        </div>
+        <div
+          data-aos="fade-left"
+          data-aos-offset="300"
+          data-aos-easing="ease-in-sine"
+          className="w-[300px] mx-auto p-2 rounded-lg"
+        >
+          <img
+            src="/assets/image/fcl-lcl.png"
+            alt="Sample Shipment"
+            className="w-full h-full object-cover object-center"
+          />
         </div>
       </section>
     </>
