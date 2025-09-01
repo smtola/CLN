@@ -1,17 +1,32 @@
 import React, { useState } from "react";
+import Swal from "sweetalert2";
 
 interface QuoteFormData {
-  name: string;
+  company_name: string;
+  full_name: string;
   email: string;
-  message: string;
+  address: string;
+  tel: string;
+  job: string;
+  origin_destination: string;
+  product_name: string;
+  weight_dimensions: string;
+  container_size: string;
 }
 
 const QuoteModal: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [form, setForm] = useState<QuoteFormData>({
-    name: "",
+    company_name: "",
+    full_name: "",
     email: "",
-    message: "",
+    address: "",
+    tel: "",
+    job: "",
+    origin_destination: "",
+    product_name: "",
+    weight_dimensions: "",
+    container_size: ""
   });
 
   // Handle form input
@@ -23,15 +38,76 @@ const QuoteModal: React.FC = () => {
   };
 
   // Handle submit
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
-    if (form.name && form.email) {
-      console.log("Form Submitted:", form);
-      setIsOpen(false);
-      setForm({ name: "", email: "", message: "" }); // reset form
+  
+    if (
+      form.company_name &&
+      form.full_name &&
+      form.email &&
+      form.address &&
+      form.tel &&
+      form.job &&
+      form.origin_destination &&
+      form.product_name &&
+      form.weight_dimensions &&
+      form.container_size
+    ) {
+      try {
+        const response = await fetch("http://127.0.0.1:5001/api/v1/docs/web/request-quote", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTc1NjcxMjEyOSwianRpIjoiY2Y4ZmE1MzAtYTQ4Yy00ZTk1LTlhZDctMGU2YTYyYjAxYTg0IiwidHlwZSI6ImFjY2VzcyIsInN1YiI6IjY4YjI2ODE3OTNhMTE4NjU0MDVjMzczZiIsIm5iZiI6MTc1NjcxMjEyOSwiY3NyZiI6IjczZDM4M2YxLTdjODctNDkzNy1hOTZiLWRmMjcyYTYxN2I3NCIsImV4cCI6MTc1NjcxMzAyOSwicm9sZSI6IkFETUlOIn0.V5mKk7zmRBeG40Z4OEjd_h5CbDyz7hASptnsMycmiic`,
+          },
+          body: JSON.stringify(form),
+        });
+  
+        if (response.ok) {
+          Swal.fire({
+            icon: "success",
+            title: "Request Submitted!",
+            text: "Your quote request has been sent successfully.",
+            confirmButtonColor: "#3085d6",
+          });
+  
+          setIsOpen(false);
+          setForm({
+            company_name: "",
+            full_name: "",
+            email: "",
+            address: "",
+            tel: "",
+            job: "",
+            origin_destination: "",
+            product_name: "",
+            weight_dimensions: "",
+            container_size: "",
+          });
+        } else {
+          const errorData = await response.json();
+          Swal.fire({
+            icon: "error",
+            title: "Submission Failed",
+            text: errorData?.message || "Something went wrong while sending request.",
+            confirmButtonColor: "#d33",
+          });
+        }
+      } catch {
+        Swal.fire({
+          icon: "error",
+          title: "Network Error",
+          text: "Unable to connect to server.",
+          confirmButtonColor: "#d33",
+        });
+      }
     } else {
-      alert("Please fill out required fields.");
+      Swal.fire({
+        icon: "warning",
+        title: "Missing Fields",
+        text: "Please fill out all required fields before submitting.",
+        confirmButtonColor: "#f1c40f",
+      });
     }
   };
 
@@ -60,39 +136,133 @@ const QuoteModal: React.FC = () => {
             <h2 className="text-xl font-bold mb-4">Request a Quote</h2>
 
             <form onSubmit={handleSubmit}>
-              <div className="mb-3">
-                <label className="block mb-1">Name</label>
+              <div className="flex gap-3">
+                <div className="w-full mb-3">
+                  <label className="block mb-1">Company Name</label>
+                  <input
+                    type="text"
+                    name="company_name"
+                    value={form.company_name}
+                    onChange={handleChange}
+                    className="w-full border rounded p-2"
+                    required
+                  />
+                </div>
+
+                <div className="w-full mb-3">
+                  <label className="block mb-1">Full Name</label>
+                  <input
+                    type="text"
+                    name="full_name"
+                    value={form.full_name}
+                    onChange={handleChange}
+                    className="w-full border rounded p-2"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <div className="w-full mb-3">
+                  <label className="block mb-1">Email</label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={form.email}
+                    onChange={handleChange}
+                    className="w-full border rounded p-2"
+                    required
+                  />
+                </div>
+
+                <div className="w-full mb-3">
+                  <label className="block mb-1">Telephone</label>
+                  <input
+                    type="text"
+                    name="tel"
+                    value={form.tel}
+                    onChange={handleChange}
+                    className="w-full border rounded p-2"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <div className="w-full mb-3">
+                  <label className="block mb-1">Job Title</label>
+                  <input
+                    type="text"
+                    name="job"
+                    value={form.job}
+                    onChange={handleChange}
+                    className="w-full border rounded p-2"
+                    required
+                  />
+                </div>
+
+                <div className="w-full mb-3">
+                  <label className="block mb-1">Origin - Destination</label>
+                  <input
+                    type="text"
+                    name="origin_destination"
+                    value={form.origin_destination}
+                    onChange={handleChange}
+                    className="w-full border rounded p-2"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+              <div className="w-full mb-3">
+                <label className="block mb-1">Prodduct Name</label>
                 <input
                   type="text"
-                  name="name"
-                  value={form.name}
+                  name="product_name"
+                  value={form.product_name}
                   onChange={handleChange}
                   className="w-full border rounded p-2"
                   required
                 />
               </div>
 
-              <div className="mb-3">
-                <label className="block mb-1">Email</label>
+              <div className="w-full mb-3">
+                <label className="block mb-1">Weight & Dimensions</label>
                 <input
-                  type="email"
-                  name="email"
-                  value={form.email}
+                  type="text"
+                  name="weight_dimensions"
+                  value={form.weight_dimensions}
                   onChange={handleChange}
                   className="w-full border rounded p-2"
                   required
                 />
               </div>
+              </div>
 
-              <div className="mb-3">
-                <label className="block mb-1">Message</label>
-                <textarea
-                  name="message"
-                  value={form.message}
-                  onChange={handleChange}
-                  className="w-full border rounded p-2"
-                  rows={3}
-                />
+              <div className="flex gap-3">
+                <div className="w-full mb-3">
+                  <label className="block mb-1">Container Size</label>
+                  <input
+                    type="text"
+                    name="container_size"
+                    value={form.container_size}
+                    onChange={handleChange}
+                    className="w-full border rounded p-2"
+                    required
+                  />
+                </div>
+
+                <div className="w-full mb-3">
+                  <label className="block mb-1">Address</label>
+                  <textarea
+                    name="address"
+                    value={form.address}
+                    onChange={handleChange}
+                    className="w-full border rounded p-2"
+                    rows={3}
+                  />
+                </div>
               </div>
 
               <button
