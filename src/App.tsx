@@ -6,6 +6,11 @@ import AboutCLN from "./pages/about-us/AboutUs"
 import Service from "./pages/services/Service"
 import Products from "./pages/products/Product"
 import ContactUs from "./pages/contact-us/contact-us"
+import SignupPage from "./pages/auth/SignupPage"
+import VerifyEmail from "./pages/auth/VerifyEmail";
+import LoginPage from "./pages/auth/Login"
+import VerifyOTPPage from "./pages/auth/VerifyOTPPage"
+
 function App() {
   return (
     <>
@@ -16,6 +21,10 @@ function App() {
         <Route path="/services" element={<Service/>}/>
         <Route path="/products" element={<Products/>}/>
         <Route path="/contact-us" element={<ContactUs/>}/>
+        <Route path="/auth/sign-up" element={<SignupPage/>}/>
+        <Route path="/auth/login" element={<LoginPage/>}/>
+        <Route path="/auth/verify-email" element={<VerifyEmail />} />
+        <Route path="/auth/verify-otp" element={<VerifyOTPPage />} />
      </Routes>
      <Footer/>
     </>

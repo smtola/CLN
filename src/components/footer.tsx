@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import Logo from "../../public/logo.png";
 
 const Footer: React.FC = () => {
   const [showScrollTop, setShowScrollTop] = useState(false);
@@ -24,7 +25,7 @@ const Footer: React.FC = () => {
           className="absolute inset-0 translate-y-[40%] xl:translate-y-[8%] translate-x-2 w-fit h-fit bg-white p-2 z-[2]"
         >
           <img
-            src="logo.png"
+            src={Logo}
             alt="logo"
             width={1920}
             height={1080}

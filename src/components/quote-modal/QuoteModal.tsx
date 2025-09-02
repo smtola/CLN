@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import Swal from "sweetalert2";
+import { getAccessToken } from "../../authStorage";
 
 interface QuoteFormData {
   company_name: string;
@@ -28,7 +29,7 @@ const QuoteModal: React.FC = () => {
     weight_dimensions: "",
     container_size: ""
   });
-
+  const token = getAccessToken();
   // Handle form input
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -54,11 +55,11 @@ const QuoteModal: React.FC = () => {
       form.container_size
     ) {
       try {
-        const response = await fetch("http://127.0.0.1:5001/api/v1/docs/web/request-quote", {
+        const response = await fetch("https://cln-rest-api.onrender.com/api/v1/docs/web/request-quote", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTc1NjcxMjEyOSwianRpIjoiY2Y4ZmE1MzAtYTQ4Yy00ZTk1LTlhZDctMGU2YTYyYjAxYTg0IiwidHlwZSI6ImFjY2VzcyIsInN1YiI6IjY4YjI2ODE3OTNhMTE4NjU0MDVjMzczZiIsIm5iZiI6MTc1NjcxMjEyOSwiY3NyZiI6IjczZDM4M2YxLTdjODctNDkzNy1hOTZiLWRmMjcyYTYxN2I3NCIsImV4cCI6MTc1NjcxMzAyOSwicm9sZSI6IkFETUlOIn0.V5mKk7zmRBeG40Z4OEjd_h5CbDyz7hASptnsMycmiic`,
+            "Authorization": `Bearer ${token}`,
           },
           body: JSON.stringify(form),
         });
@@ -115,15 +116,17 @@ const QuoteModal: React.FC = () => {
     <div>
       {/* Button */}
       <button
+        disabled={!token ? true:false}
         onClick={() => setIsOpen(true)}
-        className="text-[14px] md:text-[18px] px-4 py-1 bg-red-50 border border-[#EE3A23] text-[#EE3A23] rounded-[4px] hover:bg-red-100"
+        className="w-full text-[14px] md:text-[18px] px-4 py-1 bg-red-50 border border-[#EE3A23] text-[#EE3A23] rounded-[4px] hover:bg-red-100"
       >
         Request a Quote
       </button>
 
       {/* Modal */}
-      {isOpen && (
-        <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50">
+      {
+      isOpen && (
+        <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-[90]">
           <div className="bg-white rounded-lg shadow-lg w-[90%] md:w-[500px] p-6 relative">
             {/* Close Button */}
             <button
@@ -274,7 +277,8 @@ const QuoteModal: React.FC = () => {
             </form>
           </div>
         </div>
-      )}
+      )
+      }
     </div>
   );
 };

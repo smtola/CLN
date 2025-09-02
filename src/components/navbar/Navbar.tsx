@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import QuoteModal from "../quote-modal/QuoteModal";
+import UserMenu from "../UserMenu";
+import Logo from "../../../public/logo.png";
 
 const Navbar: React.FC = () => {
   const location = useLocation();
@@ -111,15 +113,16 @@ const Navbar: React.FC = () => {
         {/* Middle Bar for Mobile */}
         <div className="flex lg:hidden">
           <div
-            className="flex items-center gap-1 w-[64%] bg-[#4F9748]/30"
+            className="flex items-center gap-1 w-[45%] bg-[#4F9748]/30"
             style={{ clipPath: "polygon(0% 0%, 100% 0%, 80% 100%, 0% 100%)" }}
           >
             <NavLink to="/">
-              <img src="logo.png" alt="logo" width={100} height={50} className="ms-2" />
+              <img src={Logo} alt="logo" width={70} height={50} className="ms-2" />
             </NavLink>
           </div>
-          <div className="flex justify-center items-center w-[50%] h-auto bg-white space-x-[1rem]">
+          <div className="flex justify-center items-center w-[65%] h-auto bg-white space-x-[1rem]">
             <QuoteModal />
+            <UserMenu />
           </div>
         </div>
       </header>
@@ -139,7 +142,7 @@ const Navbar: React.FC = () => {
             <div>
               <NavLink to="/">
                 <img
-                  src="logo.png"
+                  src={Logo}
                   alt="logo"
                   width={150}
                   className="w-[150px] h-full drop-shadow-md"
@@ -245,6 +248,7 @@ const Navbar: React.FC = () => {
           {/* Quote Button */}
           <div className="flex justify-center items-center w-[50%] h-auto bg-[#ee3a23] space-x-[1rem]">
             <QuoteModal />
+            <UserMenu />
           </div>
         </div>
 
