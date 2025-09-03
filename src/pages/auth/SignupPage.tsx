@@ -61,7 +61,7 @@ export default function SignupPage() {
       const res = await signup(payload);
       // Check if it's an error response
 
-      if (res.is_verified) {
+      if (res) {
         navigate("/auth/verify-email", { state: { email } });
       }
     } catch (err: unknown) {
