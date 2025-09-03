@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, type FormEvent } from "react";
+import { useState, useRef, type FormEvent, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import { resendOTP, verifyOTP } from "../../authService";
@@ -16,11 +16,26 @@ export default function VerifyOTPPage() {
   const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(""));
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
-
+  const [timeLeft, setTimeLeft] = useState(300); 
   const username = state?.username ?? "";
 
   const inputsRef = useRef<Array<HTMLInputElement | null>>([]);
 
+  useEffect(() => {
+    if (timeLeft <= 0) return;
+
+    const interval = setInterval(() => {
+      setTimeLeft((prev) => prev - 1);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [timeLeft]);
+
+  const formatTime = (seconds: number) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+  };
     // Update single OTP digit
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
     const value = e.target.value;
@@ -86,6 +101,13 @@ export default function VerifyOTPPage() {
     setLoading(true);
     try {
       const res = await verifyOTP({ username, otp: otpCode });
+      
+      // Check if it's an error response
+      if ('msg' in res && !('user' in res)) {
+        Swal.fire("Error", res.msg, "error");
+        return;
+      }
+      
       if (!res.access_token) {
         Swal.fire("Error", res.msg ?? "OTP verification failed", "error");
         return;
@@ -117,12 +139,26 @@ export default function VerifyOTPPage() {
   };
 
   return (
-    <section className="overflow-hidden flex ">
-    <div className="w-[30%] p-8 md:p-12 lg:px-16 lg:py-24">
-    <div className="max-w-md mx-auto text-center bg-white px-6 py-10 rounded-xl shadow-lg">
+    <section className="overflow-hidden flex flex-col md:flex-row w-full max-w-screen-2xl shadow-[rgba(9,_30,_66,_0.25)_0px_4px_8px_-2px,_rgba(9,_30,_66,_0.08)_0px_0px_0px_1px] mx-auto mt-[2rem] rounded-[20px]">
+    <div className="w-full md:w-[50%]">
+    <img
+      alt=""
+      src={Banner}
+      className="h-56 w-full object-cover sm:h-full"
+    />
+    </div>
+    <div className="w-full md:w-[50%] p-8 md:p-12 lg:px-16 lg:py-24">
+      <div className="max-w-md mx-auto text-center px-6 py-10 rounded-xl">
         <h1 className="text-2xl font-bold mb-2 text-[#4f9748]">Two-Factor Verification</h1>
         <p className="text-sm text-gray-500 mb-6">
           Enter the {OTP_LENGTH}-digit OTP sent to your username.
+        </p>
+        <p className="text-[15px] text-slate-500">
+          {timeLeft > 0 ? (
+            <>This code will expire in <span className="font-semibold">{formatTime(timeLeft)}</span>.</>
+          ) : (
+            <>⏳ This code has expired.</>
+          )}
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -151,26 +187,18 @@ export default function VerifyOTPPage() {
           >
             {loading ? "Verifying..." : "Verify OTP"}
           </button>
-          <div className="mt-4 text-center">
-            <button
-              type="submit"
-              onClick={handleResend}
-              disabled={resending}
-              className="text-sm text-indigo-600 hover:underline disabled:text-gray-400"
-            >
-              {resending ? "Resending..." : "Resend OTP"}
-            </button>
+          <div className="text-sm text-slate-500 mt-4">
+                Didn't receive code?{" "}
+                <button
+                  onClick={handleResend}
+                  disabled={resending}
+                  className="font-medium text-[#4F9748] hover:text-[#4F9748]"
+                >
+                  {resending ? "Resending..." : "Resend"}
+                </button>
           </div>
         </form>
       </div>
-    </div>
-
-    <div className="w-[70%]">
-    <img
-      alt=""
-      src={Banner}
-      className="h-56 w-full object-cover sm:h-full"
-    />
     </div>
   </section>
   );

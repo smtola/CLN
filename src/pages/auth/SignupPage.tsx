@@ -1,18 +1,19 @@
 "use client";
 import { useState, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../hook/useAuth"; // ✅ your auth hook
+import { NavLink, useNavigate } from "react-router-dom";
 import type { SignupPayload } from "../../types/auth";
-import Banner from '../../../public/assets/image/banner.png'
+import Banner from "../../../public/assets/image/banner.png";
+import { signup } from "../../authService";
 
 export default function SignupPage() {
-  const { signup } = useAuth();
   const navigate = useNavigate();
 
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState(""); // ✅ new
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false); // ✅ toggle for confirm
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -22,11 +23,20 @@ export default function SignupPage() {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   // Inline validations
-  const usernameError = username && (username.includes(" ") ? "Username cannot contain spaces" : "");
-  const emailError = email && (!emailRegex.test(email) ? "Invalid email address" : "");
-  const passwordError = password && (!strongPasswordRegex.test(password)
-    ? "Password must be 8+ chars, with uppercase, lowercase, number & special char"
-    : "");
+  const usernameError =
+    username &&
+    (username.includes(" ") ? "Username cannot contain spaces" : "");
+  const emailError =
+    email && (!emailRegex.test(email) ? "Invalid email address" : "");
+  const passwordError =
+    password &&
+    (!strongPasswordRegex.test(password)
+      ? "Password must be 8+ chars, with uppercase, lowercase, number & special char"
+      : "");
+  const confirmPasswordError =
+    confirmPassword && confirmPassword !== password
+      ? "Passwords do not match"
+      : "";
 
   const passwordStrength = useMemo(() => {
     if (!password) return "";
@@ -41,6 +51,7 @@ export default function SignupPage() {
     if (!username || username.includes(" ")) return;
     if (!emailRegex.test(email)) return;
     if (!strongPasswordRegex.test(password)) return;
+    if (confirmPassword !== password) return; // ✅ block if mismatch
 
     setLoading(true);
 
@@ -48,13 +59,11 @@ export default function SignupPage() {
 
     try {
       const res = await signup(payload);
+      // Check if it's an error response
 
-      if (!res.ok) {
-        setError(res.error ?? "Signup failed");
-        return;
+      if (res.is_verified) {
+        navigate("/auth/verify-email", { state: { email } });
       }
-
-      navigate("/verify-email", { state: { email } });
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Unknown error");
     } finally {
@@ -63,14 +72,19 @@ export default function SignupPage() {
   };
 
   return (
-        <section className="overflow-hidden flex ">
-        <div className="w-[30%] p-8 md:p-12 lg:px-16 lg:py-24">
-          <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-md">
+    <section className="overflow-hidden flex flex-col md:flex-row w-full mx-auto max-w-screen-2xl shadow-[rgba(9,_30,_66,_0.25)_0px_4px_8px_-2px,_rgba(9,_30,_66,_0.08)_0px_0px_0px_1px] mt-[2rem] rounded-[20px]">
+      <div className="w-full md:w-[50%]">
+        <img
+          alt=""
+          src={Banner}
+          className="h-56 w-full object-cover sm:h-full"
+        />
+      </div>
+      <div className="w-full md:w-[50%] mx-auto p-8 md:p-12 lg:px-16 lg:py-24">
+        <div className="w-full max-w-md mx-auto p-8">
           <h1 className="text-2xl font-semibold text-center text-gray-800 mb-6">
             Create an Account
           </h1>
-
-          {error && <p className="text-red-500 text-sm text-center mb-4">{error}</p>}
 
           <div className="space-y-4">
             {/* Username */}
@@ -81,10 +95,14 @@ export default function SignupPage() {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
-                  usernameError ? "border-red-500 focus:ring-red-400" : "focus:ring-blue-500"
+                  usernameError
+                    ? "border-red-500 focus:ring-red-400"
+                    : "focus:ring-blue-500"
                 }`}
               />
-              {usernameError && <p className="text-xs text-red-500 mt-1">{usernameError}</p>}
+              {usernameError && (
+                <p className="text-xs text-red-500 mt-1">{usernameError}</p>
+              )}
             </div>
 
             {/* Email */}
@@ -95,10 +113,14 @@ export default function SignupPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
-                  emailError ? "border-red-500 focus:ring-red-400" : "focus:ring-blue-500"
+                  emailError
+                    ? "border-red-500 focus:ring-red-400"
+                    : "focus:ring-blue-500"
                 }`}
               />
-              {emailError && <p className="text-xs text-red-500 mt-1">{emailError}</p>}
+              {emailError && (
+                <p className="text-xs text-red-500 mt-1">{emailError}</p>
+              )}
             </div>
 
             {/* Password */}
@@ -109,7 +131,9 @@ export default function SignupPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
-                  passwordError ? "border-red-500 focus:ring-red-400" : "focus:ring-blue-500"
+                  passwordError
+                    ? "border-red-500 focus:ring-red-400"
+                    : "focus:ring-blue-500"
                 }`}
               />
               <button
@@ -134,10 +158,45 @@ export default function SignupPage() {
               )}
             </div>
 
+            {/* Confirm Password */}
+            <div className="relative">
+              <input
+                type={showConfirmPassword ? "text" : "password"}
+                placeholder="Confirm Password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
+                  confirmPasswordError
+                    ? "border-red-500 focus:ring-red-400"
+                    : "focus:ring-blue-500"
+                }`}
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword((prev) => !prev)}
+                className="absolute top-2 right-2 text-sm text-gray-500 hover:text-gray-700 focus:outline-none"
+              >
+                {showConfirmPassword ? "Hide" : "Show"}
+              </button>
+              {confirmPasswordError && (
+                <p className="text-xs text-red-500 mt-1">
+                  {confirmPasswordError}
+                </p>
+              )}
+            </div>
+
+            {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
+
             {/* Signup Button */}
             <button
               onClick={handleSignup}
-              disabled={loading || !!usernameError || !!emailError || !!passwordError}
+              disabled={
+                loading ||
+                !!usernameError ||
+                !!emailError ||
+                !!passwordError ||
+                !!confirmPasswordError
+              }
               className={`w-full py-2 rounded-lg text-white font-semibold transition ${
                 loading
                   ? "bg-gray-400 cursor-not-allowed"
@@ -147,20 +206,24 @@ export default function SignupPage() {
               {loading ? "Signing up..." : "Sign Up"}
             </button>
           </div>
+          <span className="text-sm text-gray-600">
+            Already have an account?{" "}
+            <NavLink to="/auth/login" className="text-blue-600 hover:underline">
+              Login
+            </NavLink>
+          </span>
 
           <p className="text-xs text-gray-500 mt-4">
-            Username cannot contain spaces.<br/> Password must be at least 8 characters and include uppercase, lowercase, number, and special character.
+            Username cannot contain spaces. <br />
+            Password must be at least 8 characters and include uppercase,
+            lowercase, number, and special character.
           </p>
+          <span className="text-yellow-500">
+            <b>Note:</b> If your account is not verified within 1 hours, it
+            will be deleted from the database.
+          </span>
         </div>
-        </div>
-  
-        <div className="w-[70%]">
-        <img
-          alt=""
-          src={Banner}
-          className="h-56 w-full object-cover sm:h-full"
-        />
-        </div>
-      </section>
+      </div>
+    </section>
   );
 }

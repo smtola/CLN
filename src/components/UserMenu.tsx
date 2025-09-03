@@ -1,14 +1,13 @@
 import { useState, useEffect } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import { useAuth } from "../hook/useAuth";
 import Swal from "sweetalert2";
 import { logout } from "../authService";
+import { getUser } from "../authStorage";
 
 export default function UserMenu() {
   const [open, setOpen] = useState(false);
-  const { user } = useAuth(); // Make sure useAuth exposes setUser
   const navigate = useNavigate();
-
+  const user = getUser();
   const handleLogout = async () => {
     try {
       const res = await logout();

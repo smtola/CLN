@@ -7,40 +7,39 @@ export interface User {
 }
 
 export interface AuthTokens {
-  accessToken: string;
-  refreshToken: string;
+  access_token: string;
+  refresh_token: string;
 }
 
-export interface AuthResponse {
-  user: User;
-  tokens: AuthTokens;
-  requiresOtp?: boolean;
+export interface SignupResponse {
+  user?: User;
+  is_verified?: boolean;
   access_token?:string;
-  refreshToken?:string;
+  refresh_token?:string;
   msg?:string;
 }
 
 export interface LoginResponse{
-  msg: string;
-  user: User;
   requiresOtp?: boolean;
   access_token?:string;
   refresh_token?:string;
-  username: string;
+  msg?: string;
+  user?: User;
+  username?: string;
 }
 
 export interface VerifyResponse{
   msg?:string;
   access_token?:string;
   refresh_token?:string;
-  user: User;
+  user?: User;
 }
 
 export interface LogoutResponse{
   msg?:string;
   access_token?:string;
   refresh_token?:string;
-  user: User;
+  user?: User;
 }
 
 export interface ApiError {
@@ -53,28 +52,39 @@ export interface LoginPayload {
   password: string;
   local_ip: string;
   ip?:string;
+  msg?:string;
 }
 
 export interface SignupPayload {
   username?: string;
-  email: string;
-  password: string;
+  email?: string;
+  password?: string;
 }
 
 export interface LogoutPayload {
   msg?:string;
   access_token?:string;
   refresh_token?:string;
-  user: User;
+  user?: User;
 }
 
 export interface VerifyEmailPayload {
-  email: string;
-  otp: string;
+  username?:string;
+  email?: string;
+  otp?: string;
+  msg?: string;
+}
+
+export interface VerifyOTPPayload{
+  username:string;
+  otp:string;
+  msg?:string;
+  access_token?:string;
+  refresh_token?:string;
+  user?: User;
 }
 
 export interface VerifyEmailResponse {
-  ok: boolean;
-  msg: string;
+  msg?: string;
   token?: string;
 }
