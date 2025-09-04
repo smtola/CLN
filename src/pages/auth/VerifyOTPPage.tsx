@@ -22,20 +22,36 @@ export default function VerifyOTPPage() {
   const inputsRef = useRef<Array<HTMLInputElement | null>>([]);
 
   useEffect(() => {
-    if (timeLeft <= 0) return;
+    // Calculate or restore countdown end time
+    const storedEnd = localStorage.getItem("countdownEnd");
+    let endTime: number;
+
+    if (storedEnd && Number(storedEnd) > Date.now()) {
+      endTime = Number(storedEnd); // restore
+    } else {
+      endTime = Date.now() + timeLeft * 1000; // new countdown
+      localStorage.setItem("countdownEnd", endTime.toString());
+    }
 
     const interval = setInterval(() => {
-      setTimeLeft((prev) => prev - 1);
+      const secondsLeft = Math.max(Math.floor((endTime - Date.now()) / 1000), 0);
+      setTimeLeft(secondsLeft);
+
+      if (secondsLeft <= 0) {
+        clearInterval(interval);
+        localStorage.removeItem("countdownEnd"); // clean up when finished
+      }
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [timeLeft]);
+  }, []);
 
   const formatTime = (seconds: number) => {
     const m = Math.floor(seconds / 60);
     const s = seconds % 60;
     return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
   };
+
     // Update single OTP digit
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
     const value = e.target.value;
