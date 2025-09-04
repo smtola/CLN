@@ -17,6 +17,7 @@ export interface SignupResponse {
   access_token?:string;
   refresh_token?:string;
   msg?:string;
+  status?:boolean;
 }
 
 export interface LoginResponse{
@@ -26,6 +27,7 @@ export interface LoginResponse{
   msg?: string;
   user?: User;
   username?: string;
+  status?:boolean;
 }
 
 export interface VerifyResponse{
@@ -33,6 +35,7 @@ export interface VerifyResponse{
   access_token?:string;
   refresh_token?:string;
   user?: User;
+  status?:boolean;
 }
 
 export interface LogoutResponse{
@@ -40,6 +43,7 @@ export interface LogoutResponse{
   access_token?:string;
   refresh_token?:string;
   user?: User;
+  status?:boolean;
 }
 
 export interface ApiError {
@@ -53,12 +57,14 @@ export interface LoginPayload {
   local_ip: string;
   ip?:string;
   msg?:string;
+  status?:boolean;
 }
 
 export interface SignupPayload {
   username?: string;
   email?: string;
   password?: string;
+  status?:boolean;
 }
 
 export interface LogoutPayload {
@@ -66,6 +72,7 @@ export interface LogoutPayload {
   access_token?:string;
   refresh_token?:string;
   user?: User;
+  status?:boolean;
 }
 
 export interface VerifyEmailPayload {
@@ -73,6 +80,7 @@ export interface VerifyEmailPayload {
   email?: string;
   otp?: string;
   msg?: string;
+  status?:boolean;
 }
 
 export interface VerifyOTPPayload{
@@ -81,10 +89,15 @@ export interface VerifyOTPPayload{
   msg?:string;
   access_token?:string;
   refresh_token?:string;
+  status?:boolean;
   user?: User;
 }
 
 export interface VerifyEmailResponse {
   msg?: string;
   token?: string;
+  access_token?:string;
+  refresh_token?:string;
+  status?:boolean;
+  user?:User;
 }

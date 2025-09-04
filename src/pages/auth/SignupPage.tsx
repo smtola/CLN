@@ -72,7 +72,7 @@ export default function SignupPage() {
   };
 
   return (
-    <section className="overflow-hidden flex flex-col md:flex-row w-full mx-auto max-w-screen-2xl shadow-[rgba(9,_30,_66,_0.25)_0px_4px_8px_-2px,_rgba(9,_30,_66,_0.08)_0px_0px_0px_1px] mt-[2rem] rounded-[20px]">
+    <section className="overflow-hidden flex flex-col md:flex-row w-full mx-auto max-w-[400px] md:max-w-screen-2xl shadow-[rgba(9,_30,_66,_0.25)_0px_4px_8px_-2px,_rgba(9,_30,_66,_0.08)_0px_0px_0px_1px] mt-[2rem] rounded-[20px]">
       <div className="w-full md:w-[50%]">
         <img
           alt=""
@@ -80,13 +80,13 @@ export default function SignupPage() {
           className="h-56 w-full object-cover sm:h-full"
         />
       </div>
-      <div className="w-full md:w-[50%] mx-auto p-8 md:p-12 lg:px-16 lg:py-24">
-        <div className="w-full max-w-md mx-auto p-8">
+      <div className="w-full md:w-[50%] mx-auto md:p-12 lg:px-16 lg:py-24">
+        <div className="w-full md:max-w-md mx-auto p-8">
           <h1 className="text-2xl font-semibold text-center text-gray-800 mb-6">
             Create an Account
           </h1>
 
-          <div className="space-y-4">
+          <form className="space-y-4">
             {/* Username */}
             <div>
               <input
@@ -205,7 +205,7 @@ export default function SignupPage() {
             >
               {loading ? "Signing up..." : "Sign Up"}
             </button>
-          </div>
+          </form>
           <span className="text-sm text-gray-600">
             Already have an account?{" "}
             <NavLink to="/auth/login" className="text-blue-600 hover:underline">

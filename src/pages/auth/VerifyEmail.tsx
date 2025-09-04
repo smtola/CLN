@@ -20,7 +20,6 @@ const VerifyEmail = () => {
   const [resending, setResending] = useState(false);
   const [timeLeft, setTimeLeft] = useState(300); 
   const inputsRef = useRef<Array<HTMLInputElement | null>>([]);
-
   useEffect(() => {
     if (timeLeft <= 0) return;
 
@@ -101,8 +100,7 @@ const VerifyEmail = () => {
 
     try {
       const res = await verifyEmail(payload);
-
-      if (!res.msg) {
+      if (!res.status) {
           setError(res.msg ?? "Verification failed");
           Swal.fire({
               icon: "error",
@@ -119,7 +117,7 @@ const VerifyEmail = () => {
           text: res.msg,
           confirmButtonColor: "#3085d6",
         });
-        navigate("/auth/login", { state: { email } });
+        navigate("/auth/login", { state: {username: res.user?.username}  });
       }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Unknown error");
@@ -134,9 +132,13 @@ const VerifyEmail = () => {
     setResending(true);
     try {
       const res = await resendOTP(email);
-      Swal.fire("Success", res.msg ?? "OTP resent", "success");
-      setOtp(Array(OTP_LENGTH).fill("")); // clear old OTP input
-      inputsRef.current[0]?.focus();
+
+      if(res.status){
+        Swal.fire("Success", res.msg ?? "OTP resent", "success");
+        setOtp(Array(OTP_LENGTH).fill("")); // clear old OTP input
+        inputsRef.current[0]?.focus();
+      }
+      Swal.fire("Error", res.msg ?? "OTP Faild", "error");
     } catch (err: unknown) {
       Swal.fire("Error", err instanceof Error ? err.message : "Unknown error", "error");
     } finally {
@@ -145,7 +147,7 @@ const VerifyEmail = () => {
   };
 
   return (
-      <section className="overflow-hidden flex flex-col md:flex-row w-full max-w-screen-2xl shadow-[rgba(9,_30,_66,_0.25)_0px_4px_8px_-2px,_rgba(9,_30,_66,_0.08)_0px_0px_0px_1px] mx-auto mt-[2rem] rounded-[20px]">
+      <section className="overflow-hidden flex flex-col md:flex-row w-full max-w-[400px] md:max-w-screen-2xl shadow-[rgba(9,_30,_66,_0.25)_0px_4px_8px_-2px,_rgba(9,_30,_66,_0.08)_0px_0px_0px_1px] mx-auto mt-[2rem] rounded-[20px]">
         <div className="w-full md:w-[50%]">
           <img
             alt=""
@@ -153,7 +155,7 @@ const VerifyEmail = () => {
             className="h-56 w-full object-cover sm:h-full"
           />
         </div>
-        <div className="w-full md:w-[50%] p-8 md:p-12 lg:px-16 lg:py-24">
+        <div className="w-full md:w-[50%]  md:p-12 lg:px-16 lg:py-24">
             <div className="max-w-md mx-auto text-center bg-white px-4 sm:px-8 py-10">
               <header className="mb-8">
                 <h1 className="text-2xl font-bold mb-1 text-[#4F9748]">Email Verification</h1>
@@ -196,7 +198,7 @@ const VerifyEmail = () => {
                       onChange={(e) => handleChange(e, index)}
                       onKeyDown={(e) => handleKeyDown(e, index)}
                       onPaste={handlePaste}
-                      className="w-14 h-14 text-center text-2xl font-extrabold text-slate-900 bg-slate-100 border border-transparent hover:border-slate-200 rounded p-4 outline-none focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
+                      className="w-12 h-12 md:w-14 md:h-14 text-center text-2xl font-extrabold text-slate-900 bg-slate-100 border border-transparent hover:border-slate-200 rounded p-4 outline-none focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
                     />
                   ))}
                 </div>

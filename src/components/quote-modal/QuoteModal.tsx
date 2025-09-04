@@ -12,6 +12,7 @@ interface QuoteFormData {
   origin_destination: string;
   product_name: string;
   weight_dimensions: string;
+  service:string;
   container_size: string;
 }
 
@@ -27,12 +28,19 @@ const QuoteModal: React.FC = () => {
     origin_destination: "",
     product_name: "",
     weight_dimensions: "",
+    service:"",
     container_size: ""
   });
   const token = getAccessToken();
+
+  const isAirFreight = form.service === "Air Freight";
+
+  const containerOptions = isAirFreight
+    ? false
+    : true;
   // Handle form input
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
@@ -83,6 +91,7 @@ const QuoteModal: React.FC = () => {
             origin_destination: "",
             product_name: "",
             weight_dimensions: "",
+            service: "",
             container_size: "",
           });
         } else {
@@ -116,7 +125,7 @@ const QuoteModal: React.FC = () => {
     <div>
       {/* Button */}
       <button
-        disabled={!token ? true:false}
+        disabled={!token ? true : false}
         onClick={() => setIsOpen(true)}
         className="w-full text-[14px] md:text-[18px] px-4 py-1 bg-red-50 border border-[#EE3A23] text-[#EE3A23] rounded-[4px] hover:bg-red-100"
       >
@@ -231,7 +240,7 @@ const QuoteModal: React.FC = () => {
               </div>
 
               <div className="w-full mb-3">
-                <label className="block mb-1">Weight & Dimensions</label>
+                <label className="block mb-1">Dimensions</label>
                 <input
                   type="text"
                   name="weight_dimensions"
@@ -244,19 +253,59 @@ const QuoteModal: React.FC = () => {
               </div>
 
               <div className="flex gap-3">
+              <div className="flex gap-3">
                 <div className="w-full mb-3">
-                  <label className="block mb-1">Container Size</label>
-                  <input
-                    type="text"
+                  <label className="block mb-1">Services</label>
+                  <select
+                    name="service"
+                    value={form.service}
+                    onChange={handleChange}
+                    className="w-full border rounded p-2"
+                    required
+                  >
+                    <option value="">Select Services</option>
+                    <option value="Customs Clearance">Customs Clearance</option>
+                    <option value="Cross Border (Land Transport)">
+                      Cross Border (Land Transport)
+                    </option>
+                    <option value="Sea Freight">Sea Freight</option>
+                    <option value="Air Freight">Air Freight</option>
+                  </select>
+                </div>
+
+                <div className="w-full mb-3">
+                  <label className="block mb-1">Container Size / Weight</label>
+                  {containerOptions ?
+                    <select
                     name="container_size"
                     value={form.container_size}
                     onChange={handleChange}
                     className="w-full border rounded p-2"
                     required
-                  />
+                  >
+                    <option value="">Select Size / Weight</option>
+                        <option  value="20GP">
+                          20GP
+                        </option>
+                        <option  value="40GP">
+                          40GP
+                        </option>
+                    </select>
+                   : 
+                    <input
+                      type="text"
+                      name="container_size"
+                      value={form.container_size}
+                      onChange={handleChange}
+                      className="w-full border rounded p-2"
+                      required
+                    />
+                  }
                 </div>
+              </div>
+              </div>
 
-                <div className="w-full mb-3">
+              <div className="w-full mb-3">
                   <label className="block mb-1">Address</label>
                   <textarea
                     name="address"
@@ -266,7 +315,6 @@ const QuoteModal: React.FC = () => {
                     rows={3}
                   />
                 </div>
-              </div>
 
               <button
                 type="submit"

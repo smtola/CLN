@@ -12,7 +12,7 @@ export async function signup(payload: SignupPayload) {
     if (err && typeof err === 'object' && 'response' in err && 
         err.response && typeof err.response === 'object' && 'data' in err.response &&
         err.response.data && typeof err.response.data === 'object' && 'msg' in err.response.data) {
-      return { msg: (err.response.data as { msg: string }).msg };
+        return err.response.data as SignupResponse;
     }
 
     // fallback message
@@ -34,7 +34,7 @@ export async function login(payload: LoginPayload) {
     if (err && typeof err === 'object' && 'response' in err && 
         err.response && typeof err.response === 'object' && 'data' in err.response &&
         err.response.data && typeof err.response.data === 'object' && 'msg' in err.response.data) {
-      return { msg: (err.response.data as { msg: string }).msg };
+      return err.response.data as LoginResponse;
     }
 
     // fallback message
@@ -51,7 +51,7 @@ export async function logout(payload?: LogoutPayload) {
     if (err && typeof err === 'object' && 'response' in err && 
         err.response && typeof err.response === 'object' && 'data' in err.response &&
         err.response.data && typeof err.response.data === 'object' && 'msg' in err.response.data) {
-      return { msg: (err.response.data as { msg: string }).msg };
+       return err.response.data as LogoutResponse;
     }
 
     // fallback message
@@ -76,7 +76,7 @@ export async function verifyOTP(payload: VerifyOTPPayload) {
     if (err && typeof err === 'object' && 'response' in err && 
         err.response && typeof err.response === 'object' && 'data' in err.response &&
         err.response.data && typeof err.response.data === 'object' && 'msg' in err.response.data) {
-      return { msg: (err.response.data as { msg: string }).msg };
+      return err.response.data as VerifyResponse;
     }
 
     // fallback message
@@ -93,7 +93,7 @@ export async function verifyEmail(payload: VerifyEmailPayload): Promise<VerifyEm
     if (err && typeof err === 'object' && 'response' in err && 
         err.response && typeof err.response === 'object' && 'data' in err.response &&
         err.response.data && typeof err.response.data === 'object' && 'msg' in err.response.data) {
-      return { msg: (err.response.data as { msg: string }).msg };
+      return err.response.data as VerifyEmailResponse;
     }
 
     // fallback message
@@ -103,14 +103,14 @@ export async function verifyEmail(payload: VerifyEmailPayload): Promise<VerifyEm
 
 export async function resendOTP(username?: string, email?:string) {
   try{
-    const { data } = await api.post("/resend-otp", { username, email });
+    const { data } = await api.post<{msg?:string, status?:boolean}>("/resend-otp", { username, email });
     return data;
   }catch (err: unknown){
     // If API sends { msg: "Invalid credentials" }
     if (err && typeof err === 'object' && 'response' in err && 
         err.response && typeof err.response === 'object' && 'data' in err.response &&
         err.response.data && typeof err.response.data === 'object' && 'msg' in err.response.data) {
-      return { msg: (err.response.data as { msg: string }).msg };
+        return err.response.data as {msg?:string, status?:boolean};
     }
 
     // fallback message
@@ -128,7 +128,7 @@ export async function fetchUsers() {
     if (err && typeof err === 'object' && 'response' in err && 
         err.response && typeof err.response === 'object' && 'data' in err.response &&
         err.response.data && typeof err.response.data === 'object' && 'msg' in err.response.data) {
-      return { msg: (err.response.data as { msg: string }).msg };
+          return err.response.data as {msg?:string};
     }
 
     // fallback message
