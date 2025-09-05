@@ -219,7 +219,7 @@ export default function SignupPage() {
             lowercase, number, and special character.
           </p>
           <span className="text-yellow-500">
-            <b>Note:</b> If your account is not verified within 1 hours, it
+            <b>Note:</b> If your account is not verified within 25 minutes, it
             will be deleted from the database.
           </span>
         </div>
