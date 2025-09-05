@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import Swal from "sweetalert2";
 import { getAccessToken } from "../../authStorage";
+import { useNavigate } from "react-router-dom";
 
 interface QuoteFormData {
   company_name: string;
@@ -17,6 +18,7 @@ interface QuoteFormData {
 }
 
 const QuoteModal: React.FC = () => {
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [form, setForm] = useState<QuoteFormData>({
     company_name: "",
@@ -49,7 +51,17 @@ const QuoteModal: React.FC = () => {
   // Handle submit
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-  
+
+    if(!token) {
+      Swal.fire({
+        icon: "warning",
+        title: "Login required!",
+        text: "Please go to login for send information.",
+        confirmButtonColor: "#3085d6",
+      });
+      navigate("/auth/login");
+      return;
+    }
     if (
       form.company_name &&
       form.full_name &&
@@ -125,7 +137,6 @@ const QuoteModal: React.FC = () => {
     <div>
       {/* Button */}
       <button
-        disabled={!token ? true : false}
         onClick={() => setIsOpen(true)}
         className="w-full text-[14px] md:text-[18px] px-4 py-1 bg-red-50 border border-[#EE3A23] text-[#EE3A23] rounded-[4px] hover:bg-red-100"
       >
@@ -253,57 +264,56 @@ const QuoteModal: React.FC = () => {
               </div>
 
               <div className="flex gap-3">
-              <div className="flex gap-3">
-                <div className="w-full mb-3">
-                  <label className="block mb-1">Services</label>
-                  <select
-                    name="service"
-                    value={form.service}
-                    onChange={handleChange}
-                    className="w-full border rounded p-2"
-                    required
-                  >
-                    <option value="">Select Services</option>
-                    <option value="Customs Clearance">Customs Clearance</option>
-                    <option value="Cross Border (Land Transport)">
-                      Cross Border (Land Transport)
-                    </option>
-                    <option value="Sea Freight">Sea Freight</option>
-                    <option value="Air Freight">Air Freight</option>
-                  </select>
-                </div>
-
-                <div className="w-full mb-3">
-                  <label className="block mb-1">Container Size / Weight</label>
-                  {containerOptions ?
+                  <div className="w-full mb-3">
+                    <label className="block mb-1">Services</label>
                     <select
-                    name="container_size"
-                    value={form.container_size}
-                    onChange={handleChange}
-                    className="w-full border rounded p-2"
-                    required
-                  >
-                    <option value="">Select Size / Weight</option>
-                        <option  value="20GP">
-                          20GP
-                        </option>
-                        <option  value="40GP">
-                          40GP
-                        </option>
+                      name="service"
+                      value={form.service}
+                      onChange={handleChange}
+                      className="w-full border rounded p-2"
+                      required
+                    >
+                      <option value="">Select Services</option>
+                      <option value="Customs Clearance">Customs Clearance</option>
+                      <option value="Cross Border (Land Transport)">
+                        Cross Border (Land Transport)
+                      </option>
+                      <option value="Sea Freight">Sea Freight</option>
+                      <option value="Air Freight">Air Freight</option>
                     </select>
-                   : 
-                    <input
-                      type="text"
+                  </div>
+
+                  <div className="w-full mb-3">
+                    <label className="block mb-1">{containerOptions ? 'Container Size' : 'Weight'}</label>
+                    {containerOptions ?
+                      <select
                       name="container_size"
                       value={form.container_size}
                       onChange={handleChange}
                       className="w-full border rounded p-2"
                       required
-                    />
-                  }
+                    >
+                      <option value="">Select Size</option>
+                          <option  value="20GP">
+                            20GP
+                          </option>
+                          <option  value="40GP">
+                            40GP
+                          </option>
+                      </select>
+                    : 
+                      <input
+                        type="text"
+                        name="container_size"
+                        value={form.container_size}
+                        onChange={handleChange}
+                        className="w-full border rounded p-2"
+                        placeholder="Weight"
+                        required
+                      />
+                    }
+                  </div>
                 </div>
-              </div>
-              </div>
 
               <div className="w-full mb-3">
                   <label className="block mb-1">Address</label>
