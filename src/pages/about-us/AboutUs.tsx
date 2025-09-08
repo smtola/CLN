@@ -1,26 +1,23 @@
-import React from "react";
+import React, {useEffect, useState} from "react";
 import AOS from "aos";
 import "aos/dist/aos.css";
-import SEO from "../../components/SEO";
+import SEO, {type SEOProps} from '../../components/SEO';
+import {fetchSEO} from "../../services/seoService.ts";
 
 const AboutCLN: React.FC = () => {
-  React.useEffect(() => {
-    AOS.init({ duration: 1000 });
+  const [seo, setSeo] = useState<SEOProps | null>(null);
+  React.useEffect(() => {AOS.init({ duration: 1000 });
   }, []);
+
+  useEffect(() => {
+        fetchSEO("about-us")
+            .then((data) =>  setSeo(data))
+            .catch(console.error);
+    }, []);
 
   return (
     <>
-      <SEO
-        title="CLN | ABOUT US"
-        description="CLN Cambodia provides international and domestic logistics, sea freight, air freight, and cross-border land transport services with 20 years of experience."
-        keywords="CLN Cambodia, logistics, transportation, sea freight, air freight, cross-border transport, warehousing, customs clearance"
-        author="CLN Cambodia"
-        ogTitle="CLN | ABOUT US"
-        ogDescription="Offering international and domestic logistics services with 20 years of experience."
-        ogImage="/assets/image/bg_head.jpg"
-        url="https://cln-tan.vercel.app/about-us"
-      />
-
+      <SEO {...seo} />
       {/* ABOUT CLN SECTION */}
       <section className="w-full h-fit bg-gradient-to-t md:bg-gradient-to-r from-[#EE3A23] to-[#4fb748] overflow-hidden">
         <div className="flex flex-col md:flex-row md:gap-5 p-4 xl:max-w-screen-xl mx-auto">
@@ -117,7 +114,6 @@ const AboutCLN: React.FC = () => {
           >
             <div className="flex gap-4 items-center mb-2">
               <span>
-                {/* SVG for mission */}
                 <svg className="w-[28px]" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <g clip-path="url(#clip0_14_773)">
                         <path d="M30.2818 25.1575L35.7346 19.7047C36.6957 18.7439 37.2354 17.4406 37.2354 16.0815V5.72223C37.2354 4.3072 38.3826 3.16016 39.7975 3.16016C41.2125 3.16016 42.3597 4.3072 42.3597 5.72223V19.7108C42.3597 21.7086 41.6592 23.6433 40.3802 25.1781L33.8194 33.051V37.3212H21.863V29.8682C21.863 27.6033 22.7627 25.4311 24.3642 23.8295L31.8007 16.3926C32.8011 15.3922 34.4232 15.392 35.4237 16.3924C36.4243 17.3929 36.4244 19.0151 35.4239 20.0157L30.2818 25.1575Z" stroke="#4F9748" stroke-width="2" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>

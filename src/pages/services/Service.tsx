@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import SEO from "../../components/SEO";
+import SEO, {type SEOProps} from '../../components/SEO';
+import {fetchSEO} from "../../services/seoService.ts";
 
 interface ServiceItem {
   key: string;
@@ -10,6 +11,8 @@ interface ServiceItem {
 }
 
 const Service: React.FC = () => {
+  const [seo, setSeo] = useState<SEOProps | null>(null);
+  console.log(seo);
   const tabs = [
     { key: "custom", label: "Custom Clearance" },
     { key: "land", label: "Cross Border (Land Transport)" },
@@ -117,18 +120,16 @@ Warehousing provides safe storage and efficient management of goods before distr
     setActiveTab(tabKey);
     setSearchParams({ tab: tabKey }, { replace: true });
   };
+  const searchParam = Object.fromEntries(new URLSearchParams(location.search));
+  useEffect(() => {
+    fetchSEO("services", searchParam)
+        .then((data) =>  setSeo(data))
+        .catch(console.error);
+  }, []);
 
   return (
     <>
-     <SEO 
-        title="CLN | SERVICES"
-        description="CLN Cambodia provides international and domestic logistics, sea freight, air freight, and cross-border land transport services with 20 years of experience."
-        keywords="CLN Cambodia, logistics, transportation, sea freight, air freight, cross-border transport, warehousing, customs clearance"
-        author="CLN Cambodia"
-        ogTitle="CLN | Services"
-        ogDescription="Offering international and domestic logistics services with 20 years of experience."
-        ogImage="/assets/image/bg_head.jpg"
-       />
+      <SEO {...seo} />
       {/* HEADER SECTION */}
       <section className="w-full overflow-hidden">
         <div className="relative h-[20vh] smx:h-[30vh] md:h-[50vh]">

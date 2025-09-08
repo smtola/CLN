@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
-import SEO from "../../components/SEO";
+// import SEO from "../../components/SEO";
 
 interface ProductItem {
   key: string;
@@ -339,16 +339,6 @@ const Products: React.FC = () => {
 
   return (
     <>
-     <SEO
-              title="CLN | PRODUCTS"
-              description="CLN Cambodia provides international and domestic logistics, sea freight, air freight, and cross-border land transport services with 20 years of experience."
-              keywords="CLN Cambodia, logistics, transportation, sea freight, air freight, cross-border transport, warehousing, customs clearance"
-              author="CLN Cambodia"
-              ogTitle="CLN | Services"
-              ogDescription="Offering international and domestic logistics services with 20 years of experience."
-              ogImage="/assets/image/bg_head.jpg"
-            
-      />
       {/* Products Section */}
       <section className="w-full h-fit bg-gradient-to-r from-[#4fb748] to-[#EE3A23]">
         <div className="max-w-7xl mx-auto">

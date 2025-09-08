@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import AOS from "aos";
 import "aos/dist/aos.css";
-import SEO from '../../components/SEO';
+import SEO, {type SEOProps} from '../../components/SEO';
+import {fetchSEO} from "../../services/seoService.ts";
 
 interface Service {
   title: string;
@@ -21,6 +22,7 @@ const services: Service[] = [
 
 const Home: React.FC = () => {
   const [visibleCount, setVisibleCount] = useState(4);
+    const [seo, setSeo] = useState<SEOProps | null>(null);
 
   const visibleServices = services.slice(0, visibleCount);
   React.useEffect(() => {
@@ -34,19 +36,17 @@ const Home: React.FC = () => {
     setVisibleCount(prev => Math.max(prev - 4, 4));
   };
 
+    useEffect(() => {
+        fetchSEO("home")
+            .then((data) =>  setSeo(data))
+            .catch(console.error);
+    }, []);
+
+    if (!seo) return <p>Loading...</p>;
+
   return (
     <>
-      <SEO
-        title="Home"
-        description="CLN Cambodia provides international and domestic logistics, sea freight, air freight, and cross-border land transport services with 20 years of experience."
-        keywords="CLN Cambodia, logistics, transportation, sea freight, air freight, cross-border transport, warehousing, customs clearance"
-        author="CLN Cambodia"
-        ogTitle="CLN"
-        ogDescription="Offering international and domestic logistics services with 20 years of experience."
-        ogImage="https://via.placeholder.com/1200x630.png"
-        url="https://cln-tan.vercel.app/home"
-      />
-      
+      <SEO {...seo} />
       <section className="relative">
         <div className="md:hidden w-full h-[3px] bg-gradient-to-l from-[#ffffff] to-[#4F9748]" />
 
