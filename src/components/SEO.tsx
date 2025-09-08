@@ -40,7 +40,7 @@ const SEO: React.FC<SEOProps> = ({
       <meta name="twitter:title" content={ogTitle || title} />
       <meta name="twitter:description" content={ogDescription || description} />
       {ogImage && <meta name="twitter:image" content={ogImage} />}
-      {url && <meta property="twitter:url" content={url} />}
+      {url && <meta name="twitter:url" content={url} />}
     </Helmet>
   );
 };
