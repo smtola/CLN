@@ -37,14 +37,14 @@ const Home: React.FC = () => {
   return (
     <>
       <SEO
-        title="CLN | ABOUT US"
+        title="Home"
         description="CLN Cambodia provides international and domestic logistics, sea freight, air freight, and cross-border land transport services with 20 years of experience."
         keywords="CLN Cambodia, logistics, transportation, sea freight, air freight, cross-border transport, warehousing, customs clearance"
         author="CLN Cambodia"
-        ogTitle="CLN | ABOUT US"
+        ogTitle="CLN"
         ogDescription="Offering international and domestic logistics services with 20 years of experience."
         ogImage="https://via.placeholder.com/1200x630.png"
-        url="https://cln-tan.vercel.app/about-us"
+        url="https://cln-tan.vercel.app/home"
       />
       
       <section className="relative">
@@ -184,7 +184,7 @@ const Home: React.FC = () => {
             </p>     
         </div>
     </div>
-</section>
+      </section>
 
 
 
