@@ -37,7 +37,7 @@ const Home: React.FC = () => {
   };
 
     useEffect(() => {
-        fetchSEO("")
+        fetchSEO("home")
             .then((data) =>  setSeo(data))
             .catch(console.error);
     }, []);
