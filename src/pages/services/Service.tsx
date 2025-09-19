@@ -12,7 +12,6 @@ interface ServiceItem {
 
 const Service: React.FC = () => {
   const [seo, setSeo] = useState<SEOProps | null>(null);
-  console.log(seo);
   const tabs = [
     { key: "custom", label: "Custom Clearance" },
     { key: "land", label: "Cross Border (Land Transport)" },
@@ -21,7 +20,7 @@ const Service: React.FC = () => {
     { key: "packing", label: "Packing & Warehouse" },
     { key: "iec", label: "International Express Courier" },
     { key: "consolidation", label: "Consolidation" },
-    { key: "door2door", label: "DTD Service" },
+    { key: "door2door", label: "Door to Door Service" },
   ];
 
   const services: ServiceItem[] = [
@@ -174,21 +173,21 @@ Warehousing provides safe storage and efficient management of goods before distr
           (service) =>
             activeTab === service.key && (
               <div key={service.key} className="flex flex-wrap lg:flex-nowrap gap-2 mb-6">
+                <div className="w-full">
+                  <h2 className="text-[18px] md:text-[22px] font-bold text-black">
+                    {service.title}
+                  </h2>
+                  <p
+                    className="text-[14px] md:text-[18px] font-light text-start text-black whitespace-pre-line"
+                    dangerouslySetInnerHTML={{ __html: service.description }}
+                  ></p>
+                </div>
                 <div className="w-full mb-2">
                   <img
                     src={service.image}
                     alt={service.title}
                     className="w-full h-full object-cover object-center"
                   />
-                </div>
-                <div className="w-full">
-                  <h2 className="text-[18px] md:text-[22px] font-bold text-black">
-                    {service.title}
-                  </h2>
-                  <p
-                    className="text-[14px] md:text-[18px] font-light text-justify text-black hyphens-auto whitespace-pre-line"
-                    dangerouslySetInnerHTML={{ __html: service.description }}
-                  ></p>
                 </div>
               </div>
             )

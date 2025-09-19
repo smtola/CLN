@@ -23,7 +23,7 @@ const Navbar: React.FC = () => {
     { name: "Packing & Warehouse", tab: "packing" },
     { name: "IEC", tab: "iec" },
     { name: "Consolidation", tab: "consolidation" },
-    { name: "DTD Service", tab: "dtd" },
+    { name: "DTD Service", tab: "door2door" },
   ];
 
   const productsSubmenu = [

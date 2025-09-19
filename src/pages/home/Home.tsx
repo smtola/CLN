@@ -54,8 +54,6 @@ const Home: React.FC = () => {
             });
     }, []);
 
-    if (!seo) return <p>Loading...</p>;
-
   return (
     <>
       <SEO {...seo} />
