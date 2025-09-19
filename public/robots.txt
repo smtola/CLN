@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://cln-tan.vercel.app/sitemap.xml
+Sitemap: https://clncambodia.com/sitemap.xml

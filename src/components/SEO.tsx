@@ -21,20 +21,20 @@ const SEO: React.FC<SEOProps> = ({
                                  }) => (
     <Helmet>
         <title>{title}</title>
-        <meta name="description" content={description} />
+        {description && <meta name="description" content={description} />}
         {keywords && <meta name="keywords" content={keywords} />}
 
         {/* OpenGraph */}
         <meta property="og:type" content="website" />
         <meta property="og:title" content={ogTitle || title} />
-        <meta property="og:description" content={ogDescription || description} />
+        {ogDescription && <meta property="og:description" content={ogDescription} />}
         {ogImage && <meta property="og:image" content={ogImage} />}
         {url && <meta property="og:url" content={url} />}
 
         {/* Twitter */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={ogTitle || title} />
-        <meta name="twitter:description" content={ogDescription || description} />
+        {ogDescription && <meta name="twitter:description" content={ogDescription} />}
         {ogImage && <meta name="twitter:image" content={ogImage} />}
         {url && <meta name="twitter:url" content={url} />}
     </Helmet>

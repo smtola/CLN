@@ -38,8 +38,20 @@ const Home: React.FC = () => {
 
     useEffect(() => {
         fetchSEO("home")
-            .then((data) =>  setSeo(data))
-            .catch(console.error);
+            .then((data) => setSeo(data))
+            .catch((error) => {
+                console.error("Failed to fetch SEO data:", error);
+                // Fallback SEO data
+                setSeo({
+                    title: "CLN | Home",
+                    description: "CLN Cambodia provides international and domestic logistics services.",
+                    keywords: "CLN Cambodia, logistics, transportation, sea freight, air freight",
+                    ogTitle: "CLN Cambodia",
+                    ogDescription: "Offering international and domestic logistics services with 20 years of experience.",
+                    ogImage: "https://clncambodia.com/og-home.png",
+                    url: "https://clncambodia.com"
+                });
+            });
     }, []);
 
     if (!seo) return <p>Loading...</p>;
