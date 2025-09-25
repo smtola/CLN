@@ -40,7 +40,7 @@ const Footer: React.FC = () => {
               <h1 className="text-[16px] md:text-[22px] font-[500]">Our Services</h1>
               <ul className="text-[14px] md:text-[18px] font-[300] space-y-[0.5rem]">
                 {[
-                  "Custom Clearance",
+                  "Customs Clearance",
                   "Cross Border (Land Transport)",
                   "Sea Freight",
                   "Air Freight",

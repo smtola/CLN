@@ -15,7 +15,7 @@ interface Service {
 }
 
 const services: Service[] = [
-  { title: 'Custom Clearance (Import / Export)', image: 'assets/image/custom clearance.jpg' },
+  { title: 'Customs Clearance (Import / Export)', image: 'assets/image/custom clearance.jpg' },
   { title: 'Cross border (land transport)', image: 'assets/image/cross.png' },
   { title: 'Sea Freight', image: 'assets/image/ship.png' },
   { title: 'Air Freight', image: 'assets/image/airplan.png' },
@@ -192,9 +192,9 @@ const Home: React.FC = () => {
             
                 With our quality staff with more than 20 years experiences of handling logistics and advanced
                 information technology, we are dedicated to offering the best international and domestic
-                logistics services and networks that enable our customers to make “All the Possible
+                logistics services and networks that enable our Customsers to make “All the Possible
                 Movesˮ in their supply chains. We also comply with Cambodia labor law and
-                commit to provide the best services to our customers as their expectation.
+                commit to provide the best services to our Customsers as their expectation.
             </p>     
         </div>
     </div>

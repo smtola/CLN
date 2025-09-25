@@ -15,7 +15,7 @@ interface ServiceItem {
 const Service: React.FC = () => {
   const [seo, setSeo] = useState<SEOProps | null>(null);
   const tabs = [
-    { key: "custom", label: "Custom Clearance" },
+    { key: "Customs", label: "Customs Clearance" },
     { key: "land", label: "Cross Border (Land Transport)" },
     { key: "sea", label: "Sea Freight" },
     { key: "air", label: "Air Freight" },
@@ -27,10 +27,10 @@ const Service: React.FC = () => {
 
   const services: ServiceItem[] = [
     {
-      key: "custom",
-      title: "Custom Clearance",
+      key: "Customs",
+      title: "Customs Clearance",
       description:
-        "We offer certified customs brokerage services throughout nationwide customs points. Our specialist who certified by Thai Customs department will assist importers and exporters the entry procedures, admissibility requirements, classification, valuation, and the rates of duty and applicable taxes and fees.",
+        "We offer certified Customss brokerage services throughout nationwide Customss points. Our specialist who certified by Thai Customss department will assist importers and exporters the entry procedures, admissibility requirements, classification, valuation, and the rates of duty and applicable taxes and fees.",
       image: "/assets/image/custom clearance.jpg",
     },
     {
@@ -38,7 +38,7 @@ const Service: React.FC = () => {
       title: "Cross Border (Land Transport)",
       description:
         `
-        Cross Border (Land Transport) refers to the movement of goods and passengers between two or more countries using road-based transportation, typically by trucks, buses, or private vehicles. It involves crossing international boundaries via designated land checkpoints, where customs, immigration, and security procedures are carried out.
+        Cross Border (Land Transport) refers to the movement of goods and passengers between two or more countries using road-based transportation, typically by trucks, buses, or private vehicles. It involves crossing international boundaries via designated land checkpoints, where Customss, immigration, and security procedures are carried out.
 
 This mode of transport plays a vital role in international trade and regional connectivity, especially in areas with shared land borders. Cross-border land transport facilitates:
 
@@ -48,7 +48,7 @@ Passenger Mobility – providing convenient travel for tourists, workers, and bu
 
 Regional Integration – supporting economic growth, cultural exchange, and cooperation between neighboring countries.
 
-However, cross-border land transport also requires compliance with various regulations such as customs clearance, vehicle permits, driver documentation, and safety standards. Efficient management of these processes is essential to ensure smooth operations, minimize delays, and enhance supply chain efficiency.
+However, cross-border land transport also requires compliance with various regulations such as Customss clearance, vehicle permits, driver documentation, and safety standards. Efficient management of these processes is essential to ensure smooth operations, minimize delays, and enhance supply chain efficiency.
         `,
       image: "/assets/image/cross.png",
     },
@@ -74,9 +74,9 @@ However, cross-border land transport also requires compliance with various regul
       description:
         `<b class="font-[500]">Packing Services</b>
 Proper packing is essential to protect goods during transportation and storage. Professional packing ensures products are secured, labeled, and prepared according to international shipping standards.
-Customized Solutions: Packing tailored to the type, size, and fragility of goods.
+Customsized Solutions: Packing tailored to the type, size, and fragility of goods.
 <b class="font-[500]">Materials Used</b>: Wooden crates, pallets, cartons, bubble wrap, shrink wrap, and protective coverings.
-<b class="font-[500]">Export Compliance</b>: Ensures packaging meets customs and international trade requirements.
+<b class="font-[500]">Export Compliance</b>: Ensures packaging meets Customss and international trade requirements.
 <b class="font-[500]">Benefits</b>: Reduced risk of damage, easier handling, and cost efficiency in shipping.
 <b class="font-[500]">Warehouse Services</b>
 Warehousing provides safe storage and efficient management of goods before distribution or shipping.
@@ -109,7 +109,7 @@ Warehousing provides safe storage and efficient management of goods before distr
     },
   ];
 
-  const [activeTab, setActiveTab] = useState<string>("custom");
+  const [activeTab, setActiveTab] = useState<string>("Customs");
   const [searchParams, setSearchParams] = useSearchParams();
 
   useEffect(() => {

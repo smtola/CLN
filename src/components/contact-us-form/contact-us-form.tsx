@@ -253,7 +253,7 @@ const ContactUsForm: React.FC = () => {
                     required
                   >
                     <option value="">Select Services</option>
-                    <option value="Customs Clearance">Customs Clearance</option>
+                    <option value="Customss Clearance">Customss Clearance</option>
                     <option value="Cross Border (Land Transport)">
                       Cross Border (Land Transport)
                     </option>

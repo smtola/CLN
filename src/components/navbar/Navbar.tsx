@@ -6,17 +6,17 @@ import Logo from "/logo.png";
 
 const Navbar: React.FC = () => {
   const location = useLocation();
-  const [activeTab, setActiveTab] = useState<string>("custom");
+  const [activeTab, setActiveTab] = useState<string>("Customs");
 
   // Listen for query param changes
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const tab = params.get("tab");
-    setActiveTab(tab || "custom");
+    setActiveTab(tab || "Customs");
   }, [location.search]);
 
   const servicesSubmenu = [
-    { name: "Custom Clearance", tab: "custom" },
+    { name: "Customs Clearance", tab: "Customs" },
     { name: "Cross Border (Land Transport)", tab: "land" },
     { name: "Sea Freight", tab: "sea" },
     { name: "Air Freight", tab: "air" },
