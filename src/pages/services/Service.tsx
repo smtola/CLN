@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import SEO, {type SEOProps} from '../../components/SEO';
 import {fetchSEO} from "../../services/seoService.ts";
+import bg_head from "/assets/image/bg_head.jpg";
+import air_freight from "/assets/image/air_freight.jpg";
 
 interface ServiceItem {
   key: string;
@@ -133,14 +135,14 @@ Warehousing provides safe storage and efficient management of goods before distr
       <section className="w-full overflow-hidden">
         <div className="relative h-[20vh] smx:h-[30vh] md:h-[50vh]">
           <img
-            src="/assets/image/bg_head.jpg"
+            src={bg_head}
             alt="Header"
             className="w-full h-full object-cover object-center"
           />
         </div>
         <div className="w-[25vh] h-[25vh] md:w-[40vh] md:h-[30vh] lg:w-[70vh] lg:h-[50vh] bg-white -translate-y-16 translate-x-3 2xl:translate-x-[40%] p-1 overflow-hidden">
           <img
-            src="/assets/image/air_freight.jpg"
+            src={air_freight}
             alt="Air Freight"
             className="w-full h-full object-cover object-center"
           />

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
-// import SEO from "../../components/SEO";
+import SEO, { type SEOProps } from "../../components/SEO";
+import {fetchSEO} from "../../services/seoService.ts";
 
 interface ProductItem {
   key: string;
@@ -18,6 +19,14 @@ interface SubCategory {
 
 const Products: React.FC = () => {
   const categories = ["All", "Export", "Import"];
+  const [seo, setSeo] = useState<SEOProps | null>(null);
+  const searchParam = Object.fromEntries(new URLSearchParams(location.search));
+  useEffect(() => {
+    fetchSEO("services", searchParam)
+        .then((data) =>  setSeo(data))
+        .catch(console.error);
+  }, []);
+
   const subCat: SubCategory[] = [
     { key: "rice", category: "Export", product: "Rice" },
     { key: "rubber", category: "Export", product: "Rubber" },
@@ -339,6 +348,7 @@ const Products: React.FC = () => {
 
   return (
     <>
+      <SEO {...seo} />
       {/* Products Section */}
       <section className="w-full h-fit bg-gradient-to-r from-[#4fb748] to-[#EE3A23]">
         <div className="max-w-7xl mx-auto">

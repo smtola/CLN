@@ -3,6 +3,10 @@ import AOS from "aos";
 import "aos/dist/aos.css";
 import SEO, {type SEOProps} from '../../components/SEO';
 import {fetchSEO} from "../../services/seoService.ts";
+import ceo from "/assets/image/ceo.png";
+import banner_4 from "/assets/image/banner_4.png";
+import poster_1 from "/assets/image/poster_1.png";
+import lcl from "/assets/image/fcl-lcl.png";
 
 const AboutCLN: React.FC = () => {
   const [seo, setSeo] = useState<SEOProps | null>(null);
@@ -28,7 +32,7 @@ const AboutCLN: React.FC = () => {
             className="w-[150px] h-[150px] md:h-full md:w-[40%] lg:w-[28%] mx-auto  bg-black/50 border-[1px] backdrop-blur-[100%] overflow-hidden rounded-full md:rounded-[10px]"
           >
             <img
-              src="/assets/image/ceo.png"
+              src={ceo}
               alt="CEO"
               className="w-[150px] md:w-[260px] mx-auto object-cover object-center"
             />
@@ -142,7 +146,7 @@ const AboutCLN: React.FC = () => {
       <section className="w-full h-fit overflow-hidden">
         <div className="relative flex justify-center items-center w-full h-[25vh] md:h-[40vh] lg:h-[50vh]">
           <img
-            src="/assets/image/banner_4.png"
+            src={banner_4}
             alt="Banner"
             className="absolute inset-0 w-full h-full object-cover object-center"
           />
@@ -176,7 +180,7 @@ const AboutCLN: React.FC = () => {
           className="w-[300px] mx-auto bg-gradient-to-b from-white to-[#4F9748] p-2 rounded-lg"
         >
           <img
-            src="/assets/image/poster_1.png"
+            src={poster_1}
             alt="Sample Shipment"
             className="w-full h-full object-cover object-center"
           />
@@ -214,7 +218,7 @@ const AboutCLN: React.FC = () => {
           className="w-[300px] mx-auto p-2 rounded-lg"
         >
           <img
-            src="/assets/image/fcl-lcl.png"
+            src={lcl}
             alt="Sample Shipment"
             className="w-full h-full object-cover object-center"
           />

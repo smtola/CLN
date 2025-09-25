@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import QuoteModal from "../quote-modal/QuoteModal";
 import UserMenu from "../UserMenu";
-import Logo from "../../../public/logo.png";
+import Logo from "/logo.png";
 
 const Navbar: React.FC = () => {
   const location = useLocation();

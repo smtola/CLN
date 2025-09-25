@@ -1,15 +1,37 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import ContactUsForm from "../../components/contact-us-form/contact-us-form"; 
-// import SEO from "../../components/SEO";
+import SEO, { type SEOProps } from "../../components/SEO";
+import { fetchSEO } from "../../services/seoService";
+import banner from "/assets/image/banner_4.png";
 
 const ContactUs: React.FC = () => {
+  const [seo, setSeo] = useState<SEOProps | null>(null);
+
+  useEffect(() => {
+    fetchSEO("home")
+        .then((data) => setSeo(data))
+        .catch((error) => {
+            console.error("Failed to fetch SEO data:", error);
+            // Fallback SEO data
+            setSeo({
+                title: "CLN | Home",
+                description: "CLN Cambodia provides international and domestic logistics services.",
+                keywords: "CLN Cambodia, logistics, transportation, sea freight, air freight",
+                ogTitle: "CLN Cambodia",
+                ogDescription: "Offering international and domestic logistics services with 20 years of experience.",
+                ogImage: "https://clncambodia.com/og-home.png",
+                url: "https://clncambodia.com"
+            });
+        });
+}, []);
   return (
     <>
+      <SEO {...seo} />
       {/* Banner Section */}
       <section className="w-full h-fit overflow-hidden">
         <div className="relative flex justify-center items-start w-full h-[45vh] md:h-[60vh] lg:h-[50vh]">
           <img
-            src="assets/image/banner_4.png"
+            src={banner}
             alt="logo"
             width={1920}
             height={1080}

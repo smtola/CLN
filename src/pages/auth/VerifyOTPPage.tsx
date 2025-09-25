@@ -4,7 +4,7 @@ import { useState, useRef, type FormEvent, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import { resendOTP, verifyOTP } from "../../authService";
-import Banner from '../../../public/assets/image/banner.png'
+import Banner from '/assets/image/banner.png'
 
 const OTP_LENGTH = 6;
 

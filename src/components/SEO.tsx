@@ -19,24 +19,26 @@ const SEO: React.FC<SEOProps> = ({
                                      ogImage,
                                      url
                                  }) => (
-    <Helmet>
+    <Helmet prioritizeSeoTags>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>{title}</title>
-        {description && <meta name="description" content={description} />}
-        {keywords && <meta name="keywords" content={keywords} />}
+        <meta name="description" content={description} />
+        <meta name="keywords" content={keywords} />
 
         {/* OpenGraph */}
         <meta property="og:type" content="website" />
         <meta property="og:title" content={ogTitle || title} />
-        {ogDescription && <meta property="og:description" content={ogDescription} />}
-        {ogImage && <meta property="og:image" content={ogImage} />}
-        {url && <meta property="og:url" content={url} />}
+        <meta property="og:description" content={ogDescription} />
+        <meta property="og:image" content={ogImage || "/assets/image/logo.png"} />
+        <meta property="og:url" content={url} />
 
         {/* Twitter */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={ogTitle || title} />
-        {ogDescription && <meta name="twitter:description" content={ogDescription} />}
-        {ogImage && <meta name="twitter:image" content={ogImage} />}
-        {url && <meta name="twitter:url" content={url} />}
+        <meta name="twitter:description" content={ogDescription} />
+        <meta name="twitter:image" content={ogImage || "/assets/image/logo.png"} />
+        <meta name="twitter:url" content={url} />
     </Helmet>
 );
 

@@ -3,7 +3,7 @@ import { SitemapStream, streamToPromise } from "sitemap";
 import path from "path";
 
 // ✅ Change this to your deployed site URL
-const SITE_URL = "https://cln-tan.vercel.app";
+const SITE_URL = "https://clncambodia.com";
 
 async function generateSitemap() {
   const sitemap = new SitemapStream({ hostname: SITE_URL });

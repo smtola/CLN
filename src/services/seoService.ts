@@ -13,7 +13,7 @@ export const fetchSEO = async (page:string, query?: Record<string, string>): Pro
             "content-type": "application/json",
         }
     });
-
+    
     if(!res.ok) {
         throw new Error(`No seo found for page ${page}`)
     }

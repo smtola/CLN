@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import Logo from "../../public/logo.png";
+import Logo from "/logo.png";
 
 const Footer: React.FC = () => {
   const [showScrollTop, setShowScrollTop] = useState(false);

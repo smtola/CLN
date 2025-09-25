@@ -3,6 +3,11 @@ import AOS from "aos";
 import "aos/dist/aos.css";
 import SEO, {type SEOProps} from '../../components/SEO';
 import {fetchSEO} from "../../services/seoService.ts";
+import banner from "/assets/image/bg_head.jpg";
+import banner_2 from "/assets/image/banner_2.jpg";
+import carton from "/assets/image/carton.png";
+import truck from "/assets/image/mockup_truck.png";
+import poster_1 from "/assets/image/poster_1.png";
 
 interface Service {
   title: string;
@@ -22,8 +27,7 @@ const services: Service[] = [
 
 const Home: React.FC = () => {
   const [visibleCount, setVisibleCount] = useState(4);
-    const [seo, setSeo] = useState<SEOProps | null>(null);
-
+  const [seo, setSeo] = useState<SEOProps | null>(null);
   const visibleServices = services.slice(0, visibleCount);
   React.useEffect(() => {
     AOS.init({ duration: 1000 });
@@ -35,7 +39,7 @@ const Home: React.FC = () => {
   const loadLess = () => {
     setVisibleCount(prev => Math.max(prev - 4, 4));
   };
-
+  
     useEffect(() => {
         fetchSEO("home")
             .then((data) => setSeo(data))
@@ -48,7 +52,7 @@ const Home: React.FC = () => {
                     keywords: "CLN Cambodia, logistics, transportation, sea freight, air freight",
                     ogTitle: "CLN Cambodia",
                     ogDescription: "Offering international and domestic logistics services with 20 years of experience.",
-                    ogImage: "https://clncambodia.com/og-home.png",
+                    ogImage: "https://clncambodia.com/og-homes.png",
                     url: "https://clncambodia.com"
                 });
             });
@@ -69,7 +73,7 @@ const Home: React.FC = () => {
             style={{ clipPath: 'polygon(60% 100%, 100% 70%, 100% 0%, 0% 0%, 0% 70%)' }}
           >
             <img
-              src="assets/image/bg_head.jpg"
+              src={banner}
               alt="logo"
               width={1920}
               height={1080}
@@ -99,7 +103,7 @@ const Home: React.FC = () => {
           <img
             data-aos="fade-up"
             data-aos-offset="300"
-            src="assets/image/carton.png"
+            src={carton}
             alt="carton"
             width={1920}
             height={1080}
@@ -110,7 +114,7 @@ const Home: React.FC = () => {
           <img
             data-aos="fade-right"
             data-aos-offset="300"
-            src="assets/image/mockup_truck.png"
+            src={truck}
             alt="truck mockup"
             width={1920}
             height={1080}
@@ -148,7 +152,7 @@ const Home: React.FC = () => {
             <div  className="w-[240px] smx:w-[400px] xss:w-[390px] md:w-[240px] lg:w-[300px] px-[1.4rem]">
                 <div className="w-full h-[30vh] xss:h-[40vh] md:h-[20vh] lg:h-[28vh] rounded-tl-[30px] overflow-hidden">
                     <img 
-                        src="assets/image/poster_1.png" 
+                        src={poster_1}
                         alt="logo"
                         className="w-full h-full object-cover object-center"
                     />
@@ -156,7 +160,7 @@ const Home: React.FC = () => {
             </div>
             <div className="absolute right-0 bottom-0 top-[43%]">
                 <img
-                        src="assets/image/banner_2.JPG" 
+                        src={banner_2} 
                         alt="logo"
                         width="1920"
                         height="1080"

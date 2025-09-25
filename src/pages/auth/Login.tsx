@@ -5,7 +5,7 @@ import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import { login } from "../../authService";
 import { getPublicIp } from "../../utils/getIp";
-import Banner from "../../../public/assets/image/banner.png";
+import Banner from "/assets/image/banner.png";
 import { Eye, EyeOff } from "lucide-react"; // 👀 for show/hide toggle
 
 export default function LoginPage() {

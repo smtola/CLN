@@ -2,7 +2,7 @@
 import { useState, useMemo } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import type { SignupPayload } from "../../types/auth";
-import Banner from "../../../public/assets/image/banner.png";
+import Banner from "/assets/image/banner.png";
 import { signup } from "../../authService";
 
 export default function SignupPage() {
