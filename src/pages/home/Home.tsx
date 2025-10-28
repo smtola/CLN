@@ -4,11 +4,11 @@ import "aos/dist/aos.css";
 import SEO, {type SEOProps} from '../../components/SEO';
 import {fetchSEO} from "../../services/seoService.ts";
 import { organizationSchema } from '../../components/schemaExamples';
-import banner from "/assets/image/bg_head.jpg";
-import banner_2 from "/assets/image/banner_2.jpg";
-import carton from "/assets/image/carton.png";
-import truck from "/assets/image/mockup_truck.png";
-import poster_1 from "/assets/image/poster_1.png";
+const banner = "/assets/image/bg_head.jpg";
+const banner_2 = "/assets/image/banner_2.jpg";
+const carton = "/assets/image/carton.png";
+const truck = "/assets/image/mockup_truck.png";
+const poster_1 = "/assets/image/poster_1.png";
 
 interface Service {
   title: string;

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import ContactUsForm from "../../components/contact-us-form/contact-us-form"; 
 import SEO, { type SEOProps } from "../../components/SEO";
 import { fetchSEO } from "../../services/seoService";
-import banner from "/assets/image/banner_4.png";
+const banner = "/assets/image/banner_4.png";
 import { organizationSchema } from "../../components/schemaExamples.ts";
 
 const ContactUs: React.FC = () => {

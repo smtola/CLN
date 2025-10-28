@@ -2,8 +2,8 @@ import React, { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import SEO, {type SEOProps} from '../../components/SEO';
 import {fetchSEO} from "../../services/seoService.ts";
-import bg_head from "/assets/image/bg_head.jpg";
-import air_freight from "/assets/image/air_freight.jpg";
+const bg_head = "/assets/image/bg_head.jpg";
+const air_freight = "/assets/image/air_freight.jpg";
 import { organizationSchema } from "../../components/schemaExamples.ts";
 
 interface ServiceItem {

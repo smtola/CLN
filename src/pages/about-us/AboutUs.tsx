@@ -3,10 +3,10 @@ import AOS from "aos";
 import "aos/dist/aos.css";
 import SEO, {type SEOProps} from '../../components/SEO';
 import {fetchSEO} from "../../services/seoService.ts";
-import ceo from "/assets/image/Owner.jpeg";
-import banner_4 from "/assets/image/banner_4.png";
-import poster_1 from "/assets/image/poster_1.png";
-import lcl from "/assets/image/fcl-lcl.png";
+const ceo = "/assets/image/Owner.jpeg";
+const banner_4 = "/assets/image/banner_4.png";
+const poster_1 = "/assets/image/poster_1.png";
+const lcl = "/assets/image/fcl-lcl.png";
 import { organizationSchema } from "../../components/schemaExamples.ts";
 const AboutCLN: React.FC = () => {
   const [seo, setSeo] = useState<SEOProps | null>(null);
