@@ -17,7 +17,16 @@ export default defineConfig({
       ViteSitemap({
         hostname: "https://clncambodia.com",
         dynamicRoutes: routes.map(r => r.path),
-        generateRobotsTxt: true,
+        robots: [
+          {
+            userAgent: "*",
+            allow: "/",
+          },
+          {
+            userAgent: "Googlebot",
+            disallow: "/private",
+          },
+        ],
       }),
       createHtmlPlugin({
         minify: true,
