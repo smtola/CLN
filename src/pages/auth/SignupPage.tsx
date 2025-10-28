@@ -60,10 +60,10 @@ export default function SignupPage() {
     try {
       const res = await signup(payload);
       // Check if it's an error response
-
-      if (res) {
+      if (res.httpStatus == 201) {
         navigate("/auth/verify-email", { state: { email } });
       }
+      setError(res.msg!);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Unknown error");
     } finally {
@@ -72,7 +72,7 @@ export default function SignupPage() {
   };
 
   return (
-    <section className="overflow-hidden flex flex-col md:flex-row w-full mx-auto max-w-[400px] md:max-w-screen-2xl shadow-[rgba(9,_30,_66,_0.25)_0px_4px_8px_-2px,_rgba(9,_30,_66,_0.08)_0px_0px_0px_1px] mt-[2rem] rounded-[20px]">
+    <section className="flex flex-col md:flex-row w-full mx-auto max-w-[400px] md:max-w-screen-2xl shadow-[rgba(9,_30,_66,_0.25)_0px_4px_8px_-2px,_rgba(9,_30,_66,_0.08)_0px_0px_0px_1px] mt-[2rem] rounded-[20px] overflow-hidden">
       <div className="w-full md:w-[50%]">
         <img
           alt=""
@@ -85,6 +85,7 @@ export default function SignupPage() {
           <h1 className="text-2xl font-semibold text-center text-gray-800 mb-6">
             Create an Account
           </h1>
+          {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
 
           <form className="space-y-4">
             {/* Username */}
@@ -184,8 +185,6 @@ export default function SignupPage() {
                 </p>
               )}
             </div>
-
-            {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
 
             {/* Signup Button */}
             <button

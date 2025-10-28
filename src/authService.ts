@@ -1,22 +1,23 @@
 import api from "./apiClient";
 import { setAuth, clearAuth } from "./authStorage";
 import type { LoginPayload, LoginResponse, LogoutPayload, LogoutResponse, SignupPayload, SignupResponse, VerifyEmailPayload, VerifyEmailResponse, VerifyOTPPayload, VerifyResponse } from "./types/auth";
+import { AxiosError } from "axios";
 
 export async function signup(payload: SignupPayload) {
-  try{
-    const { data } = await api.post<SignupResponse>("/signup", payload);
-    
-    return data;
-  }catch (err: unknown){
-    // If API sends { msg: "Invalid credentials" }
-    if (err && typeof err === 'object' && 'response' in err && 
-        err.response && typeof err.response === 'object' && 'data' in err.response &&
-        err.response.data && typeof err.response.data === 'object' && 'msg' in err.response.data) {
-        return err.response.data as SignupResponse;
+  try {
+    const res = await api.post<SignupResponse>("/signup", payload);
+    return { ...res.data, httpStatus: res.status }; // success
+  } catch (error: unknown) {
+    const err = error as AxiosError<{ msg?: string; status?: boolean }>;
+
+    if (err.response?.data) {
+      return {
+        ...err.response.data,
+        httpStatus: err.response.status,
+      };
     }
 
-    // fallback message
-    return { msg: "Something went wrong, please try again" };
+    return { msg: "Something went wrong, please try again", httpStatus: 500 };
   }
 }
 

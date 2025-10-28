@@ -40,6 +40,8 @@ export default function LoginPage() {
     setLoading(true);
     try {
       const res = await login({ username, password, local_ip: ip });
+
+      console.log(res)
       if (res.requiresOtp) {
         navigate("/auth/verify-otp", { state: { username } });
         Swal.fire({
@@ -55,7 +57,15 @@ export default function LoginPage() {
           timer: 1500,
           showConfirmButton: false,
         });
-        navigate("/");
+        localStorage.setItem("token", res.access_token);
+        // localStorage.setItem("role", res.role); // "admin" or "user"
+
+        // redirect
+        if (res.access_token === "admin") {
+          navigate("/admin");
+        } else {
+          navigate("/");
+        }
       }
       setError(res.msg!)
     } catch (err: unknown) {
@@ -70,7 +80,7 @@ export default function LoginPage() {
   };
 
   return (
-    <section className="overflow-hidden flex flex-col md:flex-row w-full max-w-[400px] md:max-w-screen-2xl shadow-[rgba(9,_30,_66,_0.25)_0px_4px_8px_-2px,_rgba(9,_30,_66,_0.08)_0px_0px_0px_1px] mx-auto mt-[2rem] rounded-[20px]">
+    <section className="overflow-hidden flex flex-col md:flex-row w-full max-w-[400px] md:max-w-screen-md xl:max-w-screen-xl shadow-[rgba(9,_30,_66,_0.25)_0px_4px_8px_-2px,_rgba(9,_30,_66,_0.08)_0px_0px_0px_1px] mx-auto mt-[2rem] rounded-[20px]">
       <div className="w-full md:w-[50%]">
         <img
           alt="Banner"
@@ -78,7 +88,7 @@ export default function LoginPage() {
           className="h-56 w-full object-cover sm:h-full"
         />
       </div>
-      <div className="w-full md:w-[50%]  md:p-12 lg:px-16 lg:py-24">
+      <div className="w-full md:w-[50%] md:p-12 lg:px-16 lg:py-24">
         <div className="w-full max-w-md mx-auto bg-white p-8 rounded-2xl">
           <h1 className="text-2xl font-bold text-center mb-6">Login</h1>
 

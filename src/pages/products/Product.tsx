@@ -2,7 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import SEO, { type SEOProps } from "../../components/SEO";
 import {fetchSEO} from "../../services/seoService.ts";
-
+import { organizationSchema } from "../../components/schemaExamples.ts";
+  
 interface ProductItem {
   key: string;
   category: string;
@@ -20,12 +21,27 @@ interface SubCategory {
 const Products: React.FC = () => {
   const categories = ["All", "Export", "Import"];
   const [seo, setSeo] = useState<SEOProps | null>(null);
-  const searchParam = Object.fromEntries(new URLSearchParams(location.search));
+  
+  const [searchParams, setSearchParams] = useSearchParams();
+  
   useEffect(() => {
-    fetchSEO("services", searchParam)
+    const searchParam = Object.fromEntries(searchParams);
+    fetchSEO("products", searchParam)
         .then((data) =>  setSeo(data))
-        .catch(console.error);
-  }, []);
+        .catch((error) => {
+            console.error("Failed to fetch SEO data:", error);
+            // Fallback SEO data
+            setSeo({
+                title: "CLN | Products",
+                description: "Browse CLN Cambodia products and services.",
+                keywords: "CLN Cambodia, products, logistics, transportation",
+                ogTitle: "CLN Cambodia - Products",
+                ogDescription: "Browse CLN Cambodia products and services.",
+                ogImage: "https://clncambodia.com/og-products.png",
+                canonical: "https://clncambodia.com/products"
+            });
+        });
+  }, [searchParams]);
 
   const subCat: SubCategory[] = [
     { key: "rice", category: "Export", product: "Rice" },
@@ -278,8 +294,6 @@ const Products: React.FC = () => {
   const [visibleProduct, setVisibleProduct] = useState(2);
   const [visibleImage, setVisibleImage] = useState(4);
 
-  const [searchParams, setSearchParams] = useSearchParams();
-
   useEffect(() => {
     const cat = searchParams.get("category");
     const prod = searchParams.get("product");
@@ -348,7 +362,7 @@ const Products: React.FC = () => {
 
   return (
     <>
-      <SEO {...seo} />
+      <SEO {...seo} schemaMarkup={organizationSchema} />
       {/* Products Section */}
       <section className="w-full h-fit bg-gradient-to-r from-[#4fb748] to-[#EE3A23]">
         <div className="max-w-7xl mx-auto">

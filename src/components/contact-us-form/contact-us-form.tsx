@@ -149,6 +149,7 @@ const ContactUsForm: React.FC = () => {
                     onChange={handleChange}
                     className="w-full border rounded p-2"
                     required
+                    disabled
                   />
                 </div>
 
@@ -161,6 +162,7 @@ const ContactUsForm: React.FC = () => {
                     onChange={handleChange}
                     className="w-full border rounded p-2"
                     required
+                    disabled
                   />
                 </div>
               </div>
@@ -175,6 +177,7 @@ const ContactUsForm: React.FC = () => {
                     onChange={handleChange}
                     className="w-full border rounded p-2"
                     required
+                    disabled
                   />
                 </div>
 
@@ -187,6 +190,7 @@ const ContactUsForm: React.FC = () => {
                     onChange={handleChange}
                     className="w-full border rounded p-2"
                     required
+                    disabled
                   />
                 </div>
               </div>
@@ -201,6 +205,7 @@ const ContactUsForm: React.FC = () => {
                     onChange={handleChange}
                     className="w-full border rounded p-2"
                     required
+                    disabled
                   />
                 </div>
 
@@ -213,6 +218,7 @@ const ContactUsForm: React.FC = () => {
                     onChange={handleChange}
                     className="w-full border rounded p-2"
                     required
+                    disabled
                   />
                 </div>
               </div>
@@ -227,6 +233,7 @@ const ContactUsForm: React.FC = () => {
                   onChange={handleChange}
                   className="w-full border rounded p-2"
                   required
+                  disabled
                 />
               </div>
 
@@ -239,6 +246,7 @@ const ContactUsForm: React.FC = () => {
                   onChange={handleChange}
                   className="w-full border rounded p-2"
                   required
+                  disabled
                 />
               </div>
               </div>
@@ -251,6 +259,7 @@ const ContactUsForm: React.FC = () => {
                     onChange={handleChange}
                     className="w-full border rounded p-2"
                     required
+                    disabled
                   >
                     <option value="">Select Services</option>
                     <option value="Customss Clearance">Customss Clearance</option>
@@ -271,6 +280,7 @@ const ContactUsForm: React.FC = () => {
                     onChange={handleChange}
                     className="w-full border rounded p-2"
                     required
+                    disabled
                   >
                     <option value="">Select Size</option>
                         <option  value="20GP">
@@ -289,6 +299,7 @@ const ContactUsForm: React.FC = () => {
                       className="w-full border rounded p-2"
                       placeholder="Weight"
                       required
+                      disabled
                     />
                   }
                 </div>
@@ -302,11 +313,13 @@ const ContactUsForm: React.FC = () => {
                     onChange={handleChange}
                     className="w-full border rounded p-2"
                     rows={3}
+                    disabled
                   />
                 </div>
 
               <button
                 type="submit"
+                disabled
                 className="w-full bg-[#EE3A23] text-white py-2 rounded hover:bg-red-600"
               >
                 Submit

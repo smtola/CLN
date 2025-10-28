@@ -20,23 +20,23 @@ const Footer: React.FC = () => {
   return (
     <>
       <footer className="relative w-full h-full overflow-hidden">
-        <a
-          href="/"
-          className="absolute inset-0 translate-y-[40%] xl:translate-y-[8%] translate-x-2 w-fit h-fit bg-white p-2 z-[2]"
-        >
-          <img
-            src={Logo}
-            alt="logo"
-            width={1920}
-            height={1080}
-            className="w-[100px] h-[60px] xl:w-[200px] xl:h-[120px] ms-2"
-          />
-        </a>
 
         <div className="relative w-full h-auto bg-[#4fb748] mt-[5rem]">
           <ul className="flex flex-col md:flex-row xl:max-w-screen-xl mx-auto px-5 py-[3rem] text-white space-y-2 md:space-y-0">
             {/* Services */}
             <li className="w-full md:w-[30%] space-y-2">
+              <a
+                    href="/"
+                    className="w-full h-full bg-white z-[2]"
+                  >
+                    <img
+                      src={Logo}
+                      alt="logo"
+                      width={1920}
+                      height={1080}
+                      className="w-[100px] h-[60px] xl:w-[200px] xl:h-[120px] bg-white"
+                    />
+                </a>
               <h1 className="text-[16px] md:text-[22px] font-[500]">Our Services</h1>
               <ul className="text-[14px] md:text-[18px] font-[300] space-y-[0.5rem]">
                 {[
@@ -102,7 +102,7 @@ const Footer: React.FC = () => {
                     </svg>
                   </span>
                   <span>
-                    No.27, Street 322, S/K Boeung Keng Kang I, Khan Chamkamon,
+                    No.27, Street 322, S/K Boeung Keng Kang I, Khan Chamkamon,<br/>
                     Phnom Penh – Cambodia.
                   </span>
                 </li>
@@ -128,7 +128,7 @@ const Footer: React.FC = () => {
                   <span>
                     +(855) 77 551 651
                     <br />
-                    +(855) 81 551 651
+                    +(855) 61 300 618
                   </span>
                 </li>
 
@@ -161,6 +161,8 @@ const Footer: React.FC = () => {
                     m.sovann@clncambodia.com
                     <br />
                     sales@clncambodia.com
+                    <br />
+                    info@clncambodia.com
                   </span>
                 </li>
 

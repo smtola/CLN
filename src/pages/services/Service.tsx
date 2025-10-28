@@ -4,6 +4,7 @@ import SEO, {type SEOProps} from '../../components/SEO';
 import {fetchSEO} from "../../services/seoService.ts";
 import bg_head from "/assets/image/bg_head.jpg";
 import air_freight from "/assets/image/air_freight.jpg";
+import { organizationSchema } from "../../components/schemaExamples.ts";
 
 interface ServiceItem {
   key: string;
@@ -30,25 +31,18 @@ const Service: React.FC = () => {
       key: "Customs",
       title: "Customs Clearance",
       description:
-        "We offer certified Customss brokerage services throughout nationwide Customss points. Our specialist who certified by Thai Customss department will assist importers and exporters the entry procedures, admissibility requirements, classification, valuation, and the rates of duty and applicable taxes and fees.",
+        "We make customs clearance simple and stress-free! Our certified customs specialists are here to guide importers and exporters through every step handling paperwork, checking requirements, classifying goods, and making sure duties, taxes, and fees are correct. No confusion, no hassle just smooth, worry free clearance.",
       image: "/assets/image/custom clearance.jpg",
     },
     {
       key: "land",
       title: "Cross Border (Land Transport)",
       description:
-        `
-        Cross Border (Land Transport) refers to the movement of goods and passengers between two or more countries using road-based transportation, typically by trucks, buses, or private vehicles. It involves crossing international boundaries via designated land checkpoints, where Customss, immigration, and security procedures are carried out.
+        `At CLN Cambodia Logistics, we see cross border land transport as more than just moving goods it’s about building connections between countries, businesses, and people.
 
-This mode of transport plays a vital role in international trade and regional connectivity, especially in areas with shared land borders. Cross-border land transport facilitates:
+With our reliable road transport network, we make international trade easier, faster, and more convenient across regional borders.
 
-Trade & Logistics – enabling efficient import and export of goods, including bulk cargo, perishable products, and consumer goods.
-
-Passenger Mobility – providing convenient travel for tourists, workers, and business travelers.
-
-Regional Integration – supporting economic growth, cultural exchange, and cooperation between neighboring countries.
-
-However, cross-border land transport also requires compliance with various regulations such as Customss clearance, vehicle permits, driver documentation, and safety standards. Efficient management of these processes is essential to ensure smooth operations, minimize delays, and enhance supply chain efficiency.
+Our experienced team ensures your cargo move safely and efficiently across borders helping your business grow with confidence.
         `,
       image: "/assets/image/cross.png",
     },
@@ -121,16 +115,29 @@ Warehousing provides safe storage and efficient management of goods before distr
     setActiveTab(tabKey);
     setSearchParams({ tab: tabKey }, { replace: true });
   };
-  const searchParam = Object.fromEntries(new URLSearchParams(location.search));
+  
   useEffect(() => {
+    const searchParam = Object.fromEntries(searchParams);
     fetchSEO("services", searchParam)
         .then((data) =>  setSeo(data))
-        .catch(console.error);
-  }, []);
+        .catch((error) => {
+            console.error("Failed to fetch SEO data:", error);
+            // Fallback SEO data
+            setSeo({
+                title: "CLN | Services",
+                description: "CLN Cambodia offers comprehensive logistics services.",
+                keywords: "CLN Cambodia, services, logistics, freight, transportation",
+                ogTitle: "CLN Cambodia - Services",
+                ogDescription: "CLN Cambodia offers comprehensive logistics services.",
+                ogImage: "https://clncambodia.com/og-services.png",
+                canonical: "https://clncambodia.com/services"
+            });
+        });
+  }, [searchParams]);
 
   return (
     <>
-      <SEO {...seo} />
+      <SEO {...seo} schemaMarkup={organizationSchema} />
       {/* HEADER SECTION */}
       <section className="w-full overflow-hidden">
         <div className="relative h-[20vh] smx:h-[30vh] md:h-[50vh]">

@@ -3,6 +3,7 @@ import AOS from "aos";
 import "aos/dist/aos.css";
 import SEO, {type SEOProps} from '../../components/SEO';
 import {fetchSEO} from "../../services/seoService.ts";
+import { organizationSchema } from '../../components/schemaExamples';
 import banner from "/assets/image/bg_head.jpg";
 import banner_2 from "/assets/image/banner_2.jpg";
 import carton from "/assets/image/carton.png";
@@ -15,8 +16,9 @@ interface Service {
 }
 
 const services: Service[] = [
-  { title: 'Customs Clearance (Import / Export)', image: 'assets/image/custom clearance.jpg' },
-  { title: 'Cross border (land transport)', image: 'assets/image/cross.png' },
+  { title: 'MoC/MAFF/MCFA', image: 'assets/image/moc-maff-mcfa.jpg' },
+  { title: 'Customs Clearance (Import / Export & Express Courier)', image: 'assets/image/custom clearance.jpg' },
+  { title: 'Cross border', image: 'assets/image/cross_2.png' },
   { title: 'Sea Freight', image: 'assets/image/ship.png' },
   { title: 'Air Freight', image: 'assets/image/airplan.png' },
   { title: 'Packing & Warehouse', image: 'assets/image/warehouse.jpg' },
@@ -53,14 +55,14 @@ const Home: React.FC = () => {
                     ogTitle: "CLN Cambodia",
                     ogDescription: "Offering international and domestic logistics services with 20 years of experience.",
                     ogImage: "https://clncambodia.com/og-homes.png",
-                    url: "https://clncambodia.com"
+                    canonical: "https://clncambodia.com"
                 });
             });
     }, []);
 
   return (
     <>
-      <SEO {...seo} />
+      <SEO {...seo} schemaMarkup={organizationSchema} />
       <section className="relative">
         <div className="md:hidden w-full h-[3px] bg-gradient-to-l from-[#ffffff] to-[#4F9748]" />
 
@@ -123,7 +125,7 @@ const Home: React.FC = () => {
         </div>
       </section>
 
-      <div className="w-full mt-[5rem] md:mt-[10rem] lg:mt-[12rem] overflow-hidden">
+      <div className="w-full mt-[5rem] md:mt-[10rem] lg:mt-[15rem] xl:mt-[12rem] overflow-hidden">
         <h1 className="text-[24px] md:text-[28px] font-medium text-center text-[#EE3A23]">Transportation</h1>
         <div className="animate-marquee whitespace-nowrap overflow-hidden">
           {['truck_1.png', 'ship_1.png', 'airplan_1.png'].map((img, idx) => (
@@ -186,21 +188,11 @@ const Home: React.FC = () => {
         data-aos-easing="ease-in-sine" className="w-full md:w-[60%] md:order-first">
             <p className="text-[14px] md:text-[18px] font-[300] text-justify hyphens-auto text-[#000]">
                 <span className="font-semibold">CLN Cambodia logistics</span>
-                &nbsp;is the registration company, established its own office in Cambodia in 2015.
-                Currently, we have our own office in Phnom Penh and joined with many shipping companies in both
-                local and oversea.
-            
-                With our quality staff with more than 20 years experiences of handling logistics and advanced
-                information technology, we are dedicated to offering the best international and domestic
-                logistics services and networks that enable our Customsers to make “All the Possible
-                Movesˮ in their supply chains. We also comply with Cambodia labor law and
-                commit to provide the best services to our Customsers as their expectation.
+                &nbsp; is a registered company that established its own office in Cambodia in 2015. Currently, we have an office in Phnom Penh and collaborate with many shipping companies both locally and overseas. Our company is now 30 years of experience in handling import and export logistics, along with advanced information technology, we are dedicated to offering the best international and domestic logistics services and networks that enable our customers to make “All the Possible Moves” in their supply chains. We also comply with Cambodia’s labor laws and are committed to providing the best services to meet our customers’ expectations.
             </p>     
         </div>
     </div>
       </section>
-
-
 
       {/* ... Continue refactoring banners and service sections similarly ... */}
 

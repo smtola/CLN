@@ -3,8 +3,11 @@ export interface SeoMeta {
     title: string;
     description: string;
     keywords?: string;
+    canonical?: string;
     ogTitle?: string;
     ogDescription?: string;
     ogImage?: string;
+    ogType?: string;
     url?: string;
+    image?: string;
 }

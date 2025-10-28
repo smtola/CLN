@@ -3,11 +3,11 @@ import AOS from "aos";
 import "aos/dist/aos.css";
 import SEO, {type SEOProps} from '../../components/SEO';
 import {fetchSEO} from "../../services/seoService.ts";
-import ceo from "/assets/image/ceo.png";
+import ceo from "/assets/image/Owner.jpeg";
 import banner_4 from "/assets/image/banner_4.png";
 import poster_1 from "/assets/image/poster_1.png";
 import lcl from "/assets/image/fcl-lcl.png";
-
+import { organizationSchema } from "../../components/schemaExamples.ts";
 const AboutCLN: React.FC = () => {
   const [seo, setSeo] = useState<SEOProps | null>(null);
   React.useEffect(() => {AOS.init({ duration: 1000 });
@@ -16,12 +16,24 @@ const AboutCLN: React.FC = () => {
   useEffect(() => {
         fetchSEO("about-us")
             .then((data) =>  setSeo(data))
-            .catch(console.error);
+            .catch((error) => {
+                console.error("Failed to fetch SEO data:", error);
+                // Fallback SEO data
+                setSeo({
+                    title: "CLN | About Us",
+                    description: "Learn about CLN Cambodia and our logistics expertise.",
+                    keywords: "CLN Cambodia, about, logistics, transportation, company",
+                    ogTitle: "CLN Cambodia - About Us",
+                    ogDescription: "Learn about CLN Cambodia and our logistics expertise.",
+                    ogImage: "https://clncambodia.com/og-about.png",
+                    canonical: "https://clncambodia.com/about-us"
+                });
+            });
     }, []);
 
   return (
     <>
-      <SEO {...seo} />
+      <SEO {...seo} schemaMarkup={organizationSchema} />
       {/* ABOUT CLN SECTION */}
       <section className="w-full h-fit bg-gradient-to-t md:bg-gradient-to-r from-[#EE3A23] to-[#4fb748] overflow-hidden">
         <div className="flex flex-col md:flex-row md:gap-5 p-4 xl:max-w-screen-xl mx-auto">
@@ -34,7 +46,7 @@ const AboutCLN: React.FC = () => {
             <img
               src={ceo}
               alt="CEO"
-              className="w-[150px] md:w-[260px] mx-auto object-cover object-center"
+              className="w-fit mx-auto object-fit object-center translate-y-[-15%] sm:translate-y-0"
             />
           </div>
           <div
@@ -46,11 +58,9 @@ const AboutCLN: React.FC = () => {
             <h1 className="text-[24px] font-medium text-center md:text-start text-white">
               ABOUT CLN
             </h1>
-            <p className="text-[16px] font-light text-justify text-white hyphens-auto mt-2">
-              <span className="font-semibold">CLN Cambodia logistics </span>&nbsp;is the registration company, established its own office in Cambodia in 2015. Currently, we have our own office in Phnom Penh and joined with many shipping companies in both local and overseas.
-              <br />
-              <br />
-              With our quality staff with more than 20 years experiences of handling logistics and advanced information technology, we are dedicated to offering the best international and domestic logistics services and networks that enable our Customsers to make “All the Possible Movesˮ in their supply chains. We also comply with Cambodia labor law and commit to provide the best services to our Customsers as their expectation.
+            <p className="text-[18px] font-light text-justify text-white hyphens-auto mt-2">
+              <span className="font-semibold">CLN Cambodia logistics </span>&nbsp; is a registered company that established its own office in Cambodia since 2015. Currently, we have an office in Phnom Penh and collaborate with many shipping companies both locally and overseas. Our company is now 30 years of experience in handling import and export logistics, along with advanced information technology, we are dedicated to offering the best international and domestic logistics services and networks that enable our customers to make “All the Possible Moves” in their supply chains. We also comply with Cambodia’s labor laws and are committed to providing the best services to meet our customers’ expectations.
+              
             </p>
           </div>
         </div>
@@ -102,10 +112,10 @@ const AboutCLN: React.FC = () => {
               <h2 className="text-[18px] md:text-[24px] font-bold text-black">OUR VISION</h2>
             </div>
             <p className="text-[14px] md:text-[22px] font-light text-justify text-black hyphens-auto">
-              CLN Logistics aim to provide the logistics process, striving to integrate all aspects of physical cargo movement, vendor and document management, information flow and visibility for Customsers.
+            At CLN Logistics, we’re here to make logistics simple, smooth, and stress-free for our customers. We take care of every part of the supply chain from moving cargo and coordinating partners to handling documents and sharing information so you always know what’s happening with your shipments.
               <br />
               <br />
-              This process-focused methodology begins by choosing transportation modes, ports and carriers that will optimize all aspects of your supply chain – seeking solutions that reduce operating costs and transit times.
+              By choosing the best routes, transportation methods, and partners, we help your business save time, reduce costs, and keep goods moving smoothly. With CLN Logistics, your supply chain isn’t just managed it works smarter, so you can focus on what matters most.
             </p>
           </div>
 
@@ -191,7 +201,7 @@ const AboutCLN: React.FC = () => {
           data-aos-easing="ease-in-sine"
           className="w-full md:w-[70%] px-3 flex flex-col justify-start"
         >
-          <h2 className="text-[18px] md:text-[24px] font-bold text-black">Sample of P.Shipment</h2>
+          <h2 className="text-[18px] md:text-[24px] font-bold text-black">Your Trusted Logistics in Agriculture Industry</h2>
           <p className="text-[14px] md:text-[22px] font-light text-justify text-black hyphens-auto mt-2">
             CLN Logistics has a full capability in handling shipment for Customsers from A to Z with full correspondence of backup, feedback, and responsibility. We have successfully handled Customsersʼ shipments with different commodities and delivery times, as illustrated in the attached images.
           </p>
@@ -206,17 +216,7 @@ const AboutCLN: React.FC = () => {
           data-aos-easing="ease-in-sine"
           className="w-full md:w-[70%] px-3 flex flex-col justify-start"
         >
-          <h2 className="text-[18px] md:text-[24px] font-bold text-black">FCL - LCL SHIPPING</h2>
-          <p className="text-[14px] md:text-[22px] font-light text-justify text-black hyphens-auto mt-2">
-            CLN Logistics has a full capability in handling shipment for Customsers from A to Z with full correspondence of backup, feedback, and responsibility. We have successfully handled Customsersʼ shipments with different commodities and delivery times, as illustrated in the attached images.
-          </p>
-        </div>
-        <div
-          data-aos="fade-left"
-          data-aos-offset="300"
-          data-aos-easing="ease-in-sine"
-          className="w-[300px] mx-auto p-2 rounded-lg"
-        >
+          <h2 className="text-[18px] md:text-[24px] font-bold text-black">FCL/FCL</h2>
           <img
             src={lcl}
             alt="Sample Shipment"

@@ -3,30 +3,31 @@ import ContactUsForm from "../../components/contact-us-form/contact-us-form";
 import SEO, { type SEOProps } from "../../components/SEO";
 import { fetchSEO } from "../../services/seoService";
 import banner from "/assets/image/banner_4.png";
+import { organizationSchema } from "../../components/schemaExamples.ts";
 
 const ContactUs: React.FC = () => {
   const [seo, setSeo] = useState<SEOProps | null>(null);
 
   useEffect(() => {
-    fetchSEO("home")
+    fetchSEO("contact-us")
         .then((data) => setSeo(data))
         .catch((error) => {
             console.error("Failed to fetch SEO data:", error);
             // Fallback SEO data
             setSeo({
-                title: "CLN | Home",
-                description: "CLN Cambodia provides international and domestic logistics services.",
-                keywords: "CLN Cambodia, logistics, transportation, sea freight, air freight",
-                ogTitle: "CLN Cambodia",
-                ogDescription: "Offering international and domestic logistics services with 20 years of experience.",
-                ogImage: "https://clncambodia.com/og-home.png",
-                url: "https://clncambodia.com"
+                title: "CLN | Contact Us",
+                description: "Contact CLN Cambodia for international and domestic logistics services.",
+                keywords: "CLN Cambodia, contact, logistics, transportation, sea freight, air freight",
+                ogTitle: "CLN Cambodia - Contact Us",
+                ogDescription: "Contact CLN Cambodia for international and domestic logistics services.",
+                ogImage: "https://clncambodia.com/og-contact.png",
+                canonical: "https://clncambodia.com/contact-us"
             });
         });
 }, []);
   return (
     <>
-      <SEO {...seo} />
+      <SEO {...seo} schemaMarkup={organizationSchema} />
       {/* Banner Section */}
       <section className="w-full h-fit overflow-hidden">
         <div className="relative flex justify-center items-start w-full h-[45vh] md:h-[60vh] lg:h-[50vh]">

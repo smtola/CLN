@@ -5,21 +5,25 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build && tsx scripts/generate-sitemap.ts",
     "lint": "eslint .",
+    "build": "vite build",
     "preview": "vite preview",
-    "sitemap": "tsx scripts/generate-sitemap.ts"
+    "analyze": "npx vite-bundle-visualizer"
   },
   "dependencies": {
     "aos": "^2.3.4",
     "axios": "^1.11.0",
+    "http-proxy-middleware": "^3.0.5",
     "js-cookie": "^3.0.5",
     "lucide-react": "^0.542.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-helmet-async": "^2.0.5",
     "react-router-dom": "^7.8.2",
-    "sweetalert2": "^11.22.5"
+    "sweetalert2": "^11.22.5",
+    "vite-plugin-html": "^3.2.2",
+    "vite-plugin-pages": "^0.33.1",
+    "vite-plugin-sitemap": "^0.8.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.33.0",
@@ -40,7 +44,6 @@
     "tsx": "^4.20.5",
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.39.1",
-    "vite": "^7.1.2",
-    "vite-plugin-prerender": "^1.0.8"
+    "vite": "^7.1.2"
   }
 }

@@ -49,6 +49,7 @@ export default function UserMenu() {
     <div className="relative inline-block text-left user-menu-dropdown">
       {/* Button */}
       <button
+        disabled
         onClick={() => setOpen(!open)}
         className="flex flex-col items-center focus:outline-none lg:text-white"
       >

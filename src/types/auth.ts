@@ -17,7 +17,7 @@ export interface SignupResponse {
   access_token?:string;
   refresh_token?:string;
   msg?:string;
-  status?:boolean;
+  httpStatus?:number;
 }
 
 export interface LoginResponse{

@@ -10,6 +10,8 @@ import SignupPage from "./pages/auth/SignupPage"
 import VerifyEmail from "./pages/auth/VerifyEmail";
 import LoginPage from "./pages/auth/Login"
 import VerifyOTPPage from "./pages/auth/VerifyOTPPage"
+import ProtectedRoute from "./auth/ProtectedRoute"
+import AdminPenal from "./admin/AdminPenal"
 
 function App() {
   return (
@@ -25,6 +27,16 @@ function App() {
         <Route path="/auth/login" element={<LoginPage/>}/>
         <Route path="/auth/verify-email" element={<VerifyEmail />} />
         <Route path="/auth/verify-otp" element={<VerifyOTPPage />} />
+
+        {/* Admin Panel (Protected) */}
+        <Route
+          path="/admin/*"
+          element={
+            <ProtectedRoute role="admin">
+              <AdminPenal />
+            </ProtectedRoute>
+          }
+        />
      </Routes>
      <Footer/>
     </>

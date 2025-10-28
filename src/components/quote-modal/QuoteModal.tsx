@@ -134,9 +134,10 @@ const QuoteModal: React.FC = () => {
   };
 
   return (
-    <div>
+    <div className="overflow-x-hidden overflow-y-auto">
       {/* Button */}
       <button
+        disabled
         onClick={() => setIsOpen(true)}
         className="w-full text-[14px] md:text-[18px] px-4 py-1 bg-red-50 border border-[#EE3A23] text-[#EE3A23] rounded-[4px] hover:bg-red-100"
       >
