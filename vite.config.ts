@@ -24,7 +24,7 @@ export default defineConfig({
         inject: {
           data: {
             title: 'CLN (CAMBODIA) CO., LTD.',
-            description: 'CLN Cambodia logistics  is a registered company that established its own office in Cambodia in 2015. Currently, we have an office in Phnom Penh and collaborate with many shipping companies both locally and overseas.Our company is now 30 years of experience in handling import and export logistics, along with advanced information technology, we are dedicated to offering the best international and domestic logistics services and networks that enable our customers to make “All the Possible Moves” in their supply chains. We also comply with Cambodia’s labor laws and are committed to providing the best services to meet our customers’ expectations.',
+            description: 'CLN Cambodia logistics is a registered company that established its own office in Cambodia in 2015. Currently, we have an office in Phnom Penh and collaborate with many shipping companies both locally and overseas. Our company has 30 years of experience in handling import and export logistics, along with advanced information technology, we are dedicated to offering the best international and domestic logistics services and networks that enable our customers to make All the Possible Moves in their supply chains. We also comply with Cambodias labor laws and are committed to providing the best services to meet our customers expectations.',
           },
         },
       }),
@@ -38,4 +38,5 @@ export default defineConfig({
       },
     },
   },
+  base: '/',
 });

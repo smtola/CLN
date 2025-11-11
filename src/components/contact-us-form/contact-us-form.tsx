@@ -73,10 +73,11 @@ const ContactUsForm: React.FC = () => {
       form.origin_destination &&
       form.product_name &&
       form.weight_dimensions &&
+      form.service &&
       form.container_size
     ) {
       try {
-        const response = await fetch("https://cln-rest-api.onrender.com/api/v1/docs/web/contact-us", {
+        const response = await fetch("https://clnrestapi.vercel.app/api/v1/docs/web/contact-us", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -107,11 +108,28 @@ const ContactUsForm: React.FC = () => {
             container_size: "",
           });
         } else {
-          const errorData = await response.json();
+          let errorMessage = "Something went wrong while sending request.";
+          try {
+            const errorData = await response.json();
+            if (response.status === 422) {
+              // Handle validation errors
+              if (errorData.errors && Array.isArray(errorData.errors)) {
+                errorMessage = errorData.errors.map((err: { msg?: string; message?: string }) => err.msg || err.message || "").filter(Boolean).join(", ");
+              } else if (errorData.message) {
+                errorMessage = errorData.message;
+              } else if (typeof errorData === "object") {
+                errorMessage = Object.values(errorData).flat().join(", ");
+              }
+            } else if (errorData.message) {
+              errorMessage = errorData.message;
+            }
+          } catch {
+            // If parsing fails, use default message
+          }
           Swal.fire({
             icon: "error",
-            title: "Submission Failed",
-            text: errorData?.message || "Something went wrong while sending request.",
+            title: response.status === 422 ? "Validation Error" : "Submission Failed",
+            text: errorMessage,
             confirmButtonColor: "#d33",
           });
         }
@@ -149,7 +167,7 @@ const ContactUsForm: React.FC = () => {
                     onChange={handleChange}
                     className="w-full border rounded p-2"
                     required
-                    disabled
+                    
                   />
                 </div>
 
@@ -162,7 +180,7 @@ const ContactUsForm: React.FC = () => {
                     onChange={handleChange}
                     className="w-full border rounded p-2"
                     required
-                    disabled
+                    
                   />
                 </div>
               </div>
@@ -177,7 +195,7 @@ const ContactUsForm: React.FC = () => {
                     onChange={handleChange}
                     className="w-full border rounded p-2"
                     required
-                    disabled
+                    
                   />
                 </div>
 
@@ -190,7 +208,7 @@ const ContactUsForm: React.FC = () => {
                     onChange={handleChange}
                     className="w-full border rounded p-2"
                     required
-                    disabled
+                    
                   />
                 </div>
               </div>
@@ -205,7 +223,7 @@ const ContactUsForm: React.FC = () => {
                     onChange={handleChange}
                     className="w-full border rounded p-2"
                     required
-                    disabled
+                    
                   />
                 </div>
 
@@ -218,7 +236,7 @@ const ContactUsForm: React.FC = () => {
                     onChange={handleChange}
                     className="w-full border rounded p-2"
                     required
-                    disabled
+                    
                   />
                 </div>
               </div>
@@ -233,7 +251,7 @@ const ContactUsForm: React.FC = () => {
                   onChange={handleChange}
                   className="w-full border rounded p-2"
                   required
-                  disabled
+                  
                 />
               </div>
 
@@ -246,7 +264,7 @@ const ContactUsForm: React.FC = () => {
                   onChange={handleChange}
                   className="w-full border rounded p-2"
                   required
-                  disabled
+                  
                 />
               </div>
               </div>
@@ -259,7 +277,7 @@ const ContactUsForm: React.FC = () => {
                     onChange={handleChange}
                     className="w-full border rounded p-2"
                     required
-                    disabled
+                    
                   >
                     <option value="">Select Services</option>
                     <option value="Customss Clearance">Customss Clearance</option>
@@ -280,7 +298,7 @@ const ContactUsForm: React.FC = () => {
                     onChange={handleChange}
                     className="w-full border rounded p-2"
                     required
-                    disabled
+                    
                   >
                     <option value="">Select Size</option>
                         <option  value="20GP">
@@ -299,7 +317,7 @@ const ContactUsForm: React.FC = () => {
                       className="w-full border rounded p-2"
                       placeholder="Weight"
                       required
-                      disabled
+                      
                     />
                   }
                 </div>
@@ -313,13 +331,13 @@ const ContactUsForm: React.FC = () => {
                     onChange={handleChange}
                     className="w-full border rounded p-2"
                     rows={3}
-                    disabled
+                    
                   />
                 </div>
 
               <button
                 type="submit"
-                disabled
+                
                 className="w-full bg-[#EE3A23] text-white py-2 rounded hover:bg-red-600"
               >
                 Submit

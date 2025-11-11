@@ -146,7 +146,7 @@ const AboutCLN: React.FC = () => {
               <h2 className="text-[18px] md:text-[24px] font-bold text-black">OUR MISSION</h2>
             </div>
             <p className="text-[14px] md:text-[22px] font-light text-justify text-black whitespace-pre-line">
-              We provide our Customsers with full control and visibility both in choosing the best-in-class service providers and in managing their own supply chains. Our reward comes from the satisfaction of our Customsers, their Customsers, and associates; and we strive to become a trust link in our Customsers' business success.
+              We provide our customers with full control and visibility both in choosing the best-in-class service providers and in managing their own supply chains. Our reward comes from the satisfaction of our customers, their customers, associates and we strive to become a trust link in our customers business success.
             </p>
           </div>
         </div>
@@ -203,7 +203,7 @@ const AboutCLN: React.FC = () => {
         >
           <h2 className="text-[18px] md:text-[24px] font-bold text-black">Your Trusted Logistics in Agriculture Industry</h2>
           <p className="text-[14px] md:text-[22px] font-light text-justify text-black hyphens-auto mt-2">
-            CLN Logistics has a full capability in handling shipment for Customsers from A to Z with full correspondence of backup, feedback, and responsibility. We have successfully handled Customsersʼ shipments with different commodities and delivery times, as illustrated in the attached images.
+            CLN Logistics has a full capability in handling shipment for Our customers from A to Z with full correspondence of backup, feedback, and responsibility. We have successfully handled Our customersʼ shipments with different commodities and delivery times, as illustrated in the attached images.
           </p>
         </div>
       </section>

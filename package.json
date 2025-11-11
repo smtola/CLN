@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "vite",
     "lint": "eslint .",
-    "build": "vite build",
+    "build": "vite build && npm run copy-htaccess",
+    "copy-htaccess": "cp public/.htaccess dist/.htaccess",
+    "test:seo": "tsx scripts/test-seo.ts",
     "preview": "vite preview",
     "analyze": "npx vite-bundle-visualizer"
   },

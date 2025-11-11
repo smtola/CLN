@@ -1,0 +1,48 @@
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # Handle Angular HTML5 mode / SPA routing
+  # If the requested file or directory doesn't exist, serve index.html
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule . /index.html [L]
+
+  # Prevent directory browsing
+  Options -Indexes
+
+  # Prevent access to hidden files and sensitive files
+  # These errors in logs are expected and indicate security is working
+  <FilesMatch "^\.">
+    Order allow,deny
+    Deny from all
+    Require all denied
+  </FilesMatch>
+  
+  # Explicitly deny access to environment files
+  <FilesMatch "\.(env|git|gitignore|npmrc)">
+    Order allow,deny
+    Deny from all
+    Require all denied
+  </FilesMatch>
+
+  # Enable GZIP compression
+  <IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript application/json
+  </IfModule>
+
+  # Set cache headers for static assets
+  <IfModule mod_headers.c>
+    <FilesMatch "\.(jpg|jpeg|png|gif|svg|ico|css|js|woff|woff2|ttf|eot)$">
+      Header set Cache-Control "max-age=31536000, public"
+    </FilesMatch>
+  </IfModule>
+
+  # Force HTTPS (optional - uncomment if you have SSL)
+  # RewriteCond %{HTTPS} off
+  # RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+</IfModule>
+
+# Custom Error Pages (optional)
+ErrorDocument 404 /index.html
+

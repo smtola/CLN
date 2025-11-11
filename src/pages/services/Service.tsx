@@ -31,7 +31,7 @@ const Service: React.FC = () => {
       key: "Customs",
       title: "Customs Clearance",
       description:
-        "We make customs clearance simple and stress-free! Our certified customs specialists are here to guide importers and exporters through every step handling paperwork, checking requirements, classifying goods, and making sure duties, taxes, and fees are correct. No confusion, no hassle just smooth, worry free clearance.",
+        "CLN is the proud owner of a certified Customs Brokerage License, dedicated to making customs clearance simple, transparent, and stress-free. <br/> <br/> Our team of certified customs specialists guides importers and exporters through every stage of the process — from preparing and submitting documentation to checking import/export requirements, classifying goods, and ensuring that all duties, taxes, and fees are calculated accurately. <br/> <br/>No confusion. No hassle.<br/> Just smooth, worry-free clearance every time.<br/> <br/> Beyond clearance services, we also provide training and guidance for businesses and individuals looking to apply for Certificates of Origin (CO) online. Our team ensures you understand the process, obtain your CO certification, and meet all necessary proof of permission requirements — helping you stay fully compliant with customs regulations.",
       image: "/assets/image/custom clearance.jpg",
     },
     {
@@ -50,7 +50,7 @@ Our experienced team ensures your cargo move safely and efficiently across borde
       key: "sea",
       title: "Sea Freight",
       description:
-      `Sea freight is the transportation of goods by cargo ships across international waters. It is one of the most cost-effective and reliable methods for moving large volumes of goods over long distances. Businesses choose sea freight when shipping bulk cargo, raw materials, or products that are not time-sensitive.
+      `Sea freight is the transportation of goods by cargo ships across international waters. It is one of the most cost-effective and reliable methods for moving large volumes of goods over long distances. Businesses choose sea freight when shipping bulk cargo, raw materials, or products that are not time-sensitive. We handle fresh bananas, fresh mangoes, rice, cashews, and more agricultural products.
       `,
       image: "/assets/image/ship.png",
     },
@@ -58,7 +58,7 @@ Our experienced team ensures your cargo move safely and efficiently across borde
       key: "air",
       title: "Air Freight",
       description:
-        `Air freight is the transportation of goods via aircraft, offering the fastest and most efficient solution for international and domestic shipping. It is ideal for time-sensitive, high-value, or perishable cargo that requires quick delivery across long distances.
+        `Air freight is the transportation of goods via aircraft, offering the fastest and most efficient solution for international and domestic shipping. It is ideal for time-sensitive, high-value, or perishable cargo that requires quick delivery across long distances for international shipping. We handle fresh durian, machinery spare parts, samples of products, documents, and frozen seafood.
         `,
       image: "/assets/image/airplan.png",
     },

@@ -3,7 +3,7 @@ import type {SEOProps} from "../components/SEO";
 
 
 export const fetchSEO = async (page:string, query?: Record<string, string>): Promise<SEOProps> => {
-    let API_BASE_URL = `https://cln-rest-api.onrender.com/api/v1/docs/seo/${page}`
+    let API_BASE_URL = `https://clnrestapi.vercel.app/api/v1/docs/seo/${page}`
     if(query){
         const params = new URLSearchParams(query);
         API_BASE_URL += `?${params}`;

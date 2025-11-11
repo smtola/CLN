@@ -51,7 +51,6 @@ const Products: React.FC = () => {
     { key: "soy_bean", category: "Export", product: "Soy Bean" },
     { key: "pesticide", category: "Import", product: "Pesticide" },
     { key: "fertillizer", category: "Import", product: "Fertillizer" },
-    { key: "farm_equipment", category: "Import", product: "Farm Equipment" },
     { key: "dis", category: "Import", product: "Drip Irrigation System" },
     { key: "aquarium_products", category: "Import", product: "Aquarium Products" },
     { key: "tractors", category: "Import", product: "Tractors" },
@@ -74,7 +73,7 @@ const Products: React.FC = () => {
       category: 'Export',
       product: 'Rice',
       caption: 'Cambodia - France, Germany, Philippines and China',
-      image: ['assets/image/products/rice/rice.jpeg'],
+      image: ['assets/image/products/rice/rice.jpg'],
     },
     {
       key: 'rubber',
@@ -91,21 +90,22 @@ const Products: React.FC = () => {
       category: 'Import',
       product: 'Lubricant Oil',
       caption: '',
-      image: [],
+      image: ['assets/image/products/lubricant oil/oil.jpg'],
     },
     {
       key: 'personal_effect',
       category: 'Import',
       product: 'Personal Effect',
       caption: '',
-      image: [],
+      image: ['assets/image/products/personal effect/pe_1.jpg','assets/image/products/personal effect/pe_2.jpg','assets/image/products/personal effect/pe_3.jpg'],
     },
     {
       key: 'soy_bean',
       category: 'Export',
       product: 'Soy Bean',
       caption: '',
-      image: [],
+      image: ['assets/image/products/soy bean/soy_bean.jpg',],
+
     },
     {
       key: 'pesticide',
@@ -131,13 +131,6 @@ const Products: React.FC = () => {
       ],
     },
     {
-      key: 'farm_equipment',
-      category: 'Import',
-      product: 'Farm Equipment',
-      caption: '',
-      image: [],
-    },
-    {
       key: 'dis',
       category: 'Import',
       product: 'Drip Irrigation System',
@@ -154,7 +147,10 @@ const Products: React.FC = () => {
       product: 'Aquarium Products',
       caption: '',
       image: [
-        
+        'assets/image/products/aquarium products/ap_1.jpg',
+        'assets/image/products/aquarium products/ap_2.jpg',
+        'assets/image/products/aquarium products/ap_3.jpg',
+        'assets/image/products/aquarium products/ap_4.jpg',
       ],
     },
     {
@@ -233,7 +229,7 @@ const Products: React.FC = () => {
       category: 'Export',
       product: 'Sugar Palm',
       caption: 'Cambodia - Japan, Vietnam and Thailand',
-      image: [],
+      image: ['assets/image/products/sugar palm/sugar_palm.jpg',],
     },
     {
       key: 'pepper',
@@ -283,7 +279,8 @@ const Products: React.FC = () => {
       category: 'Import',
       product: 'Veterinary Medicine',
       caption: 'Vietnam-Cambodia',
-      image: []
+      image: ['assets/image/products/veterinary medicine/Veterinary_Medicine.jpeg'
+      ]
     },
   ];
 

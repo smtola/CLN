@@ -15,36 +15,50 @@ export interface SEOProps {
 }
 
 const SEO: React.FC<SEOProps> = ({
-    title = "CLN CAMBODIA CO., LTD.",
-    description = "Discover CLN Cambodia Co., Ltd., your trusted partner for innovative solutions in Cambodia.",
-    keywords = "CLN Cambodia, business solutions, Cambodia services",
-    canonical = "https://clncambodia.com/",
-    image = "https://opengraph.b-cdn.net/production/images/20ff62e1-856e-4885-b2fe-3bfc88ec36c4.png?token=HyXitAh9ghIt-C6yqhGPInQaCRx_5lh9JFjWpiKC-EM&height=542&width=1200&expires=33294770512",
+    title,
+    description,
+    keywords,
+    canonical,
+    image,
     schemaMarkup,
     ogTitle,
     ogDescription,
     ogImage,
-    ogType = "website",
+    ogType,
     url
 }) => {
-    const effectiveOgTitle = ogTitle || title;
-    const effectiveOgDescription = ogDescription || description;
-    const effectiveOgImage = ogImage || image;
-    const effectiveUrl = url || canonical;
+    // Default values if not provided
+    const defaultTitle = "CLN CAMBODIA CO., LTD.";
+    const defaultDescription = "Discover CLN Cambodia Co., Ltd., your trusted partner for innovative solutions in Cambodia.";
+    const defaultKeywords = "CLN Cambodia, business solutions, Cambodia services";
+    const defaultCanonical = "https://clncambodia.com/";
+    const defaultImage = "https://clncambodia.com/assets/image/logo.png";
+    const defaultOgType = "website";
+
+    const effectiveTitle = title || defaultTitle;
+    const effectiveDescription = description || defaultDescription;
+    const effectiveKeywords = keywords || defaultKeywords;
+    const effectiveCanonical = canonical || defaultCanonical;
+    const effectiveImage = image || defaultImage;
+    const effectiveOgTitle = ogTitle || effectiveTitle;
+    const effectiveOgDescription = ogDescription || effectiveDescription;
+    const effectiveOgImage = ogImage || effectiveImage;
+    const effectiveUrl = url || effectiveCanonical;
+    const effectiveOgType = ogType || defaultOgType;
 
     return (
         <Helmet prioritizeSeoTags>
             {/* Standard Meta Tags */}
             <meta charSet="utf-8" />
             <meta name="viewport" content="width=device-width, initial-scale=1" />
-            <title>{title}</title>
-            <meta name="description" content={description} />
-            <meta name="keywords" content={keywords} />
+            <title>{effectiveTitle}</title>
+            <meta name="description" content={effectiveDescription} />
+            <meta name="keywords" content={effectiveKeywords} />
             <meta name="robots" content="index, follow" />
-            <link rel="canonical" href={canonical} />
+            <link rel="canonical" href={effectiveCanonical} />
 
             {/* Open Graph for Facebook, LinkedIn */}
-            <meta property="og:type" content={ogType} />
+            <meta property="og:type" content={effectiveOgType} />
             <meta property="og:title" content={effectiveOgTitle} />
             <meta property="og:description" content={effectiveOgDescription} />
             <meta property="og:image" content={effectiveOgImage} />

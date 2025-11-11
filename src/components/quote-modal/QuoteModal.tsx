@@ -51,7 +51,6 @@ const QuoteModal: React.FC = () => {
   // Handle submit
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
     if(!token) {
       Swal.fire({
         icon: "warning",
@@ -72,10 +71,11 @@ const QuoteModal: React.FC = () => {
       form.origin_destination &&
       form.product_name &&
       form.weight_dimensions &&
+      form.service &&
       form.container_size
     ) {
       try {
-        const response = await fetch("https://cln-rest-api.onrender.com/api/v1/docs/web/request-quote", {
+        const response = await fetch("https://clnrestapi.vercel.app/api/v1/docs/web/request-quote", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -83,7 +83,7 @@ const QuoteModal: React.FC = () => {
           },
           body: JSON.stringify(form),
         });
-  
+
         if (response.ok) {
           Swal.fire({
             icon: "success",
@@ -107,11 +107,28 @@ const QuoteModal: React.FC = () => {
             container_size: "",
           });
         } else {
-          const errorData = await response.json();
+          let errorMessage = "Something went wrong while sending request.";
+          try {
+            const errorData = await response.json();
+            if (response.status === 422) {
+              // Handle validation errors
+              if (errorData.errors && Array.isArray(errorData.errors)) {
+                errorMessage = errorData.errors.map((err: { msg?: string; message?: string }) => err.msg || err.message || "").filter(Boolean).join(", ");
+              } else if (errorData.message) {
+                errorMessage = errorData.message;
+              } else if (typeof errorData === "object") {
+                errorMessage = Object.values(errorData).flat().join(", ");
+              }
+            } else if (errorData.message) {
+              errorMessage = errorData.message;
+            }
+          } catch {
+            // If parsing fails, use default message
+          }
           Swal.fire({
             icon: "error",
-            title: "Submission Failed",
-            text: errorData?.message || "Something went wrong while sending request.",
+            title: response.status === 422 ? "Validation Error" : "Submission Failed",
+            text: errorMessage,
             confirmButtonColor: "#d33",
           });
         }
@@ -137,7 +154,7 @@ const QuoteModal: React.FC = () => {
     <div className="overflow-x-hidden overflow-y-auto">
       {/* Button */}
       <button
-        disabled
+        
         onClick={() => setIsOpen(true)}
         className="w-full text-[14px] md:text-[18px] px-4 py-1 bg-red-50 border border-[#EE3A23] text-[#EE3A23] rounded-[4px] hover:bg-red-100"
       >

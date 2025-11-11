@@ -18,7 +18,7 @@ interface Service {
 const services: Service[] = [
   { title: 'MoC/MAFF/MCFA', image: 'assets/image/moc-maff-mcfa.jpg' },
   { title: 'Customs Clearance (Import / Export & Express Courier)', image: 'assets/image/custom clearance.jpg' },
-  { title: 'Cross border', image: 'assets/image/cross_2.png' },
+  { title: 'Cross Border', image: 'assets/image/cross_2.png' },
   { title: 'Sea Freight', image: 'assets/image/ship.png' },
   { title: 'Air Freight', image: 'assets/image/airplan.png' },
   { title: 'Packing & Warehouse', image: 'assets/image/warehouse.jpg' },
@@ -28,37 +28,29 @@ const services: Service[] = [
 ];
 
 const Home: React.FC = () => {
-  const [visibleCount, setVisibleCount] = useState(4);
-  const [seo, setSeo] = useState<SEOProps | null>(null);
+  const [visibleCount, setVisibleCount] = useState(6);
+  const [seo, setSeo] = useState<SEOProps>({});
   const visibleServices = services.slice(0, visibleCount);
+  
   React.useEffect(() => {
     AOS.init({ duration: 1000 });
   }, []);
+  
   const loadMore = () => {
-    setVisibleCount(prev => Math.min(prev + 4, services.length));
+    setVisibleCount(prev => Math.min(prev + 1, services.length));
   };
 
   const loadLess = () => {
-    setVisibleCount(prev => Math.max(prev - 4, 4));
+    setVisibleCount(prev => Math.max(prev - 1, 1));
   };
   
-    useEffect(() => {
-        fetchSEO("home")
-            .then((data) => setSeo(data))
-            .catch((error) => {
-                console.error("Failed to fetch SEO data:", error);
-                // Fallback SEO data
-                setSeo({
-                    title: "CLN | Home",
-                    description: "CLN Cambodia provides international and domestic logistics services.",
-                    keywords: "CLN Cambodia, logistics, transportation, sea freight, air freight",
-                    ogTitle: "CLN Cambodia",
-                    ogDescription: "Offering international and domestic logistics services with 20 years of experience.",
-                    ogImage: "https://clncambodia.com/og-homes.png",
-                    canonical: "https://clncambodia.com"
-                });
-            });
-    }, []);
+  useEffect(() => {
+    fetchSEO("home")
+      .then((data) => setSeo(data))
+      .catch((error) => {
+        console.error("Failed to fetch SEO data:", error);
+      });
+  }, []);
 
   return (
     <>
@@ -86,14 +78,14 @@ const Home: React.FC = () => {
               <h2
                 data-aos="fade-down"
                 data-aos-offset="300"
-                className="text-[24px] leading-[28px] md:text-[34px] md:leading-[34px] font-medium text-white"
+                className="text-[48px] leading-[28px] md:text-[74px] md:leading-[74px] font-medium text-white uppercase"
               >
                 Welcome to
               </h2>
               <h1
                 data-aos="fade-down"
                 data-aos-offset="300"
-                className="text-[28px] leading-[32px] md:text-[40px] md:leading-[40px] font-medium text-white"
+                className="text-[24px] leading-[32px] md:text-[38px] md:leading-[40px] font-medium text-white uppercase"
               >
                 CLN (CAMBODIA) CO., LTD.
               </h1>
@@ -221,7 +213,7 @@ const Home: React.FC = () => {
         </div>
 
         <div className="flex gap-2 justify-end mt-4">
-          {visibleCount > 4 && (
+          {visibleCount > 1 && (
             <button
               onClick={loadLess}
               className="w-fit px-3 py-1 my-2 text-[14px] font-mono text-center bg-gray-50 border border-gray-600 text-gray-600 rounded"
