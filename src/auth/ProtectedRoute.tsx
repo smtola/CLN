@@ -3,6 +3,7 @@ import { Navigate } from "react-router-dom";
 import type { ReactElement } from "react";
 import { getUser } from "../authStorage";
 import type { DecodeToken } from "../types/auth";
+import Logo from "/logo.png";
 
 interface ProtectedRouteProps {
   children: ReactElement;
@@ -21,8 +22,27 @@ const ProtectedRoute = ({ children, role }: ProtectedRouteProps) => {
     })();
   }, []);
 
-  // ⏳ While loading, show a loader or nothing
-  if (loading) return <div>Loading...</div>;
+  // ⏳ While loading, show a loader with company logo
+  if (loading) {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center bg-white z-50">
+        <div className="flex flex-col items-center justify-center space-y-4">
+          <div className="relative">
+            <img
+              src={Logo}
+              alt="CLN Cambodia Logo"
+              className="w-32 h-20 md:w-40 md:h-24 object-contain animate-pulse"
+            />
+          </div>
+          <div className="flex space-x-2">
+            <div className="w-3 h-3 bg-[#4fb748] rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+            <div className="w-3 h-3 bg-[#4fb748] rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+            <div className="w-3 h-3 bg-[#4fb748] rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const token = localStorage.getItem("accessToken");
 

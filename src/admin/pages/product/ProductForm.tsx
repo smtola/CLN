@@ -28,7 +28,7 @@ const ProductForm = () => {
     (async () => {
       try {
         const data = await getCategories(); 
-        setCategories(data);
+        setCategories(data.map(cat => ({ id: cat._id, name: cat.name })));
       } catch (error: unknown) {
         console.error("Failed to fetch categories:", error);
         if (error && typeof error === 'object' && 'response' in error) {

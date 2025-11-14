@@ -590,20 +590,20 @@ function CRUDForm<T>({
   };
 
   return (
-    <div className="p-6 bg-white rounded-lg shadow-md max-w-3xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">{id ? "Edit" : "Add"} {entityName}</h1>
+    <div className="p-3 md:p-6 bg-white rounded-lg shadow-md max-w-3xl mx-auto">
+      <h1 className="text-xl md:text-2xl font-bold mb-4 md:mb-6">{id ? "Edit" : "Add"} {entityName}</h1>
 
-      <form onSubmit={handleSubmit} className="space-y-6" encType="multipart/form-data">
+      <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6" encType="multipart/form-data">
         {fields.map(f => (
           <div key={String(f.name)}>
-            <label className="block font-medium mb-2">{f.label}</label>
+            <label className="block font-medium mb-2 text-sm md:text-base">{f.label}</label>
 
             {f.type === "select" ? (
               <select
                 name={String(f.name)}
                 value={(form[f.name] as string) || ""}
                 onChange={handleChange}
-                className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                className="w-full border rounded-lg px-3 py-2 text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-blue-400"
                 disabled={f.readOnly}
               >
                 <option value="">Select {f.label}</option>
@@ -616,7 +616,7 @@ function CRUDForm<T>({
                 name={String(f.name)}
                 value={(form[f.name] as string) || ""}
                 onChange={handleChange}
-                className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                className="w-full border rounded-lg px-3 py-2 text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-blue-400 min-h-[100px]"
                 readOnly={f.readOnly}
               />
             ) : f.type === "file" || f.type === "multi-image" ? (
@@ -744,7 +744,7 @@ function CRUDForm<T>({
                 name={String(f.name)}
                 value={(form[f.name] as string) || ""}
                 onChange={handleChange}
-                className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                className="w-full border rounded-lg px-3 py-2 text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-blue-400"
                 readOnly={f.readOnly}
               />
             )}
@@ -754,7 +754,7 @@ function CRUDForm<T>({
         <button
           type="submit"
           disabled={isSubmitting}
-          className="bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 disabled:cursor-not-allowed text-white px-5 py-2 rounded-lg transition-colors"
+          className="w-full sm:w-auto bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 disabled:cursor-not-allowed text-white px-5 py-2 rounded-lg transition-colors text-sm md:text-base font-medium"
         >
           {isSubmitting ? "Uploading..." : id ? "Update" : "Create"}
         </button>

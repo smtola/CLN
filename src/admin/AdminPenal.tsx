@@ -13,27 +13,26 @@ import CategoryForm from "./pages/category/CategoryForm";
 
 const AdminPanel = () => {
   return (
-    <div className="flex">
+    <div className="flex min-h-screen">
       <AdminNavbar />
-      <div className="flex-1 p-4">
-
-      <Routes>
-        <Route path="/" element={<Dashboard />} />
-        <Route path="category" element={<CategoryList />} />
-        <Route path="category/create" element={<CategoryForm />} />
-        <Route path="category/edit/:id" element={<CategoryForm />} />
-        <Route path="product" element={<ProductList />} />
-        <Route path="product/create" element={<ProductForm />} />
-        <Route path="product/edit/:id" element={<ProductForm />} />
-        <Route path="seo" element={<SEOList />} />
-        <Route path="seo/create" element={<SEOForm />} />
-        <Route path="seo/edit/:id" element={<SEOForm />} />
-        <Route path="user" element={<UserList />} />
-        <Route path="user/create" element={<UserForm />} />
-        <Route path="user/edit/:id" element={<UserForm />} />
-        <Route path="profile" element={<Profile />} />
-        <Route path="*" element={<Navigate to="/admin" />} />
-      </Routes>
+      <div className="flex-1 md:ml-0 pt-16 md:pt-0">
+        <Routes>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="category" element={<CategoryList />} />
+          <Route path="category/create" element={<CategoryForm />} />
+          <Route path="category/edit/:id" element={<CategoryForm />} />
+          <Route path="product" element={<ProductList />} />
+          <Route path="product/create" element={<ProductForm />} />
+          <Route path="product/edit/:id" element={<ProductForm />} />
+          <Route path="seo" element={<SEOList />} />
+          <Route path="seo/create" element={<SEOForm />} />
+          <Route path="seo/edit/:id" element={<SEOForm />} />
+          <Route path="user" element={<UserList />} />
+          <Route path="user/create" element={<UserForm />} />
+          <Route path="user/edit/:id" element={<UserForm />} />
+          <Route path="profile" element={<Profile />} />
+          <Route path="*" element={<Navigate to="/admin" />} />
+        </Routes>
       </div>
     </div>
   );
