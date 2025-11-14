@@ -41,7 +41,6 @@ export default function LoginPage() {
     try {
       const res = await login({ username, password, local_ip: ip });
 
-      console.log(res)
       if (res.requiresOtp) {
         navigate("/auth/verify-otp", { state: { username } });
         Swal.fire({

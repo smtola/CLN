@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom"
+import { Routes, Route, useLocation } from "react-router-dom"
 import Home from "./pages/home/Home"
 import Navbar from "./components/navbar/Navbar"
 import Footer from "./components/footer"
@@ -14,9 +14,12 @@ import ProtectedRoute from "./auth/ProtectedRoute"
 import AdminPenal from "./admin/AdminPenal"
 
 function App() {
+  const location = useLocation();
+  const isAdminRoute = location.pathname.startsWith('/admin');
+
   return (
     <>
-    <Navbar/>
+    {!isAdminRoute && <Navbar/>}
      <Routes>
         <Route path="/" element={<Home/>}/>
         <Route path="/about-us" element={<AboutCLN/>}/>
@@ -27,18 +30,21 @@ function App() {
         <Route path="/auth/login" element={<LoginPage/>}/>
         <Route path="/auth/verify-email" element={<VerifyEmail />} />
         <Route path="/auth/verify-otp" element={<VerifyOTPPage />} />
-
-        {/* Admin Panel (Protected) */}
-        <Route
-          path="/admin/*"
-          element={
-            <ProtectedRoute role="admin">
-              <AdminPenal />
-            </ProtectedRoute>
-          }
-        />
      </Routes>
-     <Footer/>
+     {!isAdminRoute && <Footer/>}
+      <Routes>
+
+          {/* Admin Panel (Protected) */}
+          <Route
+            path="/admin/*"
+            element={
+              <ProtectedRoute role="admin">
+                <AdminPenal />
+              </ProtectedRoute>
+            }
+          />
+          
+     </Routes>
     </>
   )
 }

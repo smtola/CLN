@@ -26,7 +26,7 @@ export async function login(payload: LoginPayload) {
     const { data } = await api.post<LoginResponse>("/login", payload);
   
     if (data.access_token && data.refresh_token) {
-      setAuth({ accessToken: data.access_token, refreshToken: data.refresh_token, user: data.user });
+      setAuth({ accessToken: data.access_token, refreshToken: data.refresh_token });
     }
     
     return data;
@@ -68,7 +68,7 @@ export async function verifyOTP(payload: VerifyOTPPayload) {
   
   // Set auth after OTP verification
   if (data.access_token && data.refresh_token) {
-    setAuth({ accessToken: data.access_token, refreshToken: data.refresh_token, user: data.user });
+    setAuth({ accessToken: data.access_token, refreshToken: data.refresh_token});
   }
 
   return data;

@@ -20,7 +20,7 @@ interface SubCategory {
 
 const Products: React.FC = () => {
   const categories = ["All", "Export", "Import"];
-  const [seo, setSeo] = useState<SEOProps | null>(null);
+  const [seo, setSeo] = useState<SEOProps>({});
   
   const [searchParams, setSearchParams] = useSearchParams();
   
@@ -37,8 +37,9 @@ const Products: React.FC = () => {
                 keywords: "CLN Cambodia, products, logistics, transportation",
                 ogTitle: "CLN Cambodia - Products",
                 ogDescription: "Browse CLN Cambodia products and services.",
-                ogImage: "https://clncambodia.com/og-products.png",
-                canonical: "https://clncambodia.com/products"
+                ogImage: "https://clncambodia.com/assets/image/logo.png",
+                canonical: "https://clncambodia.com/products",
+                url: "https://clncambodia.com/products"
             });
         });
   }, [searchParams]);

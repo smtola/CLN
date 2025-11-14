@@ -1,7 +1,7 @@
 export interface SeoMeta {
-    page: string;
-    title: string;
-    description: string;
+    page?: string;
+    title?: string;
+    description?: string;
     keywords?: string;
     canonical?: string;
     ogTitle?: string;

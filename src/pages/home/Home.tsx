@@ -46,9 +46,23 @@ const Home: React.FC = () => {
   
   useEffect(() => {
     fetchSEO("home")
-      .then((data) => setSeo(data))
+      .then((data) => {
+        setSeo(data);
+      })
       .catch((error) => {
         console.error("Failed to fetch SEO data:", error);
+        // Use fallback SEO data if API fails
+        setSeo({
+          title: "CLN CAMBODIA CO., LTD. - Your Trusted Logistics Partner",
+          description: "Discover CLN Cambodia Co., Ltd., your trusted partner for innovative solutions in Cambodia. 30 years of experience in handling import and export logistics.",
+          keywords: "CLN Cambodia, logistics, freight, transportation, customs clearance, Cambodia services",
+          canonical: "https://clncambodia.com/",
+          ogTitle: "CLN CAMBODIA CO., LTD. - Your Trusted Logistics Partner",
+          ogDescription: "Discover CLN Cambodia Co., Ltd., your trusted partner for innovative solutions in Cambodia. 30 years of experience in handling import and export logistics.",
+          ogImage: "https://clncambodia.com/assets/image/logo.png",
+          ogType: "website",
+          url: "https://clncambodia.com/",
+        });
       });
   }, []);
 

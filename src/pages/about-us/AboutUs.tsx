@@ -9,7 +9,7 @@ const poster_1 = "/assets/image/poster_1.png";
 const lcl = "/assets/image/fcl-lcl.png";
 import { organizationSchema } from "../../components/schemaExamples.ts";
 const AboutCLN: React.FC = () => {
-  const [seo, setSeo] = useState<SEOProps | null>(null);
+  const [seo, setSeo] = useState<SEOProps>({});
   React.useEffect(() => {AOS.init({ duration: 1000 });
   }, []);
 
@@ -25,8 +25,9 @@ const AboutCLN: React.FC = () => {
                     keywords: "CLN Cambodia, about, logistics, transportation, company",
                     ogTitle: "CLN Cambodia - About Us",
                     ogDescription: "Learn about CLN Cambodia and our logistics expertise.",
-                    ogImage: "https://clncambodia.com/og-about.png",
-                    canonical: "https://clncambodia.com/about-us"
+                    ogImage: "https://clncambodia.com/assets/image/logo.png",
+                    canonical: "https://clncambodia.com/about-us",
+                    url: "https://clncambodia.com/about-us"
                 });
             });
     }, []);

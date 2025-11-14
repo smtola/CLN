@@ -1,9 +1,10 @@
 export interface User {
-  id: string;
-  username: string;
+  _id: string;
+  username?: string;
   email: string;
-  role: string;
+  role?: string;
   profile?: string;
+  is_verified?: boolean;
 }
 
 export interface AuthTokens {
@@ -100,4 +101,11 @@ export interface VerifyEmailResponse {
   refresh_token?:string;
   status?:boolean;
   user?:User;
+}
+
+export interface DecodeToken{
+  username: string;
+  email:string;
+  role:string;
+  isVerify:boolean;
 }

@@ -14,7 +14,7 @@ interface ServiceItem {
 }
 
 const Service: React.FC = () => {
-  const [seo, setSeo] = useState<SEOProps | null>(null);
+  const [seo, setSeo] = useState<SEOProps>({});
   const tabs = [
     { key: "Customs", label: "Customs Clearance" },
     { key: "land", label: "Cross Border (Land Transport)" },
@@ -129,8 +129,9 @@ Warehousing provides safe storage and efficient management of goods before distr
                 keywords: "CLN Cambodia, services, logistics, freight, transportation",
                 ogTitle: "CLN Cambodia - Services",
                 ogDescription: "CLN Cambodia offers comprehensive logistics services.",
-                ogImage: "https://clncambodia.com/og-services.png",
-                canonical: "https://clncambodia.com/services"
+                ogImage: "https://clncambodia.com/assets/image/logo.png",
+                canonical: "https://clncambodia.com/services",
+                url: "https://clncambodia.com/services"
             });
         });
   }, [searchParams]);

@@ -6,7 +6,7 @@ const banner = "/assets/image/banner_4.png";
 import { organizationSchema } from "../../components/schemaExamples.ts";
 
 const ContactUs: React.FC = () => {
-  const [seo, setSeo] = useState<SEOProps | null>(null);
+  const [seo, setSeo] = useState<SEOProps>({});
 
   useEffect(() => {
     fetchSEO("contact-us")
@@ -20,8 +20,9 @@ const ContactUs: React.FC = () => {
                 keywords: "CLN Cambodia, contact, logistics, transportation, sea freight, air freight",
                 ogTitle: "CLN Cambodia - Contact Us",
                 ogDescription: "Contact CLN Cambodia for international and domestic logistics services.",
-                ogImage: "https://clncambodia.com/og-contact.png",
-                canonical: "https://clncambodia.com/contact-us"
+                ogImage: "https://clncambodia.com/assets/image/logo.png",
+                canonical: "https://clncambodia.com/contact-us",
+                url: "https://clncambodia.com/contact-us"
             });
         });
 }, []);

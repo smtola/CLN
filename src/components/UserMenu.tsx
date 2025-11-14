@@ -3,11 +3,14 @@ import { NavLink, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import { logout } from "../authService";
 import { getUser } from "../authStorage";
+import type { DecodeToken } from "../types/auth";
 
 export default function UserMenu() {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
-  const user = getUser();
+  const [user, setUser] = useState<DecodeToken>();
+
+
   const handleLogout = async () => {
     try {
       const res = await logout();
@@ -44,7 +47,15 @@ export default function UserMenu() {
     document.addEventListener("click", handleClickOutside);
     return () => document.removeEventListener("click", handleClickOutside);
   }, []);
-
+  // ✅ Proper async call inside useEffect
+  useEffect(() => {
+    const fetchUser = async () => {
+      const userToken = await getUser();
+      setUser(userToken);
+    };
+    fetchUser();
+  }, []);
+  
   return (
     <div className="relative inline-block text-left user-menu-dropdown">
       {/* Button */}
