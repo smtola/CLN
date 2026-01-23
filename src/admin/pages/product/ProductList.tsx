@@ -160,7 +160,7 @@ const ProductList = () => {
                       <tr key={product._id} className="hover:bg-gray-50 transition-colors">
                         <td className="px-6 py-4 whitespace-nowrap">
                           {images.length > 0 ? (
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 w-full max-w-[93px] overflow-x-auto">
                               {images.slice(0, 3).map((img, idx) => (
                                 <div
                                   key={idx}

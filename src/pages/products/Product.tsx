@@ -1,16 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import SEO, { type SEOProps } from "../../components/SEO";
-import {fetchSEO} from "../../services/seoService.ts";
-import { organizationSchema } from "../../components/schemaExamples.ts";
-  
-interface ProductItem {
-  key: string;
-  category: string;
-  product: string;
-  caption: string;
-  image: string[];
-}
+import { fetchSEO } from "../../services/seoService.ts";
+import type { Category } from "../../admin/types/category.ts";
+import { getCategories } from "../../admin/services/categoryService.ts";
+import { getProducts } from "../../admin/services/productService.ts";
+import type { Product } from "../../admin/types/product.ts";
 
 interface SubCategory {
   key: string;
@@ -19,30 +14,15 @@ interface SubCategory {
 }
 
 const Products: React.FC = () => {
-  const categories = ["All", "Export", "Import"];
   const [seo, setSeo] = useState<SEOProps>({});
-  
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchParams, setSearchParams] = useSearchParams();
-  
-  useEffect(() => {
-    const searchParam = Object.fromEntries(searchParams);
-    fetchSEO("products", searchParam)
-        .then((data) =>  setSeo(data))
-        .catch((error) => {
-            console.error("Failed to fetch SEO data:", error);
-            // Fallback SEO data
-            setSeo({
-                title: "CLN | Products",
-                description: "Browse CLN Cambodia products and services.",
-                keywords: "CLN Cambodia, products, logistics, transportation",
-                ogTitle: "CLN Cambodia - Products",
-                ogDescription: "Browse CLN Cambodia products and services.",
-                ogImage: "https://clncambodia.com/assets/image/logo.png",
-                canonical: "https://clncambodia.com/products",
-                url: "https://clncambodia.com/products"
-            });
-        });
-  }, [searchParams]);
+  const selectedCategory = searchParams.get("category") || "All";
+  const [showPopup, setShowPopup] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<string | null>(null);
+  const [visibleProduct, setVisibleProduct] = useState(2);
 
   const subCat: SubCategory[] = [
     { key: "rice", category: "Export", product: "Rice" },
@@ -68,263 +48,69 @@ const Products: React.FC = () => {
     { key: "veterinary_medicine", category: "Import", product: "Veterinary Medicine" },
   ];
 
-  const products:ProductItem[] = [
-    {
-      key: 'rice',
-      category: 'Export',
-      product: 'Rice',
-      caption: 'Cambodia - France, Germany, Philippines and China',
-      image: ['assets/image/products/rice/rice.jpg'],
-    },
-    {
-      key: 'rubber',
-      category: 'Export',
-      product: 'Rubber',
-      caption: 'Cambodia - China',
-      image: [
-        'assets/image/products/rubber/rubber_1.jpg',
-        'assets/image/products/rubber/rubber_2.jpg'
-      ],
-    },
-    {
-      key: 'lo',
-      category: 'Import',
-      product: 'Lubricant Oil',
-      caption: '',
-      image: ['assets/image/products/lubricant oil/oil.jpg'],
-    },
-    {
-      key: 'personal_effect',
-      category: 'Import',
-      product: 'Personal Effect',
-      caption: '',
-      image: ['assets/image/products/personal effect/pe_1.jpg','assets/image/products/personal effect/pe_2.jpg','assets/image/products/personal effect/pe_3.jpg'],
-    },
-    {
-      key: 'soy_bean',
-      category: 'Export',
-      product: 'Soy Bean',
-      caption: '',
-      image: ['assets/image/products/soy bean/soy_bean.jpg',],
+  const fetchCategory = async () => {
+    try {
+      const res = await getCategories();
+      if (Array.isArray(res)) {
+        setCategories([{ name: "All" }, ...res]);
+      } else {
+        setCategories([]);
+      }
+    } catch (err) {
+      console.error(err);
+      setCategories([]);
+    }
+  };
 
-    },
-    {
-      key: 'pesticide',
-      category: 'Import',
-      product: 'Pesticide',
-      caption: 'China, Thailand, Vietnam and Spain - Cambodia - Cambodia',
-      image: [
-        'assets/image/products/pesticide/pesticide_1.jpg',
-        'assets/image/products/pesticide/pesticide_2.jpg',
-        'assets/image/products/pesticide/pesticide_3.jpg'
-      ],
-    },
-    {
-      key: 'fertillizer',
-      category: 'Import',
-      product: 'Fertillizer',
-      caption: 'China, Thailand, Vietnam and Spain - Cambodia',
-      image: [
-        'assets/image/products/fertillizer/fertillizer_1.jpg',
-        'assets/image/products/fertillizer/fertillizer_2.jpg',
-        'assets/image/products/fertillizer/fertillizer_3.jpg',
-        'assets/image/products/fertillizer/fertillizer_4.jpg',
-      ],
-    },
-    {
-      key: 'dis',
-      category: 'Import',
-      product: 'Drip Irrigation System',
-      caption: 'China-Cambodia',
-      image: [
-        'assets/image/products/drip lrrigation system/dls_1.png',
-        'assets/image/products/drip lrrigation system/dls_2.png',
-        'assets/image/products/drip lrrigation system/dls_3.png'
-      ],
-    },
-    {
-      key: 'aquarium_products',
-      category: 'Import',
-      product: 'Aquarium Products',
-      caption: '',
-      image: [
-        'assets/image/products/aquarium products/ap_1.jpg',
-        'assets/image/products/aquarium products/ap_2.jpg',
-        'assets/image/products/aquarium products/ap_3.jpg',
-        'assets/image/products/aquarium products/ap_4.jpg',
-      ],
-    },
-    {
-      key: 'tractors',
-      category: 'Import',
-      product: 'Tractors',
-      caption: 'Cambodia - India and Italy',
-      image: ['assets/image/products/tractors/tractor_1.jpg',
-        'assets/image/products/tractors/tractor_2.png',
-        'assets/image/products/tractors/tractor_3.jpg'],
-    },
-    {
-      key: 'implement',
-      category: 'Import',
-      product: 'Implement',
-      caption: 'Cambodia - India and Italy',
-      image: [
-        'assets/image/products/implement/implement1.jpeg',
-        'assets/image/products/implement/implement_2.jpg',
-        'assets/image/products/implement/implement_3.jpg',
-        'assets/image/products/implement/implement_4.jpg'
-      ]
-    },
-    {
-      key: 'sp',
-      category: 'Import',
-      product: 'Spare Parts',
-      caption: 'Cambodia - India and Italy',
-      image: [
-        'assets/image/products/spare parts/sp_1.jpg',
-        'assets/image/products/spare parts/sp_2.jpg',
-        'assets/image/products/spare parts/sp_3.jpg',
-        'assets/image/products/spare parts/sp_4.jpg'
-      ]
-    },
-    {
-      key: 'fresh_mango',
-      category: 'Export',
-      product: 'Fresh Mango',
-      caption: 'Cambodia - China, Thailand, India, Dubai and Vietnam',
-      image: [
-        'assets/image/products/fresh mango/fresh_mango_1.jpg',
-        'assets/image/products/fresh mango/fresh_mango_2.jpg',
-        'assets/image/products/fresh mango/fresh_mango_3.png',
-        'assets/image/products/fresh mango/fresh_mango_4.jpg',
-        'assets/image/products/fresh mango/fresh_mango_5.jpg',
-        'assets/image/products/fresh mango/fresh_mango_6.jpg'
-      ]
-    },
-    {
-      key: 'fresh_banana',
-      category: 'Export',
-      product: 'Fresh Banana',
-      caption: 'Cambodia - China, Thailand, India, Dubai and Vietnam',
-      image: [
-        'assets/image/products/fresh banana/fresh_banana_1.png',
-        'assets/image/products/fresh banana/fresh_banana_2.png'
-      ]
-    },
-    {
-      key: 'fresh_durian',
-      category: 'Export',
-      product: 'Fresh Durian',
-      caption: 'Cambodia - China, Thailand, India, Dubai and Vietnam',
-      image: [
-        'assets/image/products/durian/durian_3.jpg',
-        'assets/image/products/durian/durian_2.jpg',
-        'assets/image/products/durian/durian_1.jpg',
-        'assets/image/products/durian/durian_6.jpg',
-        'assets/image/products/durian/durian_5.jpg',
-        'assets/image/products/durian/durian_4.jpg'
-      ]
-    },
-    {
-      key: 'sugar_palm',
-      category: 'Export',
-      product: 'Sugar Palm',
-      caption: 'Cambodia - Japan, Vietnam and Thailand',
-      image: ['assets/image/products/sugar palm/sugar_palm.jpg',],
-    },
-    {
-      key: 'pepper',
-      category: 'Export',
-      product: 'Pepper',
-      caption: 'Cambodia - Japan, Vietnam and Thailand',
-      image: [
-        'assets/image/products/pepper/pepper_2.jpg',
-        'assets/image/products/pepper/pepper_3.jpg',
-        'assets/image/products/pepper/pepper_4.jpg',
-        'assets/image/products/pepper/pepper_1.jpg',
-      ]
-    },
-    {
-      key: 'shelving_rack',
-      category: 'Import',
-      product: 'Shelving Rack and Light Fitting',
-      caption: '',
-      image: [
-        'assets/image/products/shelving rack and light fitting/sralf_1.png',
-        'assets/image/products/shelving rack and light fitting/sralf_2.png',
-        'assets/image/products/shelving rack and light fitting/sralf_3.png'
-      ]
-    },
-    {
-      key: 'furniture',
-      category: 'Import',
-      product: 'Furniture',
-      caption: '',
-      image: [
-        'assets/image/products/furniture/furniture_1.png',
-        'assets/image/products/furniture/furniture_2.png'
-      ]
-    },
-    {
-      key: 'bsapm',
-      category: 'Export',
-      product: 'Buddha Status And Pagoda Materials',
-      caption: 'USA-Cambodia',
-      image: [
-        'assets/image/products/buddha status/buddha_status_1.jpg',
-        'assets/image/products/buddha status/buddha_status_2.jpg'
-      ],
-    },
-    {
-      key: 'veterinary_midicine',
-      category: 'Import',
-      product: 'Veterinary Medicine',
-      caption: 'Vietnam-Cambodia',
-      image: ['assets/image/products/veterinary medicine/Veterinary_Medicine.jpeg'
-      ]
-    },
-  ];
-
-
-  const [showPopup, setShowPopup] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState("All");
-  const [selectedProduct, setSelectedProduct] = useState<string | null>(null);
-  const [visibleProduct, setVisibleProduct] = useState(2);
-  const [visibleImage, setVisibleImage] = useState(4);
+  const fetchProducts = async () => {
+    try {
+      setLoading(true);
+      const res = await getProducts();
+      if (Array.isArray(res)) setProducts(res);
+      else setProducts([]);
+    } catch (err) {
+      console.error(err);
+      setProducts([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const cat = searchParams.get("category");
-    const prod = searchParams.get("product");
+    fetchCategory();
+    fetchProducts();
+  }, []);
 
-    if (cat && categories.includes(cat)) setSelectedCategory(cat);
-
-    if (prod) {
-      if (
-        selectedCategory === "All" ||
-        subCat.some((sc) => sc.product === prod && sc.category === selectedCategory)
-      ) {
-        setSelectedProduct(prod);
-      } else {
-        setSelectedProduct(null);
-      }
-    } else {
-      setSelectedProduct(null);
-    }
-  }, [searchParams, selectedCategory]);
+  useEffect(() => {
+    const searchParam = Object.fromEntries(searchParams);
+    fetchSEO("products", searchParam)
+      .then((data) => setSeo(data))
+      .catch(() => setSeo({
+        title: "CLN | Products",
+        description: "Browse CLN Cambodia products and services.",
+        keywords: "CLN Cambodia, products, logistics, transportation",
+        ogTitle: "CLN Cambodia - Products",
+        ogDescription: "Browse CLN Cambodia products and services.",
+        ogImage: "https://clncambodia.com/assets/image/logo.png",
+        url: "https://clncambodia.com/products"
+      }));
+  }, [searchParams]);
 
   const selectCategory = (cat: string) => {
-    setSelectedCategory(cat);
     setSelectedProduct(null);
-    setSearchParams({ category: cat });
+    if (cat === "All") searchParams.delete("category");
+    else searchParams.set("category", cat);
+    setSearchParams(searchParams);
     setShowPopup(false);
   };
 
   const selectProduct = (prod: string) => {
     setSelectedProduct(prod === "All" ? null : prod);
-    setSearchParams({
-      category: selectedCategory,
-      product: prod === "All" ? "" : prod,
-    });
+    const params = new URLSearchParams(searchParams);
+    params.set("category", selectedCategory);
+    if (prod === "All") params.delete("product");
+    else params.set("product", prod);
+    setSearchParams(params);
   };
 
   const filteredSubCat = selectedCategory === "All"
@@ -340,27 +126,56 @@ const Products: React.FC = () => {
     .filter((p) => selectedCategory === "All" || p.category === selectedCategory)
     .filter((p) => !selectedProduct || p.product === selectedProduct).length;
 
-  const getVisibleImages = (item: ProductItem) => item.image.slice(0, visibleImage);
-
-  const loadMoreImages = (item: ProductItem) => {
-    if (visibleImage < item.image.length) setVisibleImage(visibleImage + 4);
+  const getVisibleImages = (item: Product): string[] => {
+    const result: string[] = [];
+    const images = Array.isArray(item.image) ? item.image : [item.image];
+    images.forEach((img) => {
+      if (typeof img === "string") {
+        // parse stringified array
+        if (img.startsWith("[") && img.endsWith("]")) {
+          try {
+            const parsed = JSON.parse(img);
+            if (Array.isArray(parsed)) result.push(...parsed);
+            return;
+          } catch {
+            // 
+          }
+        }
+        result.push(img);
+      }
+    });
+    return result;
   };
 
-  const loadLessImages = () => {
-    if (visibleImage > 4) setVisibleImage(visibleImage - 4);
+  const [visibleImagesMap, setVisibleImagesMap] = useState<Record<string, number>>({});
+
+  const loadMoreImages = (item: Product) => {
+    setVisibleImagesMap((prev) => ({
+      ...prev,
+      [item._id]: Math.min((prev[item._id] || 4) + 4, getVisibleImages(item).length),
+    }));
   };
 
-  const loadMore = () => {
-    if (visibleProduct < filteredProductsTotal) setVisibleProduct(visibleProduct + 2);
+  const loadLessImages = (item: Product) => {
+    setVisibleImagesMap((prev) => ({
+      ...prev,
+      [item._id]: Math.max((prev[item._id] || 4) - 4, 4),
+    }));
   };
 
-  const loadLess = () => {
-    if (visibleProduct > 2) setVisibleProduct(visibleProduct - 2);
-  };
+  if (loading) return (
+    <div className="flex items-center justify-center min-h-[400px]">
+      <div className="text-center">
+        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mb-4"></div>
+        <p className="text-gray-600">Loading products...</p>
+      </div>
+    </div>
+  );
 
   return (
     <>
-      <SEO {...seo} schemaMarkup={organizationSchema} />
+      <SEO {...seo} />
+
       {/* Products Section */}
       <section className="w-full h-fit bg-gradient-to-r from-[#4fb748] to-[#EE3A23]">
         <div className="max-w-7xl mx-auto">
@@ -375,24 +190,9 @@ const Products: React.FC = () => {
                 onClick={() => setShowPopup(true)}
                 className="flex items-center text-[16px] md:text-[22px] gap-2 px-4 py-2 border border-white hover:bg-white/20 text-white rounded-xl transition"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth={1.5}
-                  stroke="currentColor"
-                  className="w-5 h-5 md:w-6 md:h-6"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M3 4.5h18M6 9.75h12M9 15h6M11.25 19.5h1.5"
-                  />
-                </svg>
                 Filters
               </button>
 
-              {/* Popup Overlay */}
               {showPopup && (
                 <div
                   className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
@@ -414,17 +214,17 @@ const Products: React.FC = () => {
                     </h2>
 
                     <div className="flex flex-wrap gap-2">
-                      {categories.map((cat) => (
+                      {categories.map((cat, idx) => (
                         <button
-                          key={cat}
-                          onClick={() => selectCategory(cat)}
+                          key={idx}
+                          onClick={() => selectCategory(cat.name)}
                           className={`px-4 py-2 text-[16px] md:text-[22px] rounded-[10px] ${
-                            selectedCategory === cat
+                            selectedCategory === cat.name
                               ? "bg-green-500 text-white shadow hover:bg-green-600"
                               : "border border-green-500 text-green-600 hover:bg-green-100"
                           }`}
                         >
-                          {cat}
+                          {cat.name}
                         </button>
                       ))}
                     </div>
@@ -470,51 +270,52 @@ const Products: React.FC = () => {
 
       {/* Product Display */}
       <section className="max-w-7xl mx-auto p-3 grid gap-6">
-        {filteredProducts.map((item) => (
-          <div key={item.key} className="bg-white overflow-hidden">
-            <div className="p-4">
-              <h2 className="text-[16px] md:text-[22px] text-[#000] font-medium">{item.product}</h2>
-              <span className="text-[14px] md:text-[20px] text-[#000] font-light">{item.caption}</span>
-            </div>
+        {filteredProducts.map((item: Product) => {
+          const images = getVisibleImages(item);
+          const visibleImages = visibleImagesMap[item._id] || Math.min(4, images.length);
 
-            <div className="columns-2 w-full">
-              {getVisibleImages(item).map((img, idx) => (
-                <a key={idx} href={img} target="_blank" rel="noopener noreferrer">
-                  <img
-                    src={img}
-                    alt={item.product}
-                    className="w-full object-contain mb-4"
-                  />
-                </a>
-              ))}
-            </div>
+          return (
+            <div key={item._id} className="bg-white overflow-hidden">
+              <div className="p-4">
+                <h2 className="text-[16px] md:text-[22px] text-[#000] font-medium">{item.product}</h2>
+                <span className="text-[14px] md:text-[20px] text-[#000] font-light">{item.caption}</span>
+              </div>
 
-            <div className="flex gap-2 justify-end mt-4">
-              {visibleImage > 4 && (
-                <button
-                  onClick={loadLessImages}
-                  className="px-3 py-1 bg-gray-200 border border-gray-400 rounded text-gray-700"
-                >
-                  See Less
-                </button>
-              )}
-              {visibleImage < item.image.length && (
-                <button
-                  onClick={() => loadMoreImages(item)}
-                  className="px-3 py-1 bg-green-50 border border-green-600 text-green-600 rounded"
-                >
-                  See More Image
-                </button>
-              )}
+              <div className="columns-2 w-full">
+                {images.slice(0, visibleImages).map((img, idx) => (
+                  <a key={idx} href={img} target="_blank" rel="noopener noreferrer">
+                    <img src={img} alt={item.product} className="w-full object-contain mb-4" />
+                  </a>
+                ))}
+              </div>
+
+              <div className="flex gap-2 justify-end mt-4">
+                {visibleImages > 4 && (
+                  <button
+                    onClick={() => loadLessImages(item)}
+                    className="px-3 py-1 bg-gray-200 border border-gray-400 rounded text-gray-700"
+                  >
+                    See Less
+                  </button>
+                )}
+                {visibleImages < images.length && (
+                  <button
+                    onClick={() => loadMoreImages(item)}
+                    className="px-3 py-1 bg-green-50 border border-green-600 text-green-600 rounded"
+                  >
+                    See More Images
+                  </button>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
 
         {/* Show More / Less Products */}
         <div className="flex gap-2 justify-end mt-4">
           {visibleProduct > 2 && (
             <button
-              onClick={loadLess}
+              onClick={() => setVisibleProduct(Math.max(2, visibleProduct - 2))}
               className="px-3 py-1 bg-gray-200 border border-gray-400 rounded text-gray-700"
             >
               See Less
@@ -522,7 +323,7 @@ const Products: React.FC = () => {
           )}
           {visibleProduct < filteredProductsTotal && (
             <button
-              onClick={loadMore}
+              onClick={() => setVisibleProduct(Math.min(filteredProductsTotal, visibleProduct + 2))}
               className="px-3 py-1 bg-green-50 border border-green-600 text-green-600 rounded"
             >
               See More Products

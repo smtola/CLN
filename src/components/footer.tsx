@@ -21,7 +21,7 @@ const Footer: React.FC = () => {
     <>
       <footer className="relative w-full h-full overflow-hidden">
 
-        <div className="relative w-full h-auto bg-[#4fb748] mt-[5rem]">
+        <div className="relative w-full h-auto bg-[#4fb748]">
           <ul className="flex flex-col md:flex-row xl:max-w-screen-xl mx-auto px-5 py-[3rem] text-white space-y-2 md:space-y-0">
             {/* Services */}
             <li className="w-full md:w-[30%] space-y-2">

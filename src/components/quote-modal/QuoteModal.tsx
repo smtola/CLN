@@ -174,30 +174,38 @@ const QuoteModal: React.FC = () => {
               ✖
             </button>
 
-            <h2 className="text-xl font-bold mb-4">Request a Quote</h2>
+            <h2 className="text-xl font-bold mb-4 text-center text-[#5b975f]">Request a Quote</h2>
 
             <form onSubmit={handleSubmit}>
               <div className="flex gap-3">
                 <div className="w-full mb-3">
-                  <label className="block mb-1">Company Name</label>
+                  <div className="flex items-center gap-2">
+                    <label className="block mb-1 text-black">Company Name</label>
+                    <span className="text-red-500">*</span>
+                  </div>
                   <input
                     type="text"
                     name="company_name"
                     value={form.company_name}
                     onChange={handleChange}
-                    className="w-full border rounded p-2"
+                    className="w-full border rounded p-2 bg-gray-200"
+                    placeholder="Enter Company Name"
                     required
                   />
                 </div>
 
                 <div className="w-full mb-3">
-                  <label className="block mb-1">Full Name</label>
+                  <div className="flex items-center gap-2">
+                    <label className="block mb-1 text-black">Full Name</label>
+                    <span className="text-red-500">*</span>
+                  </div>
                   <input
                     type="text"
                     name="full_name"
                     value={form.full_name}
                     onChange={handleChange}
-                    className="w-full border rounded p-2"
+                    className="w-full border rounded p-2 bg-gray-200"
+                    placeholder="Enter Full Name"
                     required
                   />
                 </div>
@@ -205,25 +213,33 @@ const QuoteModal: React.FC = () => {
 
               <div className="flex gap-3">
                 <div className="w-full mb-3">
-                  <label className="block mb-1">Email</label>
+                  <div className="flex items-center gap-2">
+                    <label className="block mb-1 text-black">Email</label>
+                    <span className="text-red-500">*</span>
+                  </div>
                   <input
                     type="email"
                     name="email"
                     value={form.email}
                     onChange={handleChange}
-                    className="w-full border rounded p-2"
+                    className="w-full border rounded p-2 bg-gray-200"
+                    placeholder="Enter Email"
                     required
                   />
                 </div>
 
                 <div className="w-full mb-3">
-                  <label className="block mb-1">Telephone</label>
+                  <div className="flex items-center gap-2">
+                    <label className="block mb-1 text-black">Telephone</label>
+                    <span className="text-red-500">*</span>
+                  </div>
                   <input
                     type="text"
                     name="tel"
                     value={form.tel}
                     onChange={handleChange}
-                    className="w-full border rounded p-2"
+                    className="w-full border rounded p-2 bg-gray-200"
+                    placeholder="Enter Telephone"
                     required
                   />
                 </div>
@@ -231,25 +247,33 @@ const QuoteModal: React.FC = () => {
 
               <div className="flex gap-3">
                 <div className="w-full mb-3">
-                  <label className="block mb-1">Job Title</label>
+                  <div className="flex items-center gap-2">
+                    <label className="block mb-1 text-black">Job Title</label>
+                    <span className="text-red-500">*</span>
+                  </div>
                   <input
                     type="text"
                     name="job"
                     value={form.job}
                     onChange={handleChange}
-                    className="w-full border rounded p-2"
+                    className="w-full border rounded p-2 bg-gray-200"
+                    placeholder="Enter Job Title"
                     required
                   />
                 </div>
 
                 <div className="w-full mb-3">
-                  <label className="block mb-1">Origin - Destination</label>
+                  <div className="flex items-center gap-2">
+                    <label className="block mb-1 text-black">Origin - Destination</label>
+                    <span className="text-red-500">*</span>
+                  </div>
                   <input
                     type="text"
                     name="origin_destination"
                     value={form.origin_destination}
                     onChange={handleChange}
-                    className="w-full border rounded p-2"
+                    className="w-full border rounded p-2 bg-gray-200"
+                    placeholder="Enter Origin - Destination"
                     required
                   />
                 </div>
@@ -257,25 +281,33 @@ const QuoteModal: React.FC = () => {
 
               <div className="flex gap-3">
               <div className="w-full mb-3">
-                <label className="block mb-1">Prodduct Name</label>
+                <div className="flex items-center gap-2">
+                  <label className="block mb-1 text-black">Prodduct Name</label>
+                  <span className="text-red-500">*</span>
+                </div>
                 <input
                   type="text"
                   name="product_name"
                   value={form.product_name}
                   onChange={handleChange}
-                  className="w-full border rounded p-2"
+                  className="w-full border rounded p-2 bg-gray-200"
+                  placeholder="Enter Prodduct Name"
                   required
                 />
               </div>
 
               <div className="w-full mb-3">
-                <label className="block mb-1">Dimensions</label>
+                <div className="flex items-center gap-2">
+                  <label className="block mb-1 text-black">Dimensions</label>
+                  <span className="text-red-500">*</span>
+                </div>
                 <input
                   type="text"
                   name="weight_dimensions"
                   value={form.weight_dimensions}
                   onChange={handleChange}
-                  className="w-full border rounded p-2"
+                  className="w-full border rounded p-2 bg-gray-200"
+                  placeholder="Enter Dimensions"
                   required
                 />
               </div>
@@ -283,12 +315,15 @@ const QuoteModal: React.FC = () => {
 
               <div className="flex gap-3">
                   <div className="w-full mb-3">
-                    <label className="block mb-1">Services</label>
+                    <div className="flex items-center gap-2">
+                      <label className="block mb-1 text-black">Services</label>
+                      <span className="text-red-500">*</span>
+                    </div>
                     <select
                       name="service"
                       value={form.service}
                       onChange={handleChange}
-                      className="w-full border rounded p-2"
+                      className="w-full border rounded p-2 bg-gray-200"
                       required
                     >
                       <option value="">Select Services</option>
@@ -302,13 +337,16 @@ const QuoteModal: React.FC = () => {
                   </div>
 
                   <div className="w-full mb-3">
-                    <label className="block mb-1">{containerOptions ? 'Container Size' : 'Weight'}</label>
+                        <div className="flex items-center gap-2">
+                      <label className="block mb-1 text-black">{containerOptions ? 'Container Size' : 'Weight'}</label>
+                      <span className="text-red-500">*</span>
+                    </div>
                     {containerOptions ?
                       <select
                       name="container_size"
                       value={form.container_size}
                       onChange={handleChange}
-                      className="w-full border rounded p-2"
+                      className="w-full border rounded p-2 bg-gray-200"
                       required
                     >
                       <option value="">Select Size</option>
@@ -325,7 +363,7 @@ const QuoteModal: React.FC = () => {
                         name="container_size"
                         value={form.container_size}
                         onChange={handleChange}
-                        className="w-full border rounded p-2"
+                        className="w-full border rounded p-2 bg-gray-200"
                         placeholder="Weight"
                         required
                       />
@@ -334,12 +372,16 @@ const QuoteModal: React.FC = () => {
                 </div>
 
               <div className="w-full mb-3">
-                  <label className="block mb-1">Address</label>
+                <div className="flex items-center gap-2">
+                  <label className="block mb-1 text-black">Address</label>
+                  <span className="text-red-500">*</span>
+                </div>
                   <textarea
                     name="address"
                     value={form.address}
                     onChange={handleChange}
-                    className="w-full border rounded p-2"
+                    className="w-full border rounded p-2 bg-gray-200"
+                    placeholder="Enter Address"
                     rows={3}
                   />
                 </div>

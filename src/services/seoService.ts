@@ -24,14 +24,18 @@ export const fetchSEO = async (page:string, query?: Record<string, string>): Pro
         const data: SeoMeta = await res.json();
         
         // Map the API response to SEOProps
+        // Handle empty strings and ensure we have valid values
+        const baseUrl = `https://clncambodia.com/${page === 'home' ? '' : page === 'contact-us' ? 'contact-us' : page}`;
+        
         return {
-            title: data.title,
-            description: data.description,
-            keywords: data.keywords,
-            ogTitle: data.ogTitle || data.title,
-            ogDescription: data.ogDescription || data.description,
-            ogImage: data.ogImage || data.image,
-            url: data.url || data.canonical || `https://clncambodia.com/${page === 'home' ? '' : page}`,
+            title: data.title || undefined,
+            description: data.description || undefined,
+            keywords: data.keywords || undefined,
+            image: data.image || undefined,
+            ogTitle: data.ogTitle || data.title || undefined,
+            ogDescription: data.ogDescription || data.description || undefined,
+            ogImage: data.ogImage || data.image || undefined,
+            url: data.url || data.canonical || baseUrl,
         };
     } catch (error) {
         console.error(`Error fetching SEO for page ${page}:`, error);

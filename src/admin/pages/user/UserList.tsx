@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getUsers, deleteUser } from "../../services/userService";
+import { deleteUser, getUsers } from "../../services/userService";
 import type { User } from "../../../types/auth";
 import { confirmDelete, showError, showSuccess } from "../../utils/swalHelper";
-
 const UserList = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -33,8 +32,8 @@ const UserList = () => {
 
   const handleDelete = async (id: string) => {
     const confirmed = await confirmDelete(
-      "Delete User?",
-      "Are you sure you want to delete this user? This action cannot be undone.",
+      "Delete Category?",
+      "Are you sure you want to delete this account? This action cannot be undone.",
       "Yes, delete it!"
     );
 
@@ -42,11 +41,11 @@ const UserList = () => {
 
     try {
       await deleteUser(id);
-      await showSuccess("Deleted!", "User has been deleted successfully.", 1500);
+      await showSuccess("Deleted!", "Account has been deleted successfully.", 1500);
       fetchUsers();
     } catch (error) {
-      console.error('Error deleting user:', error);
-      await showError("Error", "Failed to delete user. Please try again.");
+      console.error('Error deleting category:', error);
+      await showError("Error", "Failed to delete account. Please try again.");
     }
   };
 
@@ -65,23 +64,11 @@ const UserList = () => {
     <div className="p-3 md:p-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Users</h1>
-        <button
-          className="w-full sm:w-auto bg-blue-500 hover:bg-blue-600 text-white px-4 md:px-6 py-2 rounded-lg shadow-md transition-colors duration-200 font-medium text-sm md:text-base"
-          onClick={() => navigate("/admin/user/create")}
-        >
-          + Add User
-        </button>
       </div>
 
       {users.length === 0 ? (
         <div className="bg-white rounded-lg shadow p-6 md:p-8 text-center">
           <p className="text-gray-500 text-base md:text-lg">No users found.</p>
-          <button
-            className="mt-4 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors duration-200 text-sm md:text-base"
-            onClick={() => navigate("/admin/user/create")}
-          >
-            Create your first user
-          </button>
         </div>
       ) : (
         <>
@@ -106,26 +93,25 @@ const UserList = () => {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Verified
                     </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Actions
-                    </th>
+                    <th>Action</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {users.map((user, idx) => (
-                    <tr key={user._id} className="hover:bg-gray-50 transition-colors">
+                    !user.is_deleted &&
+                    <tr key={idx} className="hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {idx + 1}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">{user.username || 'N/A'}</div>
+                        <div className="text-sm font-medium text-gray-900">{user.uai.firstName + " " + user.uai.lastName || 'N/A'}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">{user.email}</div>
+                        <div className="text-sm text-gray-900">{user.uai.businessEmail}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          user.role === 'admin' 
+                          user.role === 'ADMIN' 
                             ? 'bg-purple-100 text-purple-800' 
                             : 'bg-gray-100 text-gray-800'
                         }`}>
@@ -144,13 +130,13 @@ const UserList = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <button
                           className="text-blue-600 hover:text-blue-900 mr-4 transition-colors"
-                          onClick={() => navigate(`/admin/user/edit/${user._id}`)}
+                          onClick={() => navigate(`/admin/user/edit/${user._id.$oid}`)}
                         >
                           Edit
                         </button>
                         <button
-                          className="text-red-600 hover:text-red-900 transition-colors"
-                          onClick={() => handleDelete(user._id)}
+                          className="text-red-600 hover:text-red-900 mr-4 transition-colors"
+                          onClick={() => handleDelete(user._id.$oid)}
                         >
                           Delete
                         </button>
@@ -165,7 +151,8 @@ const UserList = () => {
           {/* Mobile/Tablet Card View */}
           <div className="md:hidden space-y-4">
             {users.map((user, idx) => (
-              <div key={user._id} className="bg-white rounded-lg shadow p-4">
+              user.is_deleted &&
+              <div key={idx} className="bg-white rounded-lg shadow p-4">
                 <div className="flex flex-col space-y-3">
                   <div>
                     <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wide">ID</h3>
@@ -182,7 +169,7 @@ const UserList = () => {
                   <div>
                     <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wide">Role</h3>
                     <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full mt-1 ${
-                      user.role === 'admin' 
+                      user.role === 'ADMIN' 
                         ? 'bg-purple-100 text-purple-800' 
                         : 'bg-gray-100 text-gray-800'
                     }`}>
@@ -202,15 +189,9 @@ const UserList = () => {
                   <div className="flex gap-3 pt-2 border-t border-gray-200">
                     <button
                       className="flex-1 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors text-sm font-medium"
-                      onClick={() => navigate(`/admin/user/edit/${user._id}`)}
+                      onClick={() => navigate(`/admin/profile`)}
                     >
-                      Edit
-                    </button>
-                    <button
-                      className="flex-1 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors text-sm font-medium"
-                      onClick={() => handleDelete(user._id)}
-                    >
-                      Delete
+                      View
                     </button>
                   </div>
                 </div>

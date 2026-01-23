@@ -38,7 +38,7 @@ export const getProductById = async (id: string): Promise<Product> => {
 };
 
 // ✅ CREATE a new Product
-export const createProduct = async (data: Omit<Product, "id">): Promise<Product> => {
+export const createProduct = async (data: Omit<Product, "_id">): Promise<Product> => {
   return baseApi.post<Product>("/web/products", data);
 };
 

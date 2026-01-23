@@ -53,7 +53,7 @@ const ContactUs: React.FC = () => {
       </section>
 
       {/* Contact Form Section */}
-      <div className="w-full max-w-screen-xl mx-auto p-3 translate-y-[-30%] px-5 overflow-hidden">
+      <div className="w-full max-w-screen-xl mx-auto py-2 translate-y-[-30%] px-2 overflow-hidden">
         <ContactUsForm />
       </div>
     </>

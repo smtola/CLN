@@ -11,23 +11,23 @@ import { Eye, EyeOff } from "lucide-react"; // 👀 for show/hide toggle
 export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const state = location.state as { username?: string };
-  const [username, setUsername] = useState(state?.username ?? "");
+  const state = location.state as { businessEmail?: string };
+  const [businessEmail, setBusinessEmail] = useState(state?.businessEmail ?? "");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const validateForm = () => {
-    if (!username.trim() && !password) {
-      setError("Username and Password are required");
+    if (!businessEmail.trim() && !password) {
+      setError("Email and Password are required.");
       return false;
     }
-    if (!username.trim()) {
-      setError("Username is required");
+    if (!businessEmail.trim()) {
+      setError("Email is required.");
       return false;
     }
     if (!password) {
-      setError("Password is required");
+      setError("Password is required.");
       return false;
     }
     setError(null);
@@ -39,10 +39,10 @@ export default function LoginPage() {
     if (!validateForm()) return;
     setLoading(true);
     try {
-      const res = await login({ username, password, local_ip: ip });
+      const res = await login({ businessEmail, password, local_ip: ip });
 
       if (res.requiresOtp) {
-        navigate("/auth/verify-otp", { state: { username } });
+        navigate("/auth/verify-otp", { state: { businessEmail } });
         Swal.fire({
           icon: "success",
           title: res.msg,
@@ -79,7 +79,7 @@ export default function LoginPage() {
   };
 
   return (
-    <section className="overflow-hidden flex flex-col md:flex-row w-full max-w-[400px] md:max-w-screen-md xl:max-w-screen-xl shadow-[rgba(9,_30,_66,_0.25)_0px_4px_8px_-2px,_rgba(9,_30,_66,_0.08)_0px_0px_0px_1px] mx-auto mt-[2rem] rounded-[20px]">
+    <section className="overflow-hidden flex flex-col md:flex-row w-full max-w-[400px] md:max-w-screen-md xl:max-w-screen-xl shadow-[rgba(9,_30,_66,_0.25)_0px_4px_8px_-2px,_rgba(9,_30,_66,_0.08)_0px_0px_0px_1px] mx-auto my-[2rem] rounded-[20px]">
       <div className="w-full md:w-[50%]">
         <img
           alt="Banner"
@@ -87,19 +87,19 @@ export default function LoginPage() {
           className="h-56 w-full object-cover sm:h-full"
         />
       </div>
-      <div className="w-full md:w-[50%] md:p-12 lg:px-16 lg:py-24">
+      <div className="w-full md:w-[50%] md:p-4 lg:px-14 lg:py-24">
         <div className="w-full max-w-md mx-auto bg-white p-8 rounded-2xl">
-          <h1 className="text-2xl font-bold text-center mb-6">Login</h1>
+          <h1 className="text-2xl font-bold text-center mb-6 text-[#4f9748]">Login</h1>
 
           <div className="space-y-4">
-            {/* Username */}
+            {/* BusinessEmail */}
             <input
               type="text"
-              placeholder="Username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
-                error?.includes("Username") || error?.includes("Username and")
+              placeholder="Email"
+              value={businessEmail}
+              onChange={(e) => setBusinessEmail(e.target.value)}
+              className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 bg-gray-200 text-black ${
+                error?.includes("Email") || error?.includes("Email and")
                   ? "border-red-500 focus:ring-red-500"
                   : "focus:ring-blue-500"
               }`}
@@ -112,8 +112,8 @@ export default function LoginPage() {
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
-                  error?.includes("Password") || error?.includes("Username and")
+                className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 bg-gray-200 text-black ${
+                  error?.includes("Password") || error?.includes("BusinessEmail and")
                     ? "border-red-500 focus:ring-red-500"
                     : "focus:ring-blue-500"
                 }`}
@@ -127,8 +127,8 @@ export default function LoginPage() {
               </button>
             </div>
             {error && (
-            <p className="text-red-500 text-sm mb-4">{error}</p>
-          )}
+              <p className="text-red-500 text-sm mb-4">{error}</p>
+            )}
             {/* Login button */}
             <button
               onClick={handleLogin}
@@ -141,8 +141,11 @@ export default function LoginPage() {
             >
               {loading ? "Logging in..." : "Login"}
             </button>
-            <span className="text-sm text-gray-600">
-              Don’t have an account?{" "}
+            <span className="text-end text-gray-600 flex justify-end">
+              <NavLink to="/auth/forget-password" className="text-end text-[12px] font-light text-red-600 hover:underline">Forget Password</NavLink>
+            </span>
+            <span className="text-sm text-gray-600 flex justify-center">
+              Don’t have an account? &nbsp;
               <NavLink to="/auth/sign-up" className="text-blue-600 hover:underline">
                 Sign Up
               </NavLink>

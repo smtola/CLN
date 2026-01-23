@@ -6,7 +6,7 @@ import { AxiosError } from "axios";
 export async function signup(payload: SignupPayload) {
   try {
     const res = await api.post<SignupResponse>("/signup", payload);
-    return { ...res.data, httpStatus: res.status }; // success
+    return { ...res.data, httpStatus: res.status, status: true }; // success
   } catch (error: unknown) {
     const err = error as AxiosError<{ msg?: string; status?: boolean }>;
 
@@ -17,7 +17,11 @@ export async function signup(payload: SignupPayload) {
       };
     }
 
-    return { msg: "Something went wrong, please try again", httpStatus: 500 };
+    return {
+      msg: err.response?.data?.msg || "Something went wrong",
+      httpStatus: err.response?.status || 500,
+      status: false
+    };
   }
 }
 
@@ -102,9 +106,9 @@ export async function verifyEmail(payload: VerifyEmailPayload): Promise<VerifyEm
   }
 }
 
-export async function resendOTP(username?: string, email?:string) {
+export async function resendOTP(businessEmail?:string) {
   try{
-    const { data } = await api.post<{msg?:string, status?:boolean}>("/resend-otp", { username, email });
+    const { data } = await api.post<{msg?:string, status?:boolean}>("/resend-otp", {businessEmail});
     return data;
   }catch (err: unknown){
     // If API sends { msg: "Invalid credentials" }
@@ -119,21 +123,221 @@ export async function resendOTP(username?: string, email?:string) {
   }
 }
 
+export async function checkPassword(current_password: string) {
+  try {
+    const token = localStorage.getItem("accessToken");
+    
+    const { data } = await api.post(
+      "/check-password",
+      { current_password }, // <-- send body
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
 
-export async function fetchUsers() {
-  try{
-    const { data } = await api.get("/users");
     return data;
-  }catch (err: unknown){
-    // If API sends { msg: "Invalid credentials" }
-    if (err && typeof err === 'object' && 'response' in err && 
-        err.response && typeof err.response === 'object' && 'data' in err.response &&
-        err.response.data && typeof err.response.data === 'object' && 'msg' in err.response.data) {
-          return err.response.data as {msg?:string};
+  } catch (err: unknown) {
+    if (
+      err &&
+      typeof err === "object" &&
+      "response" in err &&
+      err.response &&
+      typeof err.response === "object" &&
+      "data" in err.response &&
+      err.response.data &&
+      typeof err.response.data === "object" &&
+      "msg" in err.response.data
+    ) {
+      return err.response.data as { msg?: string };
     }
 
-    // fallback message
     return { msg: "Something went wrong, please try again" };
   }
 }
+
+export async function changePassword(
+  current_password: string,
+  new_password: string,
+  confirm_password: string
+) {
+  try {
+    const token = localStorage.getItem("accessToken");
+
+    const { data } = await api.post(
+      "/change-password", // <-- call the actual change-password endpoint
+      {
+        current_password,
+        new_password,
+        confirm_password
+      },
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+
+    return data;
+  } catch (err: unknown) {
+    if (
+      err &&
+      typeof err === "object" &&
+      "response" in err &&
+      err.response &&
+      typeof err.response === "object" &&
+      "data" in err.response &&
+      err.response.data &&
+      typeof err.response.data === "object" &&
+      "message" in err.response.data
+    ) {
+      return err.response.data as { message?: string; status?: boolean };
+    }
+
+    return { message: "Something went wrong, please try again", status: false };
+  }
+}
+
+export async function changeRole(
+  _id: string,
+  role: string
+): Promise<{ message?: string; status?: boolean }> {
+  try {
+    const token = localStorage.getItem("accessToken");
+
+    const { data } = await api.put(
+      `/change-role/${_id}`, // ✅ correct endpoint usage
+      { role },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    return data;
+  } catch (err: unknown) {
+    if (
+      err &&
+      typeof err === "object" &&
+      "response" in err &&
+      err.response &&
+      typeof err.response === "object" &&
+      "data" in err.response &&
+      err.response.data &&
+      typeof err.response.data === "object" &&
+      "message" in err.response.data
+    ) {
+      return err.response.data as { message?: string; status?: boolean };
+    }
+    return { message: "Something went wrong. Please try again", status: false };
+  }
+}
+// -------------------- Forgot Password --------------------
+export async function forgotPassword(email: string) {
+  try {
+    const { data } = await api.post("/forgot-password", { email });
+    return data;
+  } catch (err: unknown) {
+    if (
+      err &&
+      typeof err === "object" &&
+      "response" in err &&
+      err.response &&
+      typeof err.response === "object" &&
+      "data" in err.response &&
+      err.response.data &&
+      typeof err.response.data === "object" &&
+      "message" in err.response.data
+    ) {
+      return err.response.data as { message?: string; status?: boolean };
+    }
+    return { message: "Something went wrong. Please try again", status: false };
+  }
+}
+
+// -------------------- Reset Password --------------------
+export async function resetPassword(
+  token: string,
+  new_password: string,
+  confirm_password: string
+) {
+  try {
+    const { data } = await api.post("/reset-password", {
+      token,
+      new_password,
+      confirm_password,
+    });
+    return data;
+  } catch (err: unknown) {
+    if (
+      err &&
+      typeof err === "object" &&
+      "response" in err &&
+      err.response &&
+      typeof err.response === "object" &&
+      "data" in err.response &&
+      err.response.data &&
+      typeof err.response.data === "object" &&
+      "message" in err.response.data
+    ) {
+      return err.response.data as { message?: string; status?: boolean };
+    }
+    return { message: "Something went wrong. Please try again", status: false };
+  }
+}
+
+export async function fetchUsers() {
+  try {
+    const token = localStorage.getItem("accessToken");
+    
+    const { data } = await api.get("/users", {
+      headers: { Authorization: `Bearer ${token}` },
+    });    
+    
+    return data;
+  } catch (err: unknown) {
+    if (
+      err &&
+      typeof err === "object" &&
+      "response" in err &&
+      err.response &&
+      typeof err.response === "object" &&
+      "data" in err.response &&
+      err.response.data &&
+      typeof err.response.data === "object" &&
+      "msg" in err.response.data
+    ) {
+      return err.response.data as { msg?: string };
+    }
+
+    return { msg: "Something went wrong, please try again" };
+  }
+}
+
+export async function fetchProfile() {
+  try {
+    const token = localStorage.getItem("accessToken");
+    
+    const { data } = await api.get("/profile", {
+      headers: { Authorization: `Bearer ${token}` },
+    });    
+    
+    return data;
+  } catch (err: unknown) {
+    if (
+      err &&
+      typeof err === "object" &&
+      "response" in err &&
+      err.response &&
+      typeof err.response === "object" &&
+      "data" in err.response &&
+      err.response.data &&
+      typeof err.response.data === "object" &&
+      "msg" in err.response.data
+    ) {
+      return err.response.data as { msg?: string };
+    }
+
+    return { msg: "Something went wrong, please try again" };
+  }
+}
+
 

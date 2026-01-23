@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { NavLink, useLocation } from "react-router-dom";
-import QuoteModal from "../quote-modal/QuoteModal";
+// import QuoteModal from "../quote-modal/QuoteModal";
 import UserMenu from "../UserMenu";
 import Logo from "/logo.png";
+import { getCategories } from "../../admin/services/categoryService";
+import type { Category } from "../../admin/types/category";
 
 const Navbar: React.FC = () => {
   const location = useLocation();
   const [activeTab, setActiveTab] = useState<string>("Customs");
+  const [categories, setCategories] = useState<Category[]>([]);
 
   // Listen for query param changes
   useEffect(() => {
@@ -14,6 +17,26 @@ const Navbar: React.FC = () => {
     const tab = params.get("tab");
     setActiveTab(tab || "Customs");
   }, [location.search]);
+
+  const fetchCategory = async () => {
+    try {
+      const res = await getCategories();
+      // Ensure we always have an array
+      if (Array.isArray(res)) {
+        setCategories(res);
+      } else {
+        console.error('Invalid response format:', res);
+        setCategories([]);
+      }
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+      setCategories([]);
+    }
+  };
+
+  useEffect(() => {
+    fetchCategory();
+  }, []);
 
   const servicesSubmenu = [
     { name: "Customs Clearance", tab: "Customs" },
@@ -26,17 +49,13 @@ const Navbar: React.FC = () => {
     { name: "DTD Service", tab: "door2door" },
   ];
 
-  const productsSubmenu = [
-    { name: "Export", category: "Export" },
-    { name: "Import", category: "Import" },
-  ];
 
   return (
     <div className="w-full">
       {/* Header Section */}
       <header>
         {/* Top Bar */}
-        <div className="flex">
+        <div className="flex text-black">
           <div className="flex gap-1 justify-between w-[50%] lg:w-[66%] ms-2 px-1 py-1">
             <div className="flex">
             <span>
@@ -121,7 +140,7 @@ const Navbar: React.FC = () => {
             </NavLink>
           </div>
           <div className="flex justify-center items-center w-[65%] h-auto bg-white space-x-[1rem]">
-            <QuoteModal />
+            {/* <QuoteModal /> */}
             <UserMenu />
           </div>
         </div>
@@ -217,10 +236,10 @@ const Navbar: React.FC = () => {
                   PRODUCTS
                 </NavLink>
                 <ul className="absolute hidden group-hover:block bg-white text-black w-[220px] shadow-lg rounded-md mt-6">
-                  {productsSubmenu.map((item) => (
-                    <li key={item.category}>
+                  {categories.map((item) => (
+                    <li key={item._id}>
                       <NavLink
-                        to={`/products?category=${item.category}`}
+                        to={`/products?category=${item.name}`}
                         className="block px-4 py-2 hover:bg-gray-100"
                       >
                         {item.name}
@@ -242,12 +261,24 @@ const Navbar: React.FC = () => {
                   CONTACT US
                 </NavLink>
               </li>
+              <li >
+                <NavLink
+                  to="/price/quote"
+                  className={({ isActive }) =>
+                    `px-2 py-4 lg:py-7 2xl:py-8 text-[12px] lg:text-[16px] text-nowrap capitalize ${
+                      isActive ? "bg-green-50 border-b-2 border-[#EE3A23] text-[#4F9748]" : ""
+                    }`
+                  }
+                >
+                 SPOT ON
+                </NavLink>
+              </li>
             </ul>
           </div>
 
           {/* Quote Button */}
           <div className="flex justify-center items-center w-[50%] h-auto bg-[#ee3a23] space-x-[1rem]">
-            <QuoteModal />
+            {/* <QuoteModal /> */}
             <UserMenu />
           </div>
         </div>
@@ -256,7 +287,7 @@ const Navbar: React.FC = () => {
         <div className="lg:hidden w-full px-2">
           <div className="overflow-x-auto hide-scrollbar">
             <ul className="flex gap-[4px] items-center justify-center w-fit mx-auto h-full text-white rounded-full">
-              {[{link:'/',name:"HOME"},{link:'/about-us',name:"ABOUT US"},{link:'/services',name:"SERVICES"},{link:'/products',name:"PRODUCTS"},{link:'/contact-us',name:"CONTACT US"},].map(
+              {[{link:'/',name:"HOME"},{link:'/about-us',name:"ABOUT US"},{link:'/services',name:"SERVICES"},{link:'/products',name:"PRODUCTS"},{link:'/contact-us',name:"CONTACT US"},{link:'/price/quote',name:"SPOT ON"}].map(
                 (item, index) => (
                   <li key={index} className="px-2 py-3">
                     <NavLink

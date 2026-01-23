@@ -21,14 +21,14 @@ const fields: FieldConfig<Product>[] = [
 ];
 
 const ProductForm = () => {
-  const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
-
+  const [categories, setCategories] = useState<{ _id: string; name: string }[]>([]);
+  
   // Fetch categories when component mounts
   useEffect(() => {
     (async () => {
       try {
         const data = await getCategories(); 
-        setCategories(data.map(cat => ({ id: cat._id, name: cat.name })));
+        setCategories(data.map(cat => ({ _id: cat._id, name: cat.name })));
       } catch (error: unknown) {
         console.error("Failed to fetch categories:", error);
         if (error && typeof error === 'object' && 'response' in error) {

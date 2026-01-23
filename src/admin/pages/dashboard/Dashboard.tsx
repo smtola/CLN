@@ -153,7 +153,7 @@ const Dashboard = () => {
       <div className="mb-6 md:mb-8">
         <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Dashboard</h1>
         <p className="text-gray-600 mt-2 text-sm md:text-base">
-          Welcome back{currentUser?.username ? `, ${currentUser.username}` : ''}! Here's an overview of your admin panel.
+          Welcome back{currentUser?.username ? `, ${currentUser.username}` : ''}! Here's an overview of your Admin panel.
         </p>
       </div>
 
@@ -229,7 +229,7 @@ const Dashboard = () => {
               <p className="text-sm md:text-base text-gray-600 break-all">{currentUser.email}</p>
               <div className="flex flex-wrap items-center gap-2 md:gap-3 mt-2">
                 <span className={`px-3 py-1 text-xs font-semibold rounded-full ${
-                  currentUser.role === 'admin' 
+                  currentUser.role === 'ADMIN' 
                     ? 'bg-purple-100 text-purple-800' 
                     : 'bg-gray-100 text-gray-800'
                 }`}>

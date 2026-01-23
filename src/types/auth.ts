@@ -1,9 +1,57 @@
 export interface User {
-  _id: string;
-  username?: string;
+  _id: { $oid: string };
+  username: string;
   email: string;
-  role?: string;
+  data: {
+    uai: {
+      firstName: string;
+      lastName: string;
+      businessEmail: string;
+    }
+  }
+  uai: {
+    firstName: string;
+    lastName: string;
+    businessEmail: string;
+  }
+  role: "USER" | "ADMIN";
   profile?: string;
+  is_verified: boolean;
+  is_deleted: boolean;
+}
+
+
+export interface Profile {
+  uai: {
+    firstName: string;
+    lastName: string;
+    jobTitle?: string;
+    phoneNumber?: string;
+    businessEmail: string;
+    userId: string;
+    pwd: string;
+    cpwd: string;
+  };
+  ci: {
+    companyName?: string;
+    companyRegisterNumber?: string;
+    localLang?: string;
+    tradeName?: string;
+    SPT?: string;
+    CBT?: string;
+    address?: string;
+    city?: string;
+    country?: string;
+    zipCode?: string;
+    department?: string;
+    trade?: string;
+  };
+  ai: {
+    contact?: string;
+    comment?: string;
+  };
+  role?: "USER" | "ADMIN";
+  local_ip?: string;
   is_verified?: boolean;
 }
 
@@ -12,13 +60,68 @@ export interface AuthTokens {
   refresh_token: string;
 }
 
+export interface UserType {
+  _id: { $oid: string };
+
+  uai: {
+    firstName: string;
+    lastName: string;
+    jobTitle: string;
+    phoneNumber: string;
+    businessEmail: string;
+    userId: string;
+    pwd: string;
+    cpwd: string;
+  };
+
+  ci: {
+    companyName: string;
+    companyRegisterNumber: string;
+    localLang: string;
+    tradeName: string;
+    SPT: string;
+    CBT: string;
+    address: string;
+    city: string;
+    country: string;
+    zipCode: string;
+    department: string;
+    trade: string;
+  };
+
+  ai: {
+    contact: string;
+    comment: string;
+  };
+
+  role: "USER" | "ADMIN";
+  requires_otp: boolean;
+  is_verified: boolean;
+  is_deleted: boolean;
+  public_ip: string;
+  local_ip: string;
+  device_info: {
+    browser: string;
+    os: string;
+    device: string;
+  };
+  location: {
+    city: string;
+    region: string;
+    country: string;
+    latitude: number;
+    longitude: number;
+  };
+}
+
 export interface SignupResponse {
   user?: User;
   is_verified?: boolean;
   access_token?:string;
   refresh_token?:string;
-  msg?:string;
+  msg:string;
   httpStatus?:number;
+  status: true | false;
 }
 
 export interface LoginResponse{
@@ -27,7 +130,7 @@ export interface LoginResponse{
   refresh_token?:string;
   msg?: string;
   user?: User;
-  username?: string;
+  businessEmail?: string;
   status?:boolean;
 }
 
@@ -53,7 +156,7 @@ export interface ApiError {
 }
 
 export interface LoginPayload {
-  username: string;
+  businessEmail: string;
   password: string;
   local_ip: string;
   ip?:string;
@@ -62,11 +165,38 @@ export interface LoginPayload {
 }
 
 export interface SignupPayload {
-  username?: string;
-  email?: string;
-  password?: string;
-  status?:boolean;
+  uai: {
+    firstName: string;
+    lastName: string;
+    jobTitle?: string;
+    phoneNumber?: string;
+    businessEmail: string;
+    userId: string;
+    pwd: string;
+    cpwd: string;
+  };
+  ci: {
+    companyName?: string;
+    companyRegisterNumber?: string;
+    localLang?: string;
+    tradeName?: string;
+    SPT?: string;
+    CBT?: string;
+    address?: string;
+    city?: string;
+    country?: string;
+    zipCode?: string;
+    department?: string;
+    trade?: string;
+  };
+  ai?: {
+    contact?: string;
+    comment?: string;
+  };
+  role?: "USER" | "ADMIN";
+  local_ip?: string;
 }
+
 
 export interface LogoutPayload {
   msg?:string;
@@ -77,15 +207,15 @@ export interface LogoutPayload {
 }
 
 export interface VerifyEmailPayload {
-  username?:string;
-  email?: string;
+  businessEmail?:string;
+  username?: string;
   otp?: string;
   msg?: string;
   status?:boolean;
 }
 
 export interface VerifyOTPPayload{
-  username:string;
+  businessEmail:string;
   otp:string;
   msg?:string;
   access_token?:string;
@@ -104,8 +234,10 @@ export interface VerifyEmailResponse {
 }
 
 export interface DecodeToken{
+  sub?:string;
   username: string;
+  user?:User;
   email:string;
-  role:string;
+  role: "USER" | "ADMIN";
   isVerify:boolean;
 }

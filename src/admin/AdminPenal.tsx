@@ -10,12 +10,13 @@ import SEOForm from "./pages/seo/SeoForm";
 import UserList from "./pages/user/UserList";
 import UserForm from "./pages/user/UserForm";
 import CategoryForm from "./pages/category/CategoryForm";
+import TrashList from "./pages/trash/TrashList";
 
 const AdminPanel = () => {
   return (
-    <div className="flex min-h-screen">
+    <div className="relative">
       <AdminNavbar />
-      <div className="flex-1 md:ml-0 pt-16 md:pt-0">
+      <div className="md:pl-64 pt-16 md:pt-0 bg-gray-100 min-h-screen">
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="category" element={<CategoryList />} />
@@ -31,6 +32,7 @@ const AdminPanel = () => {
           <Route path="user/create" element={<UserForm />} />
           <Route path="user/edit/:id" element={<UserForm />} />
           <Route path="profile" element={<Profile />} />
+          <Route path="trash" element={<TrashList />} />
           <Route path="*" element={<Navigate to="/admin" />} />
         </Routes>
       </div>

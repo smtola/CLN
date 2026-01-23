@@ -25,12 +25,12 @@ interface FileUploadState {
 
 interface CRUDFormProps<T> {
   fetchItem?: (id: string) => Promise<T>;
-  createItem: (data: Omit<T, "id">) => Promise<T>;
+  createItem: (data: Omit<T, "_id">) => Promise<T>;
   updateItem: (id: string, data: Partial<T>) => Promise<T>;
   fields: FieldConfig<T>[];
   entityName: string;
   onChangeField?: (field: keyof T, value: string | File | File[], form: Partial<T>) => Partial<T>;
-  extraSelectOptions?: { [key in keyof T]?: { id: string; name: string }[] };
+  extraSelectOptions?: { [key in keyof T]?: { _id: string; name: string }[] };
 }
 
 function CRUDForm<T>({
@@ -44,7 +44,6 @@ function CRUDForm<T>({
 }: CRUDFormProps<T>) {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-
   const [form, setForm] = useState<Partial<T>>({});
   const [uploadStates, setUploadStates] = useState<{ [key: string]: FileUploadState[] }>({});
   const [isDragging, setIsDragging] = useState<{ [key: string]: boolean }>({});
@@ -562,7 +561,7 @@ function CRUDForm<T>({
           1500
         );
       } else {
-        await createItem(uploadForm as Omit<T, "id">);
+        await createItem(uploadForm as Omit<T, "_id">);
         closeAlert();
         await showSuccess(
           "Success!",
@@ -590,10 +589,11 @@ function CRUDForm<T>({
   };
 
   return (
-    <div className="p-3 md:p-6 bg-white rounded-lg shadow-md max-w-3xl mx-auto">
+    <div className="p-3 md:p-6 bg-white rounded w-full mx-auto mt-[2rem]">
       <h1 className="text-xl md:text-2xl font-bold mb-4 md:mb-6">{id ? "Edit" : "Add"} {entityName}</h1>
 
       <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6" encType="multipart/form-data">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
         {fields.map(f => (
           <div key={String(f.name)}>
             <label className="block font-medium mb-2 text-sm md:text-base">{f.label}</label>
@@ -608,7 +608,7 @@ function CRUDForm<T>({
               >
                 <option value="">Select {f.label}</option>
                 {extraSelectOptions?.[f.name]?.map((opt,idx) => (
-                  <option key={idx} value={opt.id}>{opt.name}</option>
+                  <option key={idx} value={opt.name}>{opt.name}</option>
                 ))}
               </select>
             ) : f.type === "textarea" ? (
@@ -750,11 +750,12 @@ function CRUDForm<T>({
             )}
           </div>
         ))}
+        </div>
 
         <button
           type="submit"
           disabled={isSubmitting}
-          className="w-full sm:w-auto bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 disabled:cursor-not-allowed text-white px-5 py-2 rounded-lg transition-colors text-sm md:text-base font-medium"
+          className="w-full float-end sm:w-auto bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 disabled:cursor-not-allowed text-white px-5 py-2 rounded-lg transition-colors text-sm md:text-base font-medium"
         >
           {isSubmitting ? "Uploading..." : id ? "Update" : "Create"}
         </button>

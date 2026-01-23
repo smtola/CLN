@@ -1,6 +1,12 @@
 import baseApi from '../api/baseApi';
-import type { User } from '../../types/auth';
+import type { Profile, User, UserType } from '../../types/auth';
+import type { UpdateUserPayload } from '../pages/user/UserForm';
 
+export type ApiResponse<T> = {
+  status: boolean;
+  msg: string;
+  data: T;
+};
 // ✅ GET all users
 export const getUsers = async (): Promise<User[]> => {
   const response = await baseApi.get<User[] | { data: User[] } | { users: User[] }>('/auth/users');
@@ -26,21 +32,39 @@ export const getUsers = async (): Promise<User[]> => {
 };
 
 // ✅ GET a single user
-export const getUserById = async (id: string): Promise<User> => {
-  return baseApi.get<User>(`/auth/users/${id}`);
+export const getUserById = async (_id: string): Promise<ApiResponse<Profile>> => {
+  return baseApi.get<ApiResponse<Profile>>(`/auth/users/${_id}`);
 };
+
 
 // ✅ CREATE a new user
-export const createUser = async (data: Omit<User, 'id'>): Promise<User> => {
-  return baseApi.post<User>('/auth/users', data);
+export const createUser = async (data: Omit<Profile, '_id'>): Promise<Profile> => {
+  return baseApi.post<Profile>('/auth/users', data);
 };
 
-// ✅ UPDATE a user
-export const updateUser = async (id: string, data: Partial<User>): Promise<User> => {
-  return baseApi.put<User>(`/auth/users/${id}`, data);
+
+export const updateUser = async (
+  _id: string,
+  data: UpdateUserPayload
+): Promise<ApiResponse<UserType>> => {
+  return baseApi.put<ApiResponse<UserType>>(`/auth/users/${_id}`, data);
 };
+
 
 // ✅ DELETE a user
-export const deleteUser = async (id: string): Promise<void> => {
-  return baseApi.delete<void>(`/auth/users/${id}`);
+export const deleteUser = async (_id: string): Promise<void> => {
+  return baseApi.delete<void>(`/auth/users/${_id}`);
+};
+
+// ✅ recovere a user
+export const recoveredUser = async (
+  _id: string,
+  data: UpdateUserPayload
+): Promise<ApiResponse<UserType>> => {
+  return baseApi.put<ApiResponse<UserType>>(`/auth/users/recovered/${_id}`, data);
+};
+
+// ✅ empty a trash
+export const emptyTrash = async (_id: string): Promise<ApiResponse<UserType>> => {
+  return baseApi.delete<ApiResponse<UserType>>(`/auth/users/empty_trash/${_id}`);
 };

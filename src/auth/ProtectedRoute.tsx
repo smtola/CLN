@@ -7,13 +7,12 @@ import Logo from "/logo.png";
 
 interface ProtectedRouteProps {
   children: ReactElement;
-  role?: "admin" | "user";
+  role?: "USER" | "ADMIN" | Array<"USER" | "ADMIN">;
 }
 
 const ProtectedRoute = ({ children, role }: ProtectedRouteProps) => {
   const [user, setUser] = useState<DecodeToken>();
   const [loading, setLoading] = useState(true);
-
   useEffect(() => {
     (async () => {
       const userData = await getUser();
@@ -35,9 +34,18 @@ const ProtectedRoute = ({ children, role }: ProtectedRouteProps) => {
             />
           </div>
           <div className="flex space-x-2">
-            <div className="w-3 h-3 bg-[#4fb748] rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-            <div className="w-3 h-3 bg-[#4fb748] rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-            <div className="w-3 h-3 bg-[#4fb748] rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+            <div
+              className="w-3 h-3 bg-[#4fb748] rounded-full animate-bounce"
+              style={{ animationDelay: "0ms" }}
+            />
+            <div
+              className="w-3 h-3 bg-[#4fb748] rounded-full animate-bounce"
+              style={{ animationDelay: "150ms" }}
+            />
+            <div
+              className="w-3 h-3 bg-[#4fb748] rounded-full animate-bounce"
+              style={{ animationDelay: "300ms" }}
+            />
           </div>
         </div>
       </div>
@@ -46,12 +54,18 @@ const ProtectedRoute = ({ children, role }: ProtectedRouteProps) => {
 
   const token = localStorage.getItem("accessToken");
 
+  // ❌ No token -> redirect to login
   if (!token) {
     return <Navigate to="/auth/login" replace />;
   }
 
-  if (role && user?.role !== role) {
-    return <Navigate to="/" replace />;
+  // ✅ Check role
+  if (role) {
+    const allowedRoles = Array.isArray(role) ? role : [role];
+    const userRole = user?.role as "USER" | "ADMIN"; // cast safely
+    if (!userRole || !allowedRoles.includes(userRole)) {
+      return <Navigate to="/" replace />;
+    }
   }
 
   return children;

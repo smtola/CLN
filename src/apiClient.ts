@@ -31,7 +31,7 @@ function processQueue(error: unknown, token: string | null) {
   }
 }
 
-const AUTH_WHITELIST = ["/login", "/signup", "/verify-email", "/refresh"];
+const AUTH_WHITELIST = ["/auth/login", "/auth/signup", "/auth/verify-email", "/refresh"];
 
 api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   const token = getAccessToken();

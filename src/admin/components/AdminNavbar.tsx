@@ -14,11 +14,12 @@ const AdminNavbar = () => {
 
   const navLinks = [
     { to: "/admin", label: "Dashboard", end: true },
-    { to: "/admin/category", label: "Categories" },
-    { to: "/admin/product", label: "Products" },
+    { to: "/admin/category", label: "Category" },
+    { to: "/admin/product", label: "Product" },
     { to: "/admin/seo", label: "SEO" },
     { to: "/admin/profile", label: "Profile" },
-    { to: "/admin/user", label: "Users" },
+    { to: "/admin/user", label: "User" },
+    { to: "/admin/trash", label: "Trash" },
   ];
 
   return (
@@ -64,11 +65,14 @@ const AdminNavbar = () => {
       {/* Sidebar Navigation */}
       <nav
         className={`
-          fixed md:static
+          fixed
           top-0 left-0
-          w-64 bg-[#c4ffc0] text-[#4FB748] 
+          w-64
+          bg-[#eff6ee] text-[#4FB748]
           min-h-screen p-4
           z-40
+          border-r border-[#4FB748]
+          shadow
           transform transition-transform duration-300 ease-in-out
           ${isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
         `}
@@ -82,7 +86,7 @@ const AdminNavbar = () => {
                 end={link.end}
                 onClick={closeMenu}
                 className={({ isActive }) =>
-                  `block px-3 py-2 rounded-lg text-sm md:text-base transition-colors ${
+                  `block px-3 py-2 rounded text-sm md:text-base transition-colors ${
                     isActive
                       ? "text-[#EE3A23] bg-[#ffd4d0] border-l-4 border-[#EE3A23]"
                       : "hover:bg-[#b0e8ac] hover:text-[#4FB748]"

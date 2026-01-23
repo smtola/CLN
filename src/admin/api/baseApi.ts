@@ -48,7 +48,7 @@ class BaseApi {
     // Handle 401 Unauthorized
     if (response.status === 401) {
       localStorage.removeItem('accessToken');
-      window.location.href = '/login';
+      window.location.href = '/auth/login';
       throw new Error('Unauthorized');
     }
 
