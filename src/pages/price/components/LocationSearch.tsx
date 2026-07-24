@@ -1,47 +1,44 @@
+// ── LocationSearch.tsx ────────────────────────────────────────────────
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import quoteService from '../services/quoteService';
 import type { Location } from '../types/common.types';
 import { useDebounce } from '../hooks/useDebounce';
 
 interface LocationSearchProps {
-  label: string;
-  value: string;
-  onChange: (location: Location) => void; // pass full location
+  label:        string;
+  value:        string;
+  onChange:     (location: Location) => void;
   placeholder?: string;
-  required?: boolean;
+  required?:    boolean;
 }
+
+const inputCls =
+  'w-full px-3 py-2.5 rounded-lg border text-sm bg-slate-50 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all';
 
 const LocationSearch: React.FC<LocationSearchProps> = ({
   label,
   value,
   onChange,
   placeholder = 'Enter location',
-  required = false,
+  required    = false,
 }) => {
-  const [searchTerm, setSearchTerm] = useState(value);
-  const [suggestions, setSuggestions] = useState<Location[]>([]);
+  const [searchTerm,      setSearchTerm]      = useState(value);
+  const [suggestions,     setSuggestions]     = useState<Location[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [hasSelected, setHasSelected] = useState(false);
+  const [loading,         setLoading]         = useState(false);
+  const [hasSelected,     setHasSelected]     = useState(false);
   const hasSelectedRef = useRef(false);
-  const debouncedSearchTerm = useDebounce(searchTerm, 500);
+  const debouncedTerm  = useDebounce(searchTerm, 500);
 
-  // Keep ref in sync with state
-  useEffect(() => {
-    hasSelectedRef.current = hasSelected;
-  }, [hasSelected]);
+  useEffect(() => { hasSelectedRef.current = hasSelected; }, [hasSelected]);
 
   const searchLocations = useCallback(async (query: string) => {
     setLoading(true);
     try {
       const results = await quoteService.searchLocations(query);
       setSuggestions(results);
-      // Only show suggestions if we haven't selected yet and have results
-      if (results.length > 0 && !hasSelectedRef.current) {
-        setShowSuggestions(true);
-      }
-    } catch (error) {
-      console.error('Failed to search locations:', error);
+      if (results.length > 0 && !hasSelectedRef.current) setShowSuggestions(true);
+    } catch {
       setSuggestions([]);
       setShowSuggestions(false);
     } finally {
@@ -50,62 +47,53 @@ const LocationSearch: React.FC<LocationSearchProps> = ({
   }, []);
 
   useEffect(() => {
-    if (debouncedSearchTerm && debouncedSearchTerm.length >= 2) {
-      searchLocations(debouncedSearchTerm);
+    if (debouncedTerm && debouncedTerm.length >= 2) {
+      searchLocations(debouncedTerm);
     } else {
       setSuggestions([]);
       setShowSuggestions(false);
     }
-  }, [debouncedSearchTerm, searchLocations]);
+  }, [debouncedTerm, searchLocations]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.value;
-    setSearchTerm(newValue);
-    setHasSelected(false); // Reset selection when user types
-    hasSelectedRef.current = false; // Update ref immediately
-    // Optionally pass partial location (just name) for live validation
-    // Pass a temporary Location object with empty required fields
-    onChange({
-      name: newValue,
-      code: '',
-      country: '',
-      city: '',
-      type: '',
-      lat: 0,
-      lon: 0,
-    });
+    const v = e.target.value;
+    setSearchTerm(v);
+    setHasSelected(false);
+    hasSelectedRef.current = false;
+    // FIX: don't call onChange with empty Location fields while typing,
+    // only update the display name so parent doesn't overwrite valid data.
+    // Parent should treat partial input as unvalidated.
   };
 
-  const handleSelectSuggestion = (location: Location) => {
+  const handleSelect = (location: Location) => {
     setSearchTerm(location.name);
-    onChange(location); // Pass the full location object
+    onChange(location);
     setSuggestions([]);
     setShowSuggestions(false);
-    setHasSelected(true); // Mark that a selection was made
-    hasSelectedRef.current = true; // Update ref immediately
+    setHasSelected(true);
+    hasSelectedRef.current = true;
   };
 
-  const handleBlur = () => {
-    // Delay hiding suggestions to allow click
-    setTimeout(() => {
-      setShowSuggestions(false);
-    }, 200);
-  };
-
-  const handleFocus = () => {
-    // Only show suggestions if we have results and haven't selected yet
-    if (suggestions.length > 0 && !hasSelected) {
-      setShowSuggestions(true);
-    }
-  };
+  const handleBlur  = () => setTimeout(() => setShowSuggestions(false), 200);
+  const handleFocus = () => { if (suggestions.length > 0 && !hasSelected) setShowSuggestions(true); };
 
   return (
-    <div className="flex form-control w-full relative">
-      <label className="space-x-1">
-        <span className="label-text">{label}</span>
-        {required && <span className="label-text-alt text-error">*</span>}
-      </label>
+    <div className="relative w-full">
+      {label && (
+        <label className="block text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: '#64748b' }}>
+          {label}{required && <span className="text-red-500 ml-1">*</span>}
+        </label>
+      )}
+
       <div className="relative">
+        {/* Search icon */}
+        <svg
+          viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth={2}
+          className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none"
+        >
+          <circle cx="11" cy="11" r="8" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35" />
+        </svg>
         <input
           type="text"
           value={searchTerm}
@@ -113,27 +101,33 @@ const LocationSearch: React.FC<LocationSearchProps> = ({
           onFocus={handleFocus}
           onBlur={handleBlur}
           placeholder={placeholder}
-          className="w-full bg-gray-100 p-2 rounded"
           required={required}
+          className={`${inputCls} pl-9 pr-8`}
         />
         {loading && (
-          <span className="absolute right-3 top-3 loading loading-spinner loading-sm"></span>
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
         )}
       </div>
 
+      {/* Dropdown */}
       {showSuggestions && suggestions.length > 0 && (
-        <div className="absolute z-50 w-full mt-1 bg-base-100 shadow-lg rounded-lg border border-base-300 max-h-60 overflow-y-auto top-full">
-          {suggestions.map((location, index) => (
-            <div
-              key={index}
-              className="px-4 py-2 hover:bg-base-200 cursor-pointer border-b border-base-200 last:border-b-0"
-              onClick={() => handleSelectSuggestion(location)}
+        <div
+          className="absolute z-50 w-full mt-1 bg-white rounded-xl shadow-lg border overflow-hidden"
+          style={{ borderColor: '#e2e8f0', maxHeight: 240, overflowY: 'auto' }}
+        >
+          {suggestions.map((loc, i) => (
+            <button
+              key={i}
+              type="button"
+              onMouseDown={() => handleSelect(loc)}
+              className="w-full text-left px-4 py-2.5 hover:bg-slate-50 transition-colors border-b last:border-b-0"
+              style={{ borderColor: '#f1f5f9' }}
             >
-              <div className="font-medium text-sm">{location.name}</div>
-              <div className="text-xs opacity-60">
-                CODE: {location.code} | {location.country}
-              </div>
-            </div>
+              <p className="text-sm font-semibold text-slate-800">{loc.name}</p>
+              <p className="text-xs text-slate-400 mt-0.5">
+                {loc.code} · {loc.country} · <span className="capitalize">{loc.type}</span>
+              </p>
+            </button>
           ))}
         </div>
       )}
@@ -141,4 +135,5 @@ const LocationSearch: React.FC<LocationSearchProps> = ({
   );
 };
 
+export { LocationSearch };
 export default LocationSearch;

@@ -25,7 +25,7 @@ const SEO: React.FC<SEOProps> = ({
     const defaultTitle = "CLN CAMBODIA CO., LTD.";
     const defaultDescription = "Discover CLN Cambodia Co., Ltd., your trusted partner for innovative solutions in Cambodia.";
     const defaultKeywords = "CLN Cambodia, business solutions, Cambodia services";
-    const defaultImage = "https://clncambodia.com/assets/image/logo.png";
+    const defaultImage = "https://clncambodia.com/assets/image/seo.jpg";
 
     const defaultUrl = "https://clncambodia.com/";
     

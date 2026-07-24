@@ -1,308 +1,369 @@
 import React, { useState, useEffect } from "react";
 import { NavLink, useLocation } from "react-router-dom";
-// import QuoteModal from "../quote-modal/QuoteModal";
 import UserMenu from "../UserMenu";
 import Logo from "/logo.png";
 import { getCategories } from "../../admin/services/categoryService";
 import type { Category } from "../../admin/types/category";
+import { getServices } from "../../admin/services/serviceService";
+import type { ServiceItem } from "../../admin/types/service";
 
 const Navbar: React.FC = () => {
   const location = useLocation();
   const [activeTab, setActiveTab] = useState<string>("Customs");
   const [categories, setCategories] = useState<Category[]>([]);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [mobileServicesOpen, setMobileServicesOpen] = useState(false);
+  const [mobileProductsOpen, setMobileProductsOpen] = useState(false);
+  const [services, setServices] = useState<ServiceItem[]>([]);
 
-  // Listen for query param changes
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const tab = params.get("tab");
     setActiveTab(tab || "Customs");
-  }, [location.search]);
+    setMobileOpen(false);
+  }, [location]);
 
   const fetchCategory = async () => {
     try {
       const res = await getCategories();
-      // Ensure we always have an array
       if (Array.isArray(res)) {
         setCategories(res);
       } else {
-        console.error('Invalid response format:', res);
         setCategories([]);
       }
-    } catch (error) {
-      console.error('Error fetching categories:', error);
+    } catch {
       setCategories([]);
+    }
+  };
+
+  const fetchServices = async () => {
+    try {
+      const res = await getServices({ page: 1, limit: 50 });
+      if (res.success && Array.isArray(res.data)) {
+        setServices(res.data);
+      } else {
+        setServices([]);
+      }
+    } catch {
+      setServices([]);
     }
   };
 
   useEffect(() => {
     fetchCategory();
+    fetchServices();
   }, []);
 
-  const servicesSubmenu = [
-    { name: "Customs Clearance", tab: "Customs" },
-    { name: "Cross Border (Land Transport)", tab: "land" },
-    { name: "Sea Freight", tab: "sea" },
-    { name: "Air Freight", tab: "air" },
-    { name: "Packing & Warehouse", tab: "packing" },
-    { name: "IEC", tab: "iec" },
-    { name: "Consolidation", tab: "consolidation" },
-    { name: "DTD Service", tab: "door2door" },
+  const navLinks = [
+    { link: "/", name: "Home" },
+    { link: "/about-us", name: "About Us" },
+    { link: "/contact-us", name: "Contact Us" },
+    { link: "/price/quote", name: "Spot On" },
   ];
 
+  const isServicesActive = location.pathname === "/services";
+  const isProductsActive = location.pathname === "/products";
 
   return (
     <div className="w-full">
-      {/* Header Section */}
+      {/* ── Top Info Bar ── */}
       <header>
-        {/* Top Bar */}
         <div className="flex text-black">
+          {/* Left: Hours + Call */}
           <div className="flex gap-1 justify-between w-[50%] lg:w-[66%] ms-2 px-1 py-1">
-            <div className="flex">
-            <span>
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" 
-              viewBox="0 0 24 24" fill="none" stroke="currentColor" 
-              strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"  
-              className="icon icon-tabler-outline icon-tabler-alarm">
-              <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-              <path d="M12 13m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0" />
-              <path d="M12 10l0 3l2 0" />
-              <path d="M7 4l-2.75 2" />
-              <path d="M17 4l2.75 2" />
-            </svg>                  
-          </span>
-              <span className="text-[14px] md:text-[18px]">
+            <div className="flex items-start gap-1">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                className="mt-1 shrink-0">
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                <path d="M12 13m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0" />
+                <path d="M12 10l0 3l2 0" />
+                <path d="M7 4l-2.75 2" />
+                <path d="M17 4l2.75 2" />
+              </svg>
+              <span className="text-[11px] md:text-[13px] leading-tight">
                 <b>Opening Hours:</b>
-                <p>Mon - Friday 8:00-5:30</p>
-                <p>Saturday 8:00-12:00</p>
+                <p>Mon–Fri 8:00–17:30</p>
+                <p>Sat 8:00–12:00</p>
               </span>
             </div>
-            <div className="hidden lg:flex gap-1 w-fit">
-              <span className="w-fit h-fit bg-black/30 rounded-full p-2">
-              <svg className="w-[24px]" viewBox="0 0 35 31" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <g clipPath="url(#clip0_14_679)">
-              <path d="M18.9349 29.7286C18.9296 29.4736 18.8459 29.2263 18.695 29.0196C18.5442 28.8129 18.3333 28.6566 18.0905 28.5717L15.0591 28.594C14.9156 28.8309 14.7777 29.0679 14.6313 29.3021C11.6963 29.3708 8.84444 28.3336 6.6518 26.4L5.64979 16.4895L5.04183 15.7842H4.32691C4.17211 14.6022 3.8428 10.9251 6.1508 7.60766C9.44674 2.86845 15.4391 2.72906 17.1926 2.68724C19.1178 2.64264 23.275 2.54507 26.6611 5.62555C30.883 9.45037 30.4467 15.0482 30.3792 15.7842C30.2099 15.755 30.0363 15.7618 29.8699 15.8041C29.7034 15.8464 29.548 15.9232 29.4138 16.0295C29.2419 16.1766 29.1176 16.3705 29.0563 16.5871L28.0205 26.2132C28.128 26.5638 28.341 26.8736 28.631 27.1009C28.9211 27.3283 29.2743 27.4625 29.6435 27.4856C30.0127 27.5086 30.3802 27.4194 30.6968 27.2299C31.0134 27.0404 31.264 26.7596 31.415 26.4251C32.2893 26.1024 33.0561 25.5458 33.6301 24.8173C34.2041 24.0887 34.5628 23.2167 34.6664 22.2983C34.7699 21.3799 34.6143 20.451 34.2166 19.615C33.819 18.779 33.1951 18.0686 32.4142 17.5628C32.5053 17.4014 32.5562 17.2209 32.5625 17.0361C32.5689 16.8513 32.5306 16.6678 32.4508 16.5006C32.3444 16.3148 32.182 16.1667 31.9863 16.0769C32.0652 15.1932 32.4902 9.38626 28.0205 4.71674C23.7254 0.206129 18.1552 0.136435 17.2292 0.139223C16.4298 0.164313 9.24127 0.504421 5.12627 6.50928C2.37074 10.5014 2.56495 14.6858 2.67472 16.0295L2.32852 16.4198V17.1641C2.08646 17.3286 0.102144 18.7504 0.00363171 21.2343C-0.0779927 23.3335 1.22237 25.3351 3.29113 26.2523C3.29113 26.4753 3.35868 27.0468 3.75554 27.2809C3.96101 27.4008 4.21714 27.3729 4.72096 27.3144L6.18739 27.1388C8.44361 29.1211 11.3937 30.1498 14.4061 30.0046C14.5194 30.2034 14.6638 30.3831 14.834 30.5371C14.9747 30.6619 15.1307 30.7686 15.2984 30.8549H18.2284C18.4402 30.7507 18.6185 30.5902 18.7433 30.3912C18.8681 30.1923 18.9344 29.9628 18.9349 29.7286Z" fill="#CE3A23" stroke="#CE3A23" strokeMiterlimit="10"/>
-              <path d="M7.18732 15.9628C7.1299 15.6549 6.99234 15.3657 6.78724 15.1216C6.58215 14.8775 6.31605 14.6863 6.01332 14.5655C5.95937 13.4692 5.97735 10.6501 7.93745 8.07327C11.1846 3.82263 16.9262 3.97191 18.0154 4.01106C19.4823 4.05266 23.7493 4.17257 26.6599 7.49085C29.1877 10.3784 29.0387 13.802 28.9719 14.6682C28.6597 14.7094 28.372 14.852 28.1576 15.072C27.9228 15.3182 27.7943 15.6399 27.7979 15.9726C24.8683 16.1401 21.9465 15.5383 19.3513 14.2327C16.8868 12.9824 14.8076 11.141 13.3194 8.8906C12.8982 10.3622 12.1656 11.7363 11.1666 12.9283C10.0902 14.2059 8.73158 15.2419 7.18732 15.9628Z" fill="#CE3A23" stroke="#CE3A23" strokeMiterlimit="10"/>
-              </g>
-              <defs>
-              <clipPath id="clip0_14_679">
-              <rect width="35" height="31" fill="white"/>
-              </clipPath>
-              </defs>
-            </svg> 
+            <div className="hidden lg:flex gap-2 items-center">
+              <span className="w-fit h-fit bg-black/10 rounded-full p-2">
+                <svg className="w-[20px]" viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M5.16667 1.33325H12.5L16.1667 10.4999L11.5833 13.2499C13.5468 17.2311 16.7689 20.4532 20.75 22.4166L23.5 17.8333L32.6667 21.4999V28.8333C32.6667 29.8057 32.2804 30.7383 31.5927 31.426C30.9051 32.1136 29.9725 32.4999 29 32.4999C21.8487 32.0653 15.1036 29.0285 10.0375 23.9624C4.97142 18.8963 1.93459 12.1513 1.5 4.99992C1.5 4.02746 1.88631 3.09483 2.57394 2.40719C3.26158 1.71956 4.19421 1.33325 5.16667 1.33325Z"
+                    stroke="#4F9748" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
               </span>
-              <span className="font-[300]">
-                Call Us Anytime
-                <br />
-                +(855) 61 300 618
+              <span className="text-[13px] font-[300]">
+                Call Us Anytime<br />
+                <b className="text-[#4F9748]">+(855) 61 300 618</b>
               </span>
             </div>
           </div>
 
+          {/* Right: Social */}
           <div
-            className="flex justify-center items-center w-[50%] lg:w-[44%] h-auto bg-[#4F9748] text-white space-x-[1rem]"
+            className="flex justify-center items-center gap-3 w-[50%] lg:w-[34%] h-auto bg-[#4F9748] text-white px-4"
             style={{ clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 12% 100%)" }}
           >
-            <h1 className="text-[14px] md:text-[18px] font-[500] uppercase">
-              Reach Us:
-            </h1>
-            <ul className="flex justify-center items-center gap-2">
+            <span className="text-[11px] md:text-[14px] font-[500] uppercase hidden sm:block">Reach Us:</span>
+            <ul className="flex items-center gap-2">
               <li>
-                <a href="https://www.facebook.com/clncambodia/"><svg className="w-[24px] md:w-[32px]" viewBox="0 0 41 45" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <circle cx="20.5" cy="20.5" r="20.5" fill="white"/>
-                  <path d="M12.3749 22.25V28.75H17.2499V40.125H23.7499V28.75H28.6249L30.2499 22.25H23.7499V19C23.7499 18.569 23.9211 18.1557 24.2258 17.851C24.5306 17.5462 24.9439 17.375 25.3749 17.375H30.2499V10.875H25.3749C23.22 10.875 21.1534 11.731 19.6296 13.2548C18.1059 14.7785 17.2499 16.8451 17.2499 19V22.25H12.3749Z" stroke="#4F9748" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>   </a>
+                <a href="https://www.facebook.com/clncambodia/" aria-label="Facebook"
+                  className="block w-[28px] h-[28px] md:w-[34px] md:h-[34px] bg-white rounded-full flex items-center justify-center hover:scale-110 transition-transform">
+                  <svg className="w-[16px] md:w-[18px]" viewBox="0 0 41 45" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12.3749 22.25V28.75H17.2499V40.125H23.7499V28.75H28.6249L30.2499 22.25H23.7499V19C23.7499 18.569 23.9211 18.1557 24.2258 17.851C24.5306 17.5462 24.9439 17.375 25.3749 17.375H30.2499V10.875H25.3749C23.22 10.875 21.1534 11.731 19.6296 13.2548C18.1059 14.7785 17.2499 16.8451 17.2499 19V22.25H12.3749Z"
+                      stroke="#4F9748" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </a>
               </li>
               <li>
-                <a href="https://t.me/+85561300618"><svg className="w-[24px] md:w-[32px]" viewBox="0 0 41 41" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="20.5" cy="20.5" r="20.5" fill="white"/>
-                <g clipPath="url(#clip0_21_272)">
-                <path d="M24 17.3335L18.6667 22.6668L26.6667 30.6668L32 9.3335L8 18.6668L13.3333 21.3335L16 29.3335L20 24.0002" stroke="#4F9748" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </g>
-                <defs>
-                <clipPath id="clip0_21_272">
-                <rect width="32" height="32" fill="white" transform="translate(4 4)"/>
-                </clipPath>
-                </defs>
-              </svg>    </a>
+                <a href="https://t.me/+85561300618" aria-label="Telegram"
+                  className="block w-[28px] h-[28px] md:w-[34px] md:h-[34px] bg-white rounded-full flex items-center justify-center hover:scale-110 transition-transform">
+                  <svg className="w-[16px] md:w-[18px]" viewBox="0 0 41 41" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <g clipPath="url(#clip0_21_272)">
+                      <path d="M24 17.3335L18.6667 22.6668L26.6667 30.6668L32 9.3335L8 18.6668L13.3333 21.3335L16 29.3335L20 24.0002"
+                        stroke="#4F9748" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </g>
+                    <defs>
+                      <clipPath id="clip0_21_272">
+                        <rect width="32" height="32" fill="white" transform="translate(4 4)"/>
+                      </clipPath>
+                    </defs>
+                  </svg>
+                </a>
               </li>
             </ul>
           </div>
         </div>
 
-        {/* Middle Bar for Mobile */}
-        <div className="flex lg:hidden">
-          <div
-            className="flex items-center gap-1 w-[45%] bg-[#4F9748]/30"
-            style={{ clipPath: "polygon(0% 0%, 100% 0%, 80% 100%, 0% 100%)" }}
-          >
-            <NavLink to="/">
-              <img src={Logo} alt="logo" width={70} height={50} className="ms-2" />
-            </NavLink>
-          </div>
-          <div className="flex justify-center items-center w-[65%] h-auto bg-white space-x-[1rem]">
-            {/* <QuoteModal /> */}
-            <UserMenu />
+        {/* Mobile logo bar */}
+        <div className="flex lg:hidden items-center justify-between px-3 py-2 bg-white border-b border-gray-100">
+          <NavLink to="/" className="flex items-center gap-2">
+            <img src={Logo} alt="CLN Logo" width={90} height={50} />
+          </NavLink>
+          <div className="flex items-center gap-3">
+            {/* <UserMenu /> */}
+            <button
+              onClick={() => setMobileOpen(!mobileOpen)}
+              className="p-2 rounded-lg text-[#4F9748] hover:bg-[#4F9748]/10 transition-colors"
+              aria-label="Toggle menu"
+            >
+              {mobileOpen ? (
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none"
+                  stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M18 6 6 18M6 6l12 12"/>
+                </svg>
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none"
+                  stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="4" y1="6" x2="20" y2="6"/>
+                  <line x1="4" y1="12" x2="20" y2="12"/>
+                  <line x1="4" y1="18" x2="20" y2="18"/>
+                </svg>
+              )}
+            </button>
           </div>
         </div>
       </header>
 
-      {/* Divider Line */}
-      <div className="lg:hidden w-full h-[3px] bg-gradient-to-l from-[#4F9748] to-[#ffffff]"></div>
+      {/* ── Sticky Navbar ── */}
+      <nav className="w-full bg-[#4F9748] sticky top-0 z-50 shadow-md">
 
-      {/* Sticky Navbar */}
-      <nav className="w-full bg-[#4F9748] sticky top-0 z-50">
-        {/* Desktop */}
-        <div className="hidden lg:flex">
-          <div className="flex w-[93%] h-full relative space-x-3">
-            <div
-              className="w-[70px] bg-[#ee3a23]"
-              style={{ clipPath: "polygon(0% 0%, 0% 0%, 80% 100%, 0% 100%)" }}
-            ></div>
-            <div>
-              <NavLink to="/">
-                <img
-                  src={Logo}
-                  alt="logo"
-                  width={150}
-                  className="w-[150px] h-full drop-shadow-md"
-                />
-              </NavLink>
-            </div>
-
-            <ul className="flex gap-[4px] justify-center items-center w-full h-full text-white rounded-full">
-              <li>
-                <NavLink
-                  to="/"
-                  className={({ isActive }) =>
-                    ` px-2 py-4 lg:py-7 2xl:py-8 text-[12px] lg:text-[16px] text-nowrap capitalize ${
-                      isActive ? "bg-green-50 border-b-2 border-[#EE3A23] text-[#4F9748]" : ""
-                    }`
-                  }
-                >
-                  HOME
-                </NavLink>
-              </li>
-              <li >
-                <NavLink
-                  to="/about-us"
-                  className={({ isActive }) =>
-                    `px-2 py-4 lg:py-7 2xl:py-8 text-[12px] lg:text-[16px] text-nowrap capitalize ${
-                      isActive ? "bg-green-50 border-b-2 border-[#EE3A23] text-[#4F9748]" : ""
-                    }`
-                  }
-                >
-                  ABOUT US
-                </NavLink>
-              </li>
-
-              {/* Services Dropdown */}
-              <li className="relative group px-2 py-4 lg:py-6 2xl:py-7">
-                <NavLink
-                  to="/services"
-                  className={() =>
-                    `px-2 py-4 lg:py-7 2xl:py-8 text-[12px] lg:text-[16px] text-nowrap capitalize ${
-                      location.pathname === "/services" ? "bg-green-50 border-b-2 border-[#EE3A23] text-[#4F9748]" : ""
-                    }`
-                  }
-                >
-                  SERVICES
-                </NavLink>
-                <ul className="absolute hidden group-hover:block bg-white text-black w-[220px] shadow-lg rounded-md mt-6">
-                  {servicesSubmenu.map((item) => (
-                    <li key={item.tab}>
-                      <NavLink
-                        to={`/services?tab=${item.tab}`}
-                        className={`block px-4 py-2 hover:bg-gray-100 ${
-                          activeTab === item.tab ? "bg-green-50 text-[#4F9748]" : ""
-                        }`}
-                      >
-                        {item.name}
-                      </NavLink>
-                    </li>
-                  ))}
-                </ul>
-              </li>
-
-              {/* Products Dropdown */}
-              <li className="relative group px-2 py-4 lg:py-6 2xl:py-7">
-                <NavLink
-                  to="/products"
-                  className={() =>
-                    `px-2 py-4 lg:py-7 2xl:py-8 text-[12px] lg:text-[16px] text-nowrap capitalize ${
-                      location.pathname === "/products" ? "bg-green-50 border-b-2 border-[#EE3A23] text-[#4F9748]" : ""
-                    }`
-                  }
-                >
-                  PRODUCTS
-                </NavLink>
-                <ul className="absolute hidden group-hover:block bg-white text-black w-[220px] shadow-lg rounded-md mt-6">
-                  {categories.map((item) => (
-                    <li key={item._id}>
-                      <NavLink
-                        to={`/products?category=${item.name}`}
-                        className="block px-4 py-2 hover:bg-gray-100"
-                      >
-                        {item.name}
-                      </NavLink>
-                    </li>
-                  ))}
-                </ul>
-              </li>
-
-              <li >
-                <NavLink
-                  to="/contact-us"
-                  className={({ isActive }) =>
-                    `px-2 py-4 lg:py-7 2xl:py-8 text-[12px] lg:text-[16px] text-nowrap capitalize ${
-                      isActive ? "bg-green-50 border-b-2 border-[#EE3A23] text-[#4F9748]" : ""
-                    }`
-                  }
-                >
-                  CONTACT US
-                </NavLink>
-              </li>
-              <li >
-                <NavLink
-                  to="/price/quote"
-                  className={({ isActive }) =>
-                    `px-2 py-4 lg:py-7 2xl:py-8 text-[12px] lg:text-[16px] text-nowrap capitalize ${
-                      isActive ? "bg-green-50 border-b-2 border-[#EE3A23] text-[#4F9748]" : ""
-                    }`
-                  }
-                >
-                 SPOT ON
-                </NavLink>
-              </li>
-            </ul>
+        {/* ── Desktop Nav ── */}
+        <div className="hidden lg:flex items-stretch h-[56px]">
+          {/* Red accent wedge + logo */}
+          <div className="flex items-center shrink-0">
+            <div className="w-[60px] h-full bg-[#ee3a23]"
+              style={{ clipPath: "polygon(0% 0%, 0% 0%, 80% 100%, 0% 100%)" }} />
+            <NavLink to="/" className="ml-3 h-full flex items-center">
+              <img src={Logo} alt="CLN" className="h-[48px] w-auto drop-shadow-md" />
+            </NavLink>
           </div>
 
-          {/* Quote Button */}
-          <div className="flex justify-center items-center w-[50%] h-auto bg-[#ee3a23] space-x-[1rem]">
-            {/* <QuoteModal /> */}
+          {/* Nav links */}
+          <ul className="flex items-stretch gap-0.5 px-2 flex-1">
+            {navLinks.slice(0, 2).map((item) => (
+              <li key={item.link} className="flex items-stretch">
+                <NavLink to={item.link}
+                  className={({ isActive }) =>
+                    `flex items-center px-3 text-[13px] lg:text-[15px] font-medium text-white transition-colors uppercase tracking-wide whitespace-nowrap
+                    ${isActive ? "bg-white/15 border-b-2 border-[#EE3A23]" : "hover:bg-white/10"}`
+                  }>
+                  {item.name}
+                </NavLink>
+              </li>
+            ))}
+
+            {/* Services dropdown */}
+            <li className="relative group flex items-stretch">
+              <NavLink to="/services"
+                className={`flex items-center gap-1 px-3 text-[13px] lg:text-[15px] font-medium text-white transition-colors uppercase tracking-wide whitespace-nowrap
+                  ${isServicesActive ? "bg-white/15 border-b-2 border-[#EE3A23]" : "hover:bg-white/10"}`}>
+                Services
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none"
+                  stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                  className="group-hover:rotate-180 transition-transform duration-200">
+                  <polyline points="6 9 12 15 18 9" transform="scale(0.75) translate(0, 2)"/>
+                </svg>
+              </NavLink>
+              {services.length > 0 && (
+                <ul className="absolute top-full left-0 hidden group-hover:block bg-white text-gray-700 w-[230px] shadow-xl rounded-b-xl border-t-2 border-[#4F9748] overflow-hidden">
+                  {services.map((item) => (
+                    <li key={item.key}>
+                      <NavLink to={`/services?tab=${item.key}`}
+                        className={`flex items-center gap-2 px-4 py-2.5 text-[13px] hover:bg-[#4F9748]/10 hover:text-[#4F9748] transition-colors
+                          ${activeTab === item.key ? "bg-[#4F9748]/10 text-[#4F9748] font-medium" : ""}`}>
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#4F9748] shrink-0" />
+                        {item.title}
+                      </NavLink>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </li>
+
+            {/* Products dropdown */}
+            <li className="relative group flex items-stretch">
+              <NavLink to="/products"
+                className={`flex items-center gap-1 px-3 text-[13px] lg:text-[15px] font-medium text-white transition-colors uppercase tracking-wide whitespace-nowrap
+                  ${isProductsActive ? "bg-white/15 border-b-2 border-[#EE3A23]" : "hover:bg-white/10"}`}>
+                Products
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none"
+                  stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                  className="group-hover:rotate-180 transition-transform duration-200">
+                  <polyline points="6 9 12 15 18 9" transform="scale(0.75) translate(0, 2)"/>
+                </svg>
+              </NavLink>
+              {categories.length > 0 && (
+                <ul className="absolute top-full left-0 hidden group-hover:block bg-white text-gray-700 w-[200px] shadow-xl rounded-b-xl border-t-2 border-[#4F9748] overflow-hidden">
+                  {categories.map((item) => (
+                    <li key={item._id}>
+                      <NavLink to={`/products?category=${item.name}`}
+                        className="flex items-center gap-2 px-4 py-2.5 text-[13px] hover:bg-[#4F9748]/10 hover:text-[#4F9748] transition-colors">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#EE3A23] shrink-0" />
+                        {item.name}
+                      </NavLink>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </li>
+
+            {navLinks.slice(2).map((item) => (
+              <li key={item.link} className="flex items-stretch">
+                <NavLink to={item.link}
+                  className={({ isActive }) =>
+                    `flex items-center px-3 text-[13px] lg:text-[15px] font-medium text-white transition-colors uppercase tracking-wide whitespace-nowrap
+                    ${isActive ? "bg-white/15 border-b-2 border-[#EE3A23]" : "hover:bg-white/10"}`
+                  }>
+                  {item.name}
+                </NavLink>
+              </li>
+            ))}
+          </ul>
+
+          {/* Right: User menu */}
+          <div className="flex items-center px-6 bg-[#ee3a23] shrink-0">
             <UserMenu />
           </div>
         </div>
 
-        {/* Mobile */}
-        <div className="lg:hidden w-full px-2">
-          <div className="overflow-x-auto hide-scrollbar">
-            <ul className="flex gap-[4px] items-center justify-center w-fit mx-auto h-full text-white rounded-full">
-              {[{link:'/',name:"HOME"},{link:'/about-us',name:"ABOUT US"},{link:'/services',name:"SERVICES"},{link:'/products',name:"PRODUCTS"},{link:'/contact-us',name:"CONTACT US"},{link:'/price/quote',name:"SPOT ON"}].map(
-                (item, index) => (
-                  <li key={index} className="px-2 py-3">
-                    <NavLink
-                      to={`${item.link}`}
-                      className={({ isActive }) =>
-                        `p-2 text-[12px] md:text-[16px] text-nowrap capitalize ${
-                          isActive ? "bg-green-50 border-b-2 border-[#EE3A23] text-[#4F9748]" : ""
-                        }`
-                      }
-                    >
-                      {item.name}
-                    </NavLink>
-                  </li>
-                )
-              )}
+        {/* ── Mobile drawer ── */}
+        <div
+          className={`lg:hidden overflow-hidden transition-all duration-300 ease-in-out ${mobileOpen ? "max-h-[600px] opacity-100" : "max-h-0 opacity-0"}`}
+        >
+          <div className="bg-[#3d7d38] border-t border-white/20">
+            <ul className="py-2">
+              <li>
+                <NavLink to="/"
+                  className={({ isActive }) =>
+                    `block px-5 py-3 text-[14px] font-medium uppercase tracking-wide transition-colors
+                    ${isActive ? "text-white bg-white/20 border-l-4 border-[#EE3A23]" : "text-white/90 hover:bg-white/10 border-l-4 border-transparent"}`}>
+                  Home
+                </NavLink>
+              </li>
+              <li>
+                <NavLink to="/about-us"
+                  className={({ isActive }) =>
+                    `block px-5 py-3 text-[14px] font-medium uppercase tracking-wide transition-colors
+                    ${isActive ? "text-white bg-white/20 border-l-4 border-[#EE3A23]" : "text-white/90 hover:bg-white/10 border-l-4 border-transparent"}`}>
+                  About Us
+                </NavLink>
+              </li>
+
+              {/* Services accordion */}
+              <li>
+                <button onClick={() => setMobileServicesOpen(!mobileServicesOpen)}
+                  className="flex items-center justify-between w-full px-5 py-3 text-[14px] font-medium uppercase tracking-wide text-white/90 hover:bg-white/10 border-l-4 border-transparent">
+                  Services
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none"
+                    stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                    className={`transition-transform duration-200 ${mobileServicesOpen ? "rotate-180" : ""}`}>
+                    <polyline points="6 9 12 15 18 9" transform="scale(0.85)"/>
+                  </svg>
+                </button>
+                <div className={`overflow-hidden transition-all duration-200 ${mobileServicesOpen ? "max-h-96" : "max-h-0"}`}>
+                  <ul className="bg-black/20 py-1">
+                    {services.map((item) => (
+                      <li key={item.key}>
+                        <NavLink to={`/services?tab=${item.key}`}
+                          className="block px-8 py-2.5 text-[13px] text-white/80 hover:text-white hover:bg-white/10 transition-colors">
+                          {item.title}
+                        </NavLink>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </li>
+
+              {/* Products accordion */}
+              <li>
+                <button onClick={() => setMobileProductsOpen(!mobileProductsOpen)}
+                  className="flex items-center justify-between w-full px-5 py-3 text-[14px] font-medium uppercase tracking-wide text-white/90 hover:bg-white/10 border-l-4 border-transparent">
+                  Products
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none"
+                    stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                    className={`transition-transform duration-200 ${mobileProductsOpen ? "rotate-180" : ""}`}>
+                    <polyline points="6 9 12 15 18 9" transform="scale(0.85)"/>
+                  </svg>
+                </button>
+                <div className={`overflow-hidden transition-all duration-200 ${mobileProductsOpen ? "max-h-64" : "max-h-0"}`}>
+                  <ul className="bg-black/20 py-1">
+                    <li>
+                      <NavLink to="/products" className="block px-8 py-2.5 text-[13px] text-white/80 hover:text-white hover:bg-white/10 transition-colors">
+                        All Products
+                      </NavLink>
+                    </li>
+                    {categories.map((item) => (
+                      <li key={item._id}>
+                        <NavLink to={`/products?category=${item.name}`}
+                          className="block px-8 py-2.5 text-[13px] text-white/80 hover:text-white hover:bg-white/10 transition-colors">
+                          {item.name}
+                        </NavLink>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </li>
+
+              <li>
+                <NavLink to="/contact-us"
+                  className={({ isActive }) =>
+                    `block px-5 py-3 text-[14px] font-medium uppercase tracking-wide transition-colors
+                    ${isActive ? "text-white bg-white/20 border-l-4 border-[#EE3A23]" : "text-white/90 hover:bg-white/10 border-l-4 border-transparent"}`}>
+                  Contact Us
+                </NavLink>
+              </li>
+              <li>
+                <NavLink to="/price/quote"
+                  className={({ isActive }) =>
+                    `block px-5 py-3 text-[14px] font-medium uppercase tracking-wide transition-colors
+                    ${isActive ? "text-white bg-white/20 border-l-4 border-[#EE3A23]" : "text-white/90 hover:bg-white/10 border-l-4 border-transparent"}`}>
+                  Spot On
+                </NavLink>
+              </li>
             </ul>
           </div>
         </div>

@@ -6,9 +6,9 @@
     vesselDeparture?: string;
     country:string;
     // Cargo details
-    equipmentType?: string; // e.g., 'Container'
+    equipmentType: string; // e.g., 'Container'
     soc?: boolean; // Shipper Owned Container
-    containerSize?: string; // "20' Dry" | "40' Dry"
+    containerSize: string; // "20' Dry" | "40' Dry"
     containerQuantity: number; 
     containerMaxWeight?: number; // in kg
     commodity:string;

@@ -1,99 +1,158 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { getProducts, deleteProduct } from "../../services/productService";
-import type { Product } from "../../types/product";
-import type { DecodeToken } from "../../../types/auth";
-import { getUser } from "../../../authStorage";
+import type { Product, ProductResponse } from "../../types/product";
+// import type { DecodeToken } from "../../../types/auth";
+// import { getUser } from "../../../authStorage";
 import { deleteFiles } from "../../services/s3Service";
 import { confirmDelete, showError, showSuccess } from "../../utils/swalHelper";
 
+interface Filters {
+  category?: string;
+  search?: string;
+  sortBy?: "product" | "category";
+  sortOrder?: "asc" | "desc";
+}
+
 const ProductList = () => {
-  const [user, setUser] = useState<DecodeToken | null>(null);
+  // const [user, setUser] = useState<DecodeToken | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [filters, setFilters] = useState<Filters>({});
+  const [pageSize, setPageSize] = useState(5); // dynamic page size
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      const userToken = await getUser();
-      setUser(userToken);
-    }
-    fetchUser();
-  }, [])
+  // Fetch user info
+  // useEffect(() => {
+  //   const fetchUser = async () => {
+  //     const userToken = await getUser();
+  //     setUser(userToken);
+  //   };
+  //   fetchUser();
+  // }, []);
+
+  // Fetch products from API
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const res = await getProducts();
-      // Ensure we always have an array
-      if (Array.isArray(res)) {
-        setProducts(res);
+      const res: ProductResponse = await getProducts({ page, limit: pageSize });
+      if (res.success && Array.isArray(res.data)) {
+        setProducts(res.data);
+        setTotalPages(res.pagination.pages || 1);
       } else {
-        console.error('Invalid response format:', res);
         setProducts([]);
+        setTotalPages(1);
       }
     } catch (error) {
-      console.error('Error fetching products:', error);
+      console.error("Error fetching products:", error);
       setProducts([]);
+      setTotalPages(1);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => { 
-    fetchProducts(); 
-  }, []);
+  // Refetch when page changes
+  useEffect(() => {
+    fetchProducts();
+  }, [page, pageSize]);
 
+  // Handle page size change
+  const handlePageSizeChange = (size: number) => {
+    setPageSize(size);
+    setPage(1); // reset to first page
+  };
+
+  // Delete product
   const handleDelete = async (_id: string) => {
     const confirmed = await confirmDelete(
       "Delete Product?",
       "Are you sure you want to delete this product? This action cannot be undone.",
       "Yes, delete it!"
     );
-
     if (!confirmed) return;
 
     try {
-      // Find the product to get its images
-      const productToDelete = products.find(p => p._id === _id);
-      
+      const productToDelete = products.find((p) => p._id === _id);
       if (productToDelete) {
-        // Parse and delete images from R2 storage
         const images = parseImages(productToDelete.image);
         if (images.length > 0) {
           try {
             await deleteFiles(images);
           } catch (error) {
-            console.error('Error deleting images from storage:', error);
-            // Continue with product deletion even if image deletion fails
+            console.error("Error deleting images:", error);
           }
         }
       }
-      
-      // Delete the product from the database
       await deleteProduct(_id);
       await showSuccess("Deleted!", "Product has been deleted successfully.", 1500);
       fetchProducts();
     } catch (error) {
-      console.error('Error deleting product:', error);
+      console.error("Error deleting product:", error);
       await showError("Error", "Failed to delete product. Please try again.");
     }
   };
 
-  // Parse image string (could be comma-separated or single URL)
-  const parseImages = (imageString: string): string[] => {
-    if (!imageString) return [];
-    // Check if it's a JSON array string
-    try {
-      const parsed = JSON.parse(imageString);
-      if (Array.isArray(parsed)) return parsed;
-    } catch {
-      // Not JSON, try comma-separated
-      if (imageString.includes(',')) {
-        return imageString.split(',').map(img => img.trim()).filter(Boolean);
+  // Parse images (string, JSON array, or comma-separated)
+  const parseImages = (imageInput: string | string[]): string[] => {
+    const result: string[] = [];
+    const normalize = (value: string | string[]) => {
+      if (!value) return;
+      if (typeof value === "string") {
+        if (value.startsWith("[") && value.endsWith("]")) {
+          try {
+            const parsed: string[] = JSON.parse(value);
+            normalize(parsed);
+            return;
+          } catch {
+            //
+          }
+        }
+        if (value.includes(",")) {
+          value
+            .split(",")
+            .map((v) => v.trim())
+            .filter(Boolean)
+            .forEach(normalize);
+          return;
+        }
+        result.push(value);
+        return;
       }
-    }
-    return [imageString];
+      if (Array.isArray(value)) value.forEach(normalize);
+    };
+    normalize(imageInput);
+    return result;
   };
+
+  // Apply filters/search/sort client-side (optional)
+  const displayedProducts = useMemo(() => {
+    let result = [...products];
+
+    if (filters.category && filters.category !== "All") {
+      result = result.filter((p) => p.category === filters.category);
+    }
+
+    if (filters.search?.trim()) {
+      const searchLower = filters.search.toLowerCase();
+      result = result.filter((p) =>
+        p.product.toLowerCase().includes(searchLower)
+      );
+    }
+
+    if (filters.sortBy) {
+      result.sort((a, b) => {
+        const fieldA = a[filters.sortBy!] as string;
+        const fieldB = b[filters.sortBy!] as string;
+        if (filters.sortOrder === "desc") return fieldB.localeCompare(fieldA);
+        return fieldA.localeCompare(fieldB);
+      });
+    }
+
+    return result;
+  }, [products, filters]);
 
   if (loading) {
     return (
@@ -108,6 +167,7 @@ const ProductList = () => {
 
   return (
     <div className="p-3 md:p-6">
+      {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Products</h1>
         <button
@@ -118,192 +178,109 @@ const ProductList = () => {
         </button>
       </div>
 
-      {products.length === 0 ? (
-        <div className="bg-white rounded-lg shadow p-6 md:p-8 text-center">
-          <p className="text-gray-500 text-base md:text-lg">No products found.</p>
-          <button
-            className="mt-4 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors duration-200 text-sm md:text-base"
-            onClick={() => navigate("/admin/product/create")}
-          >
-            Create your first product
-          </button>
-        </div>
-      ) : (
-        <>
-          {/* Desktop Table View */}
-          <div className="hidden md:block bg-white rounded-lg shadow overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Image
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Product
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Category
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Created By
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {products.map((product) => {
-                    const images = parseImages(product.image);
-                    return (
-                      <tr key={product._id} className="hover:bg-gray-50 transition-colors">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {images.length > 0 ? (
-                            <div className="flex items-center gap-2 w-full max-w-[93px] overflow-x-auto">
-                              {images.slice(0, 3).map((img, idx) => (
-                                <div
-                                  key={idx}
-                                  className="relative w-16 h-16 rounded-lg overflow-hidden border border-gray-200 flex-shrink-0"
-                                >
-                                  <img
-                                    src={img}
-                                    alt={`${product.product} ${idx + 1}`}
-                                    className="w-full h-full object-cover"
-                                    onError={(e) => {
-                                      (e.target as HTMLImageElement).src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="64" height="64"%3E%3Crect width="64" height="64" fill="%23e5e7eb"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%239ca3af" font-size="10"%3ENo Image%3C/text%3E%3C/svg%3E';
-                                    }}
-                                  />
-                                </div>
-                              ))}
-                              {images.length > 3 && (
-                                <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                                  +{images.length - 3}
-                                </span>
-                              )}
-                            </div>
-                          ) : (
-                            <div className="w-16 h-16 rounded-lg bg-gray-100 border border-gray-200 flex items-center justify-center">
-                              <span className="text-xs text-gray-400">No image</span>
-                            </div>
-                          )}
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="text-sm font-medium text-gray-900">{product.product}</div>
-                          {product.caption && (
-                            <div className="text-sm text-gray-500 mt-1 line-clamp-2">{product.caption}</div>
-                          )}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                            {product.category}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {user?.username || 'N/A'}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <button
-                            className="text-blue-600 hover:text-blue-900 mr-4 transition-colors"
-                            onClick={() => navigate(`/admin/product/edit/${product._id}`)}
-                          >
-                            Edit
-                          </button>
-                          <button
-                            className="text-red-600 hover:text-red-900 transition-colors"
-                            onClick={() => handleDelete(product._id)}
-                          >
-                            Delete
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
+      {/* Filters/Search/Sort */}
+      <div className="flex flex-col sm:flex-row gap-3 mb-6 items-start sm:items-center">
+        <select
+          className="border rounded px-3 py-2"
+          value={filters.category || "All"}
+          onChange={(e) => {
+            setFilters((prev) => ({ ...prev, category: e.target.value }));
+            setPage(1);
+          }}
+        >
+          <option value="All">All Categories</option>
+          {[...new Set(products.map((p) => p.category))].map((c) => (
+            <option key={c} value={c}>{c}</option>
+          ))}
+        </select>
 
-          {/* Mobile/Tablet Card View */}
-          <div className="md:hidden space-y-4">
-            {products.map((product) => {
-              const images = parseImages(product.image);
-              return (
-                <div key={product._id} className="bg-white rounded-lg shadow p-4">
-                  <div className="flex flex-col space-y-3">
-                    {/* Images */}
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-2">Images</h3>
-                      {images.length > 0 ? (
-                        <div className="flex items-center gap-2 flex-wrap">
-                          {images.slice(0, 3).map((img, idx) => (
-                            <div
-                              key={idx}
-                              className="relative w-20 h-20 rounded-lg overflow-hidden border border-gray-200 flex-shrink-0"
-                            >
-                              <img
-                                src={img}
-                                alt={`${product.product} ${idx + 1}`}
-                                className="w-full h-full object-cover"
-                                onError={(e) => {
-                                  (e.target as HTMLImageElement).src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="64" height="64"%3E%3Crect width="64" height="64" fill="%23e5e7eb"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%239ca3af" font-size="10"%3ENo Image%3C/text%3E%3C/svg%3E';
-                                }}
-                              />
-                            </div>
-                          ))}
-                          {images.length > 3 && (
-                            <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                              +{images.length - 3}
-                            </span>
-                          )}
-                        </div>
-                      ) : (
-                        <div className="w-20 h-20 rounded-lg bg-gray-100 border border-gray-200 flex items-center justify-center">
-                          <span className="text-xs text-gray-400">No image</span>
-                        </div>
-                      )}
-                    </div>
-                    {/* Product Name */}
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wide">Product</h3>
-                      <p className="text-base font-semibold text-gray-900 mt-1">{product.product}</p>
-                      {product.caption && (
-                        <p className="text-sm text-gray-600 mt-1 line-clamp-3">{product.caption}</p>
-                      )}
-                    </div>
-                    {/* Category */}
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wide">Category</h3>
-                      <span className="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800 mt-1">
-                        {product.category}
-                      </span>
-                    </div>
-                    {/* Created By */}
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wide">Created By</h3>
-                      <p className="text-sm text-gray-600 mt-1">{user?.username || 'N/A'}</p>
-                    </div>
-                    {/* Actions */}
-                    <div className="flex gap-3 pt-2 border-t border-gray-200">
-                      <button
-                        className="flex-1 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors text-sm font-medium"
-                        onClick={() => navigate(`/admin/product/edit/${product._id}`)}
-                      >
-                        Edit
-                      </button>
-                      <button
-                        className="flex-1 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors text-sm font-medium"
-                        onClick={() => handleDelete(product._id)}
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+        <input
+          type="text"
+          placeholder="Search products..."
+          className="border rounded px-3 py-2 flex-1"
+          value={filters.search || ""}
+          onChange={(e) => {
+            setFilters((prev) => ({ ...prev, search: e.target.value }));
+            setPage(1);
+          }}
+        />
+
+        <select
+          className="border rounded px-3 py-2"
+          value={`${filters.sortBy || ""}-${filters.sortOrder || "asc"}`}
+          onChange={(e) => {
+            const [sortBy, sortOrder] = e.target.value.split("-") as ["product" | "category", "asc" | "desc"];
+            setFilters((prev) => ({ ...prev, sortBy, sortOrder }));
+          }}
+        >
+          <option value="-asc">Sort By</option>
+          <option value="product-asc">Product ↑</option>
+          <option value="product-desc">Product ↓</option>
+          <option value="category-asc">Category ↑</option>
+          <option value="category-desc">Category ↓</option>
+        </select>
+      </div>
+          {/* Page size selector */}
+          <div className="mb-4 flex items-center justify-end gap-2">
+            <label>Pages:</label>
+            <select
+              className="border rounded px-2 py-1"
+              value={pageSize}
+              onChange={(e) => handlePageSizeChange(Number(e.target.value))}
+            >
+              {[5, 10, 20, 50].map((size) => (
+                <option key={size} value={size}>
+                  {size}
+                </option>
+              ))}
+            </select>
           </div>
-        </>
+      {/* Product Table */}
+      {displayedProducts.length === 0 ? (
+        <div className="bg-white rounded-lg shadow p-6 text-center">No products found.</div>
+      ) : (
+        <div className="overflow-x-auto bg-white rounded-lg shadow">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Images</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {displayedProducts.map((product) => {
+                const images = parseImages(product.image);
+                return (
+                  <tr key={product._id}>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex gap-2">
+                        {images.slice(0, 3).map((img, idx) => (
+                          <img key={idx} src={img} className="w-12 h-12 object-cover rounded" />
+                        ))}
+                        {images.length > 3 && <span className="text-xs text-gray-500">+{images.length - 3}</span>}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">{product.product}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">{product.category}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right">
+                      <button className="text-blue-600 hover:text-blue-900 mr-4" onClick={() => navigate(`/admin/product/edit/${product._id}`)}>Edit</button>
+                      <button className="text-red-600 hover:text-red-900" onClick={() => handleDelete(product._id)}>Delete</button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+
+          {/* Pagination */}
+          <div className="flex justify-end gap-2 p-4">
+            <button disabled={page === 1} onClick={() => setPage((p) => Math.max(1, p - 1))} className="px-3 py-1 border rounded disabled:opacity-50">Previous</button>
+            <span className="px-3 py-1 border rounded">{page} / {totalPages}</span>
+            <button disabled={page === totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))} className="px-3 py-1 border rounded disabled:opacity-50">Next</button>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -92,6 +92,10 @@ export async function verifyOTP(payload: VerifyOTPPayload) {
 export async function verifyEmail(payload: VerifyEmailPayload): Promise<VerifyEmailResponse> {
   try{
     const { data } = await api.post<VerifyEmailResponse>("/verify-email", payload);
+    // Set auth after OTP verification
+    if (data.access_token && data.refresh_token) {
+      setAuth({ accessToken: data.access_token, refreshToken: data.refresh_token});
+    }
     return data;
    }catch (err: unknown){
     // If API sends { msg: "Invalid credentials" }

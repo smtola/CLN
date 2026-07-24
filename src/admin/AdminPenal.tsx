@@ -5,6 +5,8 @@ import CategoryList from "./pages/category/CategoryList";
 import Profile from "./pages/profile/Profile";
 import ProductList from "./pages/product/ProductList";
 import ProductForm from "./pages/product/ProductForm";
+import ServiceList from "./pages/service/ServiceList";
+import ServiceForm from "./pages/service/ServiceForm";
 import SEOList from "./pages/seo/SeoList";
 import SEOForm from "./pages/seo/SeoForm";
 import UserList from "./pages/user/UserList";
@@ -25,6 +27,9 @@ const AdminPanel = () => {
           <Route path="product" element={<ProductList />} />
           <Route path="product/create" element={<ProductForm />} />
           <Route path="product/edit/:id" element={<ProductForm />} />
+          <Route path="service" element={<ServiceList />} />
+          <Route path="service/create" element={<ServiceForm />} />
+          <Route path="service/edit/:id" element={<ServiceForm />} />
           <Route path="seo" element={<SEOList />} />
           <Route path="seo/create" element={<SEOForm />} />
           <Route path="seo/edit/:id" element={<SEOForm />} />

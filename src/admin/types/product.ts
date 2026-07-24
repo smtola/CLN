@@ -7,3 +7,15 @@ export interface Product {
     image: string;
     created_by: string;
 }
+
+export interface ProductResponse {
+    success: boolean;
+    message: string;
+    data: Product[];
+    pagination: {
+      total: number;
+      page: number;
+      limit: number;
+      pages: number;
+    };
+  }

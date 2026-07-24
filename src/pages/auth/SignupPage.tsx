@@ -358,7 +358,7 @@ export default function SignupPage() {
                     <span className="text-red-600">*</span>
                   </div>
                   <select
-                    value={formData.uai.jobTitle}
+                    defaultValue={formData.uai.jobTitle}
                     onChange={(e) =>
                       setFormData({ ...formData, uai: {
                         ...formData.uai,
@@ -367,13 +367,13 @@ export default function SignupPage() {
                     }
                     className="select select-bordered w-full mt-2 rounded text-[16px]"
                   >
-                    <option value="" disabled selected>
+                    <option defaultValue="" disabled selected>
                       Job Title
                     </option>
-                    <option value="Top Management">Top Management</option>
-                    <option value="Middle Management">Middle Management</option>
-                    <option value="Operative Management">Operative Management</option>
-                    <option value="Non-Managerial">Non-Managerial</option>
+                    <option defaultValue="Top Management">Top Management</option>
+                    <option defaultValue="Middle Management">Middle Management</option>
+                    <option defaultValue="Operative Management">Operative Management</option>
+                    <option defaultValue="Non-Managerial">Non-Managerial</option>
                   </select>
 
                   {errors.jobTitle && <p className="text-red-600 font-light text-[11px]">{errors.jobTitle}</p>}

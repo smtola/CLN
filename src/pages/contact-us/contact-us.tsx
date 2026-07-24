@@ -20,7 +20,7 @@ const ContactUs: React.FC = () => {
                 keywords: "CLN Cambodia, contact, logistics, transportation, sea freight, air freight",
                 ogTitle: "CLN Cambodia - Contact Us",
                 ogDescription: "Contact CLN Cambodia for international and domestic logistics services.",
-                ogImage: "https://clncambodia.com/assets/image/logo.png",
+                ogImage: "https://clncambodia.com/assets/image/seo.jpg",
                 canonical: "https://clncambodia.com/contact-us",
                 url: "https://clncambodia.com/contact-us"
             });

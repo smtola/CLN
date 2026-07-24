@@ -1,28 +1,26 @@
 import baseApi from "../api/baseApi";
-import type { Product } from "../types/product";
+import type { Product, ProductResponse } from "../types/product";
 
 // ✅ GET all products
-export const getProducts = async (): Promise<Product[]> => {
-  const response = await baseApi.get<Product[] | { data: Product[] } | { products: Product[] }>("/web/products");
-  
-  // Handle different response formats
-  if (Array.isArray(response)) {
-    return response;
+export const getProducts = async (params?: {
+  page?: number;
+  limit?: number;
+  category?: string;
+}): Promise<ProductResponse> => {
+
+  const query = new URLSearchParams();
+
+  if (params?.page) query.append("page", String(params.page));
+  if (params?.limit) query.append("limit", String(params.limit));
+  if (params?.category && params.category !== "All") {
+    query.append("category", params.category);
   }
-  
-  // Handle wrapped responses
-  if (response && typeof response === 'object') {
-    if ('data' in response && Array.isArray(response.data)) {
-      return response.data;
-    }
-    if ('products' in response && Array.isArray(response.products)) {
-      return response.products;
-    }
-  }
-  
-  // Fallback: return empty array if format is unexpected
-  console.warn('Unexpected API response format:', response);
-  return [];
+
+  const response = await baseApi.get<ProductResponse>(
+    `/web/products?${query.toString()}`
+  );
+
+  return response;
 };
 
 // ✅ GET a single Product

@@ -171,13 +171,22 @@ export default function VerifyOTPPage() {
         }
 
         const remainingAttempts = Math.max(3 - newAttempts, 0); // first 3 attempts
-        Swal.fire(
-          "Error",
-          remainingAttempts > 0
-            ? `Invalid OTP. You have ${remainingAttempts} attempt(s) left.`
-            : `You have exceeded the maximum OTP attempts. Wait ${formatTime(cooldownSec)} to try again.`,
-          "error"
-        );
+        // Priority: show backend message first (e.g., OTP expired)
+        let errorMessage = res?.msg;
+
+        // If backend does not send specific message, fallback to attempt logic
+        if (!errorMessage) {
+          errorMessage =
+            remainingAttempts > 0
+              ? `Invalid OTP. You have ${remainingAttempts} attempt(s) left.`
+              : `You have exceeded the maximum OTP attempts. Wait ${formatTime(cooldownSec)} to try again.`;
+        }
+
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: errorMessage,
+        });
         return;
       }
 

@@ -4,6 +4,9 @@ import AdminPanel from './components/AdminPanel';
 import QuoteHistory from './components/QuoteHistory';
 import { getUser } from '../../authStorage';
 import type { DecodeToken } from '../../types/auth';
+import Logo from "/logo.png";
+import { NavLink } from 'react-router-dom';
+
 type TabType = 'quote' | 'history' | 'ADMIN';
 
 interface PriceAppProps {
@@ -13,78 +16,115 @@ interface PriceAppProps {
   onTabChange?: (tab: TabType) => void;
 }
 
+const ShipIcon = () => (
+  <NavLink to="/">
+    <img src={Logo} alt="logo" width={70} height={50} className="ms-2" />
+  </NavLink>
+);
+
+const tabs: { key: TabType; label: string; adminOnly?: boolean }[] = [
+  { key: 'quote',   label: 'Get Quote' },
+  { key: 'history', label: 'My History' },
+  { key: 'ADMIN',   label: 'Rate Manager', adminOnly: true },
+];
+
 const PriceApp: React.FC<PriceAppProps> = ({
   defaultTab = 'quote',
   showHeader = true,
   showFooter = true,
   onTabChange,
 }) => {
-  const [user, setUser] = useState<DecodeToken>();
+  const [user, setUser]           = useState<DecodeToken | undefined>();
   const [activeTab, setActiveTab] = useState<TabType>(defaultTab);
-  const handleTabChange = (tab: TabType) => {
-    setActiveTab(tab);
-    if (onTabChange) {
-      onTabChange(tab);
-    }
-  };
 
   useEffect(() => {
-    const fetchUser = async () => {
-      const userToken = await getUser();
-      setUser(userToken);
-    };
-    fetchUser();
+    getUser().then(setUser).catch(() => {});
   }, []);
-  
+
+  const handleTabChange = (tab: TabType) => {
+    setActiveTab(tab);
+    onTabChange?.(tab);
+  };
+
+  const visibleTabs = tabs.filter(t => !t.adminOnly || user?.role === 'ADMIN');
 
   return (
-    <div className="flex flex-col justify-between min-h-screen bg-[#e7e6e6]">
-      {/* Header */}
+    <div className="flex flex-col min-h-screen" style={{ background: '#f0f2f5', fontFamily: "'IBM Plex Sans', system-ui, sans-serif" }}>
+
+      {/* ── Top navbar ── */}
       {showHeader && (
-        <div className="navbar text-primary-content shadow-lg sticky top-0 z-50">
-          <div className="flex-1">
-            <a className="btn btn-white text-xl">CLN Quote System</a>
-          </div>
-          <div className="flex-none">
-            <div className="tabs tabs-boxed">
-              <a
-                className={`tab ${activeTab === 'quote' ? 'tab-active' : ''}`}
-                onClick={() => handleTabChange('quote')}
-              >
-                Get Quote
-              </a>
-              <a
-                className={`tab ${activeTab === 'history' ? 'tab-active' : ''}`}
-                onClick={() => handleTabChange('history')}
-              >
-                History
-              </a>
-              {user?.role === 'ADMIN' && 
-                <a
-                  className={`tab ${activeTab === 'ADMIN' ? 'tab-active' : ''}`}
-                  onClick={() => handleTabChange('ADMIN')}
-                >
-                  Admin
-                </a>
-              }
+        <header className="sticky top-0 z-50 shadow-md" style={{ background: '#4f9848' }}>
+          <div className="max-w-7xl mx-auto flex items-center justify-between px-4 md:px-8 h-14">
+
+            {/* Brand */}
+            <div className="flex items-center justify-start gap-2.5 text-white">
+              <div className="w-14 h-14 rounded-lg flex items-center justify-center" style={{ background: '#4F9848' }}>
+                <ShipIcon />
+              </div>
+              <span className="font-bold text-xl tracking-tight ">Quote System</span>
             </div>
+
+            {/* Tabs */}
+            <nav className="flex items-center gap-1">
+              {visibleTabs.map(tab => {
+                const active = activeTab === tab.key;
+                return (
+                  <button
+                    key={tab.key}
+                    onClick={() => handleTabChange(tab.key)}
+                    className="relative px-4 py-2 text-sm font-medium rounded-md transition-all duration-150"
+                    style={{
+                      color:      active ? '#ffffff' : 'rgba(255,255,255,0.55)',
+                      background: active ? 'rgba(255,255,255,0.12)' : 'transparent',
+                    }}
+                  >
+                    {tab.label}
+                    {active && (
+                      <span
+                        className="absolute bottom-0 left-3 right-3 h-0.5 rounded-t-full"
+                        style={{ background: '#EE3A23' }}
+                      />
+                    )}
+                  </button>
+                );
+              })}
+            </nav>
+
+            {/* User pill */}
+            {user && (
+              <div
+                className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium"
+                style={{ background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.7)' }}
+              >
+                <span
+                  className="w-5 h-5 rounded-full flex items-center justify-center text-white text-xs font-bold"
+                  style={{ background: '#4F9848' }}
+                >
+                  {user.username?.charAt(0).toUpperCase() ?? 'U'}
+                </span>
+                {user.username}
+                {user.role === 'ADMIN' && (
+                  <span className="ml-1 text-xs px-1.5 py-0.5 rounded" style={{ background: '#EE3A23', color: 'white' }}>
+                    Admin
+                  </span>
+                )}
+              </div>
+            )}
           </div>
-        </div>
+        </header>
       )}
 
-      {/* Main Content */}
-      <div className="container mx-auto py-8 px-4">
-        {activeTab === 'quote' && <QuoteForm />}
+      {/* ── Page content ── */}
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 md:px-8 py-8">
+        {activeTab === 'quote'   && <QuoteForm />}
         {activeTab === 'history' && <QuoteHistory />}
-        {activeTab === 'ADMIN' && <AdminPanel />}
-      </div>
+        {activeTab === 'ADMIN'   && <AdminPanel />}
+      </main>
 
-      {/* Footer */}
+      {/* ── Footer ── */}
       {showFooter && (
-        <footer className="footer footer-center p-4 bg-base-300 text-base-content mt-8">
-          <aside>
-            <p>© 2025 Logistics Quote System</p>
-          </aside>
+        <footer className="border-t text-center py-4 text-xs" style={{ borderColor: '#d1d5db', color: '#9ca3af', background: '#f0f2f5' }}>
+          © {new Date().getFullYear()} CLN Logistics — Freight Quote System
         </footer>
       )}
     </div>

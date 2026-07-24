@@ -3,6 +3,7 @@ import CRUDForm, { type FieldConfig } from "../../components/CRUDForm";
 import { createProduct, updateProduct, getProductById } from "../../services/productService";
 import { getCategories } from "../../services/categoryService"; // fetch categories
 import type { Product } from "../../types/product";
+import type { Category } from "../../types/category";
 
 const fields: FieldConfig<Product>[] = [
   { name: "category", label: "Category", type: "select" },
@@ -28,7 +29,7 @@ const ProductForm = () => {
     (async () => {
       try {
         const data = await getCategories(); 
-        setCategories(data.map(cat => ({ _id: cat._id, name: cat.name })));
+        setCategories(data.map((cat: Category) => ({ _id: cat._id || "", name: cat.name })));
       } catch (error: unknown) {
         console.error("Failed to fetch categories:", error);
         if (error && typeof error === 'object' && 'response' in error) {

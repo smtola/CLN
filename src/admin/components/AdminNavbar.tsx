@@ -1,9 +1,11 @@
 import { useState } from "react";
-import { NavLink, Link } from "react-router-dom";
+import { NavLink, Link,useNavigate } from "react-router-dom";
+import { logout } from "../../authService";
+import Swal from "sweetalert2";
 
 const AdminNavbar = () => {
   const [isOpen, setIsOpen] = useState(false);
-
+  const navigate = useNavigate();
   const toggleMenu = () => {
     setIsOpen(!isOpen);
   };
@@ -11,11 +13,35 @@ const AdminNavbar = () => {
   const closeMenu = () => {
     setIsOpen(false);
   };
+  const handleLogout = async () => {
+    try {
+      const res = await logout();
 
+      if (!res.msg) {
+        Swal.fire("Logout Failed", res.msg ?? "Unknown error", "error");
+        return;
+      }
+      navigate("/");
+      Swal.fire({
+        icon: "success",
+        title: res.msg,
+        timer: 1500,
+        showConfirmButton: false,
+      });
+     
+    } catch (err: unknown) {
+      Swal.fire(
+        "Error",
+        err instanceof Error ? err.message : "Unknown error occurred",
+        "error"
+      );
+    }
+  };
   const navLinks = [
     { to: "/admin", label: "Dashboard", end: true },
     { to: "/admin/category", label: "Category" },
     { to: "/admin/product", label: "Product" },
+    { to: "/admin/service", label: "Service" },
     { to: "/admin/seo", label: "SEO" },
     { to: "/admin/profile", label: "Profile" },
     { to: "/admin/user", label: "User" },
@@ -100,7 +126,7 @@ const AdminNavbar = () => {
         </ul>
         
         {/* Navigate to Client Side Button */}
-        <div className="mt-6 pt-4 border-t border-[#4FB748]/30">
+        <div className="mt-6 pt-4 border-t border-[#4FB748]/30 space-y-2">
           <Link
             to="/"
             onClick={closeMenu}
@@ -121,6 +147,24 @@ const AdminNavbar = () => {
             </svg>
             <span>View Website</span>
           </Link>
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-2 w-full px-3 py-2 rounded-lg bg-[#f03d3d] text-white hover:bg-[#ed7e7e] transition-colors text-sm md:text-base font-medium shadow-md"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path d="M10 8v-2a2 2 0 0 1 2 -2h7a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-7a2 2 0 0 1 -2 -2v-2" />
+              <path d="M15 12h-12l3 -3" />
+              <path d="M6 15l-3 -3" />
+            </svg>
+
+            <span>Logout</span>
+          </button>
         </div>
       </nav>
     </>

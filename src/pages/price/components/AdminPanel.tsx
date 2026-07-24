@@ -12,419 +12,410 @@ import { formatCurrency, capitalizeFirst } from '../utils/formatters';
 import LocationSearch from './LocationSearch';
 import type { Location } from '../types/common.types';
 import { showError } from '../../../admin/utils/swalHelper';
+
 type Option = { value?: string; label?: string; name?: string };
+type Service = keyof typeof SERVICE_COLORS;
+// ── Shared input style ──────────────────────────────────────────────
+const inputCls =
+  'w-full px-3 py-2.5 rounded-lg border text-sm bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all';
+
+const FieldLabel = ({ children }: { children: React.ReactNode }) => (
+  <label className="block text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: '#64748b' }}>
+    {children}
+  </label>
+);
+
+// ── Service badge ────────────────────────────────────────────────────
+const ServiceBadge = ({ service }: { service: Service }) => {
+  const cls = SERVICE_COLORS[service] ?? 'bg-slate-100 text-slate-600';
+  return (
+    <span className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold ${cls}`}>
+      {capitalizeFirst(service)}
+    </span>
+  );
+};
+
+// ── Form modal ───────────────────────────────────────────────────────
+interface ModalProps {
+  editingCard: RateCard | null;
+  formData: RateCardFormData;
+  loading: boolean;
+  onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => void;
+  onLocationChange: (name: string, location: Location) => void;
+  onSubmit: (e: React.FormEvent) => void;
+  onClose: () => void;
+}
+
+const RateCardModal: React.FC<ModalProps> = ({
+  editingCard, formData, loading, onChange, onLocationChange, onSubmit, onClose,
+}) => (
+  <div
+    className="fixed inset-0 z-50 flex items-center justify-center p-4"
+    style={{ background: 'rgba(10,22,50,0.65)', backdropFilter: 'blur(2px)' }}
+    onClick={e => { if (e.target === e.currentTarget) onClose(); }}
+  >
+    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
+
+      {/* Header */}
+      <div className="flex items-center justify-between px-6 py-4 flex-shrink-0" style={{ background: '#66a55f' }}>
+        <h3 className="text-white font-bold text-base">
+          {editingCard ? 'Edit Rate Card' : 'Add Rate Card'}
+        </h3>
+        <button onClick={onClose} className="text-slate-100 hover:text-white transition-colors">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-5 h-5">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      {/* Body */}
+      <form onSubmit={onSubmit} className="overflow-y-auto flex-1 px-6 py-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+          {/* Origin / Destination */}
+          <div>
+            <FieldLabel>Origin *</FieldLabel>
+            <LocationSearch
+              label=""
+              value={formData.origin}
+              onChange={loc => onLocationChange('origin', loc)}
+              required
+              placeholder="Origin Port"
+            />
+          </div>
+          <div>
+            <FieldLabel>Destination *</FieldLabel>
+            <LocationSearch
+              label=""
+              value={formData.destination}
+              onChange={loc => onLocationChange('destination', loc)}
+              required
+              placeholder="Destination Port"
+            />
+          </div>
+
+          {/* Transport Mode / Service / Currency */}
+          {([
+            { label: 'Transport Mode', name: 'mode',     options: TRANSPORT_MODES },
+            { label: 'Service',        name: 'service',  options: SERVICE_LEVELS  },
+            { label: 'Currency',       name: 'currency', options: CURRENCIES      },
+          ] as const).map(({ label, name, options }) => (
+            <div key={name}>
+              <FieldLabel>{label} *</FieldLabel>
+              <select
+                name={name}
+                value={formData[name as keyof RateCardFormData] as string}
+                onChange={onChange}
+                className={inputCls}
+                required
+              >
+                {(options as Option[]).map(o => (
+                  <option key={o.value ?? o.name} value={o.value ?? o.name}>
+                    {o.label ?? o.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ))}
+
+          {/* ── Conditional cost fields ── */}
+          {formData.service === 'local_charge' && (
+            <>
+              <div>
+                <FieldLabel>Export Clearance *</FieldLabel>
+                <input type="number" name="docs" value={formData.docs}
+                  onChange={onChange} min={0} step={0.01} required className={inputCls} />
+              </div>
+              <div>
+                <FieldLabel>Trucking *</FieldLabel>
+                <input type="number" name="trucking" value={formData.trucking}
+                  onChange={onChange} min={0} step={0.01} required className={inputCls} />
+              </div>
+            </>
+          )}
+
+          {formData.service === 'freight' && (
+            <>
+              <div>
+                <FieldLabel>Freight *</FieldLabel>
+                <input type="number" name="freight" value={formData.freight}
+                  onChange={onChange} min={0} step={0.01} required className={inputCls} />
+              </div>
+              <div>
+                <FieldLabel>OTHC *</FieldLabel>
+                <input type="number" name="othc" value={formData.othc}
+                  onChange={onChange} min={0} step={0.01} required className={inputCls} />
+              </div>
+            </>
+          )}
+
+          {/* Remark — FIX: name="remark" not name={formData.remark} */}
+          <div className="md:col-span-2">
+            <FieldLabel>Remark</FieldLabel>
+            <textarea
+              rows={2}
+              name="remark"
+              value={formData.remark}
+              onChange={onChange}
+              placeholder="e.g. Subject to space availability"
+              className={`${inputCls} resize-none`}
+            />
+          </div>
+        </div>
+
+        {/* Rate preview */}
+        {formData.service === 'local_charge' && formData.docs > 0 && (
+          <div className="mt-4 p-3 rounded-lg border text-sm" style={{ background: '#f0f9ff', borderColor: '#bae6fd' }}>
+            <p className="text-xs font-semibold text-blue-600 mb-1">Preview for customers</p>
+            <p className="font-bold text-blue-800">
+              Clearance: {formatCurrency(formData.docs, formData.currency)} &nbsp;·&nbsp;
+              Trucking: {formatCurrency(formData.trucking, formData.currency)}
+            </p>
+          </div>
+        )}
+        {formData.service === 'freight' && formData.freight > 0 && (
+          <div className="mt-4 p-3 rounded-lg border text-sm" style={{ background: '#f0f9ff', borderColor: '#bae6fd' }}>
+            <p className="text-xs font-semibold text-blue-600 mb-1">Preview for customers</p>
+            <p className="font-bold text-blue-800">
+              Freight: {formatCurrency(formData.freight, formData.currency)} &nbsp;·&nbsp;
+              OTHC: {formatCurrency(formData.othc, formData.currency)}
+            </p>
+          </div>
+        )}
+      </form>
+
+      {/* Footer */}
+      <div className="flex-shrink-0 flex justify-end gap-3 px-6 py-4 border-t bg-slate-50" style={{ borderColor: '#e2e8f0' }}>
+        <button
+          type="button"
+          onClick={onClose}
+          className="px-4 py-2 text-sm text-slate-600 border rounded-lg bg-white hover:bg-slate-100 transition-colors"
+          style={{ borderColor: '#e2e8f0' }}
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          onClick={onSubmit as unknown as React.MouseEventHandler}
+          disabled={loading}
+          className="px-5 py-2 text-sm font-semibold text-white rounded-lg transition-colors disabled:opacity-50"
+          style={{ background: '#66a55f' }}
+        >
+          {loading ? 'Saving…' : editingCard ? 'Update' : 'Create'}
+        </button>
+      </div>
+    </div>
+  </div>
+);
+
+// ── Main AdminPanel ───────────────────────────────────────────────────
+const EMPTY_FORM: RateCardFormData = {
+  origin: '', destination: '', mode: 'road', service: 'local_charge',
+  docs: 0, trucking: 0, freight: 0, othc: 0, currency: 'USD', remark: '',
+};
 
 const AdminPanel: React.FC = () => {
   const { loading, error, rateCards, createRateCard, updateRateCard, deleteRateCard } =
     useRateCards(true);
 
   const [editingCard, setEditingCard] = useState<RateCard | null>(null);
-  const [formData, setFormData] = useState<RateCardFormData>({
-    origin: '',
-    destination: '',
-    mode: 'road',
-    service: 'local_charge',
-    docs: 0,
-    trucking: 0,
-    freight: 0,
-    othc: 0,
-    currency: 'USD',
-    remark: ''
-  });
+  const [showModal,   setShowModal]   = useState(false);
+  const [formData,    setFormData]    = useState<RateCardFormData>(EMPTY_FORM);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
+    setFormData(prev => ({
       ...prev,
-      [name]: ['docs', 'trucking', 'freight', 'othc'].includes(
-        name
-      )
+      [name]: ['docs', 'trucking', 'freight', 'othc'].includes(name)
         ? parseFloat(value) || 0
         : value,
     }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    const validationErrors = validateRateCard(formData);
-    if (validationErrors.length > 0) {
-      showError(validationErrors[0].message);
-      return;
-    }
-
-    let success = false;
-    if (editingCard) {
-      success = await updateRateCard(editingCard._id, formData);
-    } else {
-      success = await createRateCard(formData);
-    }
-
-    if (success) {
-      closeModal();
-      resetForm();
-    }
+  const handleLocationChange = (name: string, location: Location) => {
+    // Only update name field to avoid overwriting valid data mid-type
+    setFormData(prev => ({ ...prev, [name]: location.name }));
   };
 
-  const handleEdit = (card: RateCard) => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const errs = validateRateCard(formData);
+    if (errs.length > 0) { showError(errs[0].message); return; }
+
+    const ok = editingCard
+      ? await updateRateCard(editingCard._id, formData)
+      : await createRateCard(formData);
+
+    if (ok) { setShowModal(false); setEditingCard(null); setFormData(EMPTY_FORM); }
+  };
+
+  const openCreate = () => { setEditingCard(null); setFormData(EMPTY_FORM); setShowModal(true); };
+
+  const openEdit = (card: RateCard) => {
     setEditingCard(card);
     setFormData({
-      origin: card.origin,
-      destination: card.destination,
-      mode: card.mode,
-      service: card.service,
-      docs: card.docs,
-      trucking: card.trucking,
-      freight: card.freight,
-      othc: card.othc,
-      currency: card.currency,
-      remark: card.remark,
+      origin: card.origin, destination: card.destination,
+      mode: card.mode, service: card.service,
+      docs: card.docs, trucking: card.trucking,
+      freight: card.freight, othc: card.othc,
+      currency: card.currency, remark: card.remark,
     });
-    openModal();
+    setShowModal(true);
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to deactivate this rate card?')) return;
+    if (!confirm('Deactivate this rate card?')) return;
     await deleteRateCard(id);
-  };
-
-  const resetForm = () => {
-    setEditingCard(null);
-    setFormData({
-      origin: '',
-      destination: '',
-      mode: 'road',
-      service: 'local_charge',
-      docs: 0,
-      trucking: 0,
-      freight: 0,
-      othc: 0,
-      currency: 'USD',
-      remark:''
-    });
-  };
-
-  const openModal = () => {
-    (document.getElementById('rate_card_modal') as HTMLDialogElement)?.showModal();
-  };
-
-  const closeModal = () => {
-    (document.getElementById('rate_card_modal') as HTMLDialogElement)?.close();
-  };
-
-  const handleLocationChange = (name: string, location: Location) => {
-    setFormData((prev) => ({
-      ...prev,
-      [name]: location.name,
-      country: location.country,
-      code: location.code,
-      city: location.city,
-      type: location.type,
-      lat: location.lat,
-      lon: location.lon,
-    }));
   };
 
   if (loading && rateCards.length === 0) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <span className="loading loading-spinner loading-lg text-primary"></span>
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+          <p className="text-sm text-slate-500">Loading rate cards…</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className=" py-10 p-4">
-      <div className="max-w-7xl mx-auto">
-        <div className="card bg-base-100 rounded">
-          <div className="card-body p-10">
-            {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-              <div className="flex items-center gap-3">
-                <div>
-                  <h2 className="text-2xl font-bold">Rate Card Management</h2>
-                  <p className="text-sm text-base-content/60">
-                    Manage pricing by country, transport & service
-                  </p>
-                </div>
-              </div>
-
-              <button
-                onClick={() => {
-                  resetForm();
-                  openModal();
-                }}
-                className="px-2 py-1 bg-blue-50 rounded gap-2"
-                disabled={loading}
-              >
-                Add Rate Card
-              </button>
-            </div>
-
-            {/* Error */}
-            {error && (
-              <div className="alert alert-error mb-4 px-2">
-                <span>{error}</span>
-              </div>
-            )}
-
-            {/* Table */}
-            <div className="overflow-x-auto rounded-lg border">
-              <table className="table table-zebra table-sm md:table-md">
-                <thead>
-                  <tr>
-                    <th>Origin</th>
-                    <th>Destination</th>
-                    <th>Mode</th>
-                    <th>Service</th>
-                    <th className="text-right">Export Clearance</th>
-                    <th className="text-right">Trucking</th>
-                    <th className="text-center">Freight</th>
-                    <th className="text-right">OTHC</th>
-                    <th className="text-right">Remark</th>
-                    <th>Currency</th>
-                    <th className="text-center">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rateCards.map((card) => (
-                    <tr key={card._id}>
-                      <td>
-                        <span className="badge badge-outline capitalize text-nowrap">{card.origin}</span>
-                      </td>
-                      <td>
-                        <span className="badge badge-outline capitalize text-nowrap">{card.destination}</span>
-                      </td>
-                      <td className="capitalize text-nowrap">{card.mode}</td>
-                      <td>
-                        <span
-                          className={`rounded-full py-1 px-2 font-semibold text-nowrap  ${SERVICE_COLORS[card.service]}`}
-                        >
-                          {capitalizeFirst(card.service)}
-                        </span>
-                      </td>
-                      {card.service === 'local_charge' && (
-                        <>
-                        <td className="text-right">
-                          {formatCurrency(card.docs, card.currency) || 'N/A'}
-                        </td>
-                        <td className="text-right">
-                          {formatCurrency(card.trucking, card.currency) || 'N/A'}
-                        </td>
-                      </>
-                      )}
-                      {card.service === 'freight' && (
-                        <>
-                        <td className="text-center">
-                        {formatCurrency(card.freight, card.currency) || 'N/A'}
-                        </td>
-                        <td className="text-center">
-                        {formatCurrency(card.othc, card.currency) || 'N/A'}
-                        </td>
-                        </>
-                      )}
-                      <td className="text-right">
-                        {card.remark}
-                      </td>
-                      <td>{card.currency}</td>
-                      <td className="text-center">
-                        <div className="flex justify-center gap-1">
-                          <button
-                            onClick={() => handleEdit(card)}
-                            className="px-2 py-1 bg-green-50 rounded"
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#32a966" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" className="icon icon-tabler icons-tabler-outline icon-tabler-edit"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" /><path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415" /><path d="M16 5l3 3" /></svg>
-                          </button>
-                          <button
-                            onClick={() => handleDelete(card._id)}
-                            className="px-2 py-1 bg-red-50 rounded"
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#a93232" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" className="icon icon-tabler icons-tabler-outline icon-tabler-trash"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 7l16 0" /><path d="M10 11l0 6" /><path d="M14 11l0 6" /><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" /><path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" /></svg>
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {loading && (
-              <div className="flex justify-center py-6 px-2">
-                <span className="loading loading-spinner loading-lg text-primary"></span>
-              </div>
-            )}
-          </div>
+    <div className="space-y-4">
+      {/* Page header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h2 className="text-xl font-bold" style={{ color: '#0A1628' }}>Rate Card Management</h2>
+          <p className="text-sm text-slate-500 mt-0.5">Manage pricing by route, transport & service type</p>
         </div>
+        <button
+          onClick={openCreate}
+          disabled={loading}
+          className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white rounded-lg transition-colors disabled:opacity-50"
+          style={{ background: '#1B4F8A' }}
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={2} className="w-4 h-4">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+          </svg>
+          Add Rate Card
+        </button>
+      </div>
+
+      {error && (
+        <div className="flex gap-2 p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-600">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-4 h-4 flex-shrink-0 mt-0.5">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          {error}
+        </div>
+      )}
+
+      {/* Table card */}
+      <div className="bg-white rounded-xl border overflow-hidden shadow-sm" style={{ borderColor: '#e2e8f0' }}>
+        {rateCards.length === 0 ? (
+          <div className="text-center py-16 text-slate-400">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-10 h-10 mx-auto mb-3">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+            </svg>
+            <p className="text-sm">No rate cards yet.</p>
+            <button onClick={openCreate} className="mt-3 text-sm font-medium" style={{ color: '#1B4F8A' }}>
+              Add your first rate card →
+            </button>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-sm">
+              <thead>
+                <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+                  {['Origin', 'Destination', 'Mode', 'Service', 'Export Clearance', 'Trucking', 'Freight', 'OTHC', 'Remark', 'Currency', 'Actions'].map(h => (
+                    <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider" style={{ color: '#64748b' }}>
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {rateCards.map((card, i) => (
+                  <tr
+                    key={card._id}
+                    style={{ borderBottom: '1px solid #f1f5f9', background: i % 2 === 1 ? '#fafafa' : 'white' }}
+                    className="hover:bg-slate-50 transition-colors"
+                  >
+                    <td className="px-4 py-3">
+                      <span className="px-2 py-0.5 bg-slate-100 text-slate-700 rounded text-xs font-medium">{card.origin}</span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="px-2 py-0.5 bg-slate-100 text-slate-700 rounded text-xs font-medium">{card.destination}</span>
+                    </td>
+                    <td className="px-4 py-3 capitalize text-slate-600 text-xs">{card.mode}</td>
+                    <td className="px-4 py-3"><ServiceBadge service={card.service} /></td>
+
+                    {/* FIX: Always render all 4 cells — show N/A when not applicable.
+                        This keeps column alignment correct regardless of service type. */}
+                    <td className="px-4 py-3 text-right text-slate-700 font-mono text-xs">
+                      {card.service === 'local_charge' ? formatCurrency(card.docs, card.currency) : <span className="text-slate-300">—</span>}
+                    </td>
+                    <td className="px-4 py-3 text-right text-slate-700 font-mono text-xs">
+                      {card.service === 'local_charge' ? formatCurrency(card.trucking, card.currency) : <span className="text-slate-300">—</span>}
+                    </td>
+                    <td className="px-4 py-3 text-right text-slate-700 font-mono text-xs">
+                      {card.service === 'freight' ? formatCurrency(card.freight, card.currency) : <span className="text-slate-300">—</span>}
+                    </td>
+                    <td className="px-4 py-3 text-right text-slate-700 font-mono text-xs">
+                      {card.service === 'freight' ? formatCurrency(card.othc, card.currency) : <span className="text-slate-300">—</span>}
+                    </td>
+
+                    <td className="px-4 py-3 text-slate-500 text-xs max-w-[160px] truncate">{card.remark || '—'}</td>
+                    <td className="px-4 py-3 text-xs font-semibold text-slate-600">{card.currency}</td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={() => openEdit(card)}
+                          className="p-1.5 rounded-lg transition-colors hover:bg-green-100"
+                          title="Edit"
+                        >
+                          <svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth={1.5} className="w-4 h-4">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                        </button>
+                        <button
+                          onClick={() => handleDelete(card._id)}
+                          className="p-1.5 rounded-lg transition-colors hover:bg-red-100"
+                          title="Delete"
+                        >
+                          <svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth={1.5} className="w-4 h-4">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {loading && rateCards.length > 0 && (
+          <div className="flex justify-center py-4 border-t" style={{ borderColor: '#e2e8f0' }}>
+            <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+          </div>
+        )}
       </div>
 
       {/* Modal */}
-      <dialog id="rate_card_modal" className="modal">
-        <div className="modal-box max-w-2xl">
-          <h3 className="font-bold text-xl mb-4 flex items-center gap-2">
-            {editingCard ? 'Edit Rate Card' : 'Add Rate Card'}
-          </h3>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="form-control">
-                  <LocationSearch 
-                  label="Origin" 
-                  value={formData.origin} 
-                  onChange={(location) => handleLocationChange('origin', location)} 
-                  required
-                  placeholder="Origin Port"
-                  />
-                  
-              </div>
-              <div className="form-control">
-                  <LocationSearch 
-                  label="Destination" 
-                  value={formData.destination} 
-                  onChange={(location) => handleLocationChange('destination', location)} 
-                  required
-                  placeholder="Destination Port"
-                  />
-              </div>
-              {/* Select Inputs */}
-              {[
-                { label: 'Transport Mode', name: 'mode', options: TRANSPORT_MODES },
-                { label: 'Service Level', name: 'service', options: SERVICE_LEVELS },
-                { label: 'Currency', name: 'currency', options: CURRENCIES },
-              ].map(({ label, name, options }) => (
-                <div className="form-control" key={name}>
-                  <label className="label">
-                    <span className="label-text">{label}</span>
-                  </label>
-                  <select
-                    name={name}
-                    value={formData[name as keyof RateCardFormData]}
-                    onChange={handleInputChange}
-                    className="w-full bg-gray-100 p-2 rounded focus:ring-2 focus:ring-primary"
-                    required
-                  >
-                    {options.map((o: Option) => (
-                      <option key={o.value ?? o.name} value={o.value ?? o.name}>
-                        {o.label ?? o.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              ))}
-
-              {/* ===== COST FIELDS (CONDITIONAL) ===== */}
-              {formData.service === 'local_charge' && (
-                <>
-                  <div className="form-control">
-                    <label className="label">
-                      <span className="label-text">Export Clearance</span>
-                    </label>
-                    <input
-                      type="number"
-                      name="docs"
-                      value={formData.docs}
-                      onChange={handleInputChange}
-                      className="w-full bg-gray-100 p-2 rounded focus:ring-2 focus:ring-primary"
-                      min="0"
-                      step="0.01"
-                      required
-                    />
-                  </div>
-
-                  <div className="form-control">
-                    <label className="label">
-                      <span className="label-text">Trucking</span>
-                    </label>
-                    <input
-                      type="number"
-                      name="trucking"
-                      value={formData.trucking}
-                      onChange={handleInputChange}
-                      className="w-full bg-gray-100 p-2 rounded focus:ring-2 focus:ring-primary"
-                      min="0"
-                      step="0.01"
-                      required
-                    />
-                  </div>
-                </>
-              )}
-
-              {formData.service === 'freight' && (
-                 <>
-                <div className="form-control">
-                  <label className="label">
-                    <span className="label-text">Freight</span>
-                  </label>
-                  <input
-                    type="number"
-                    name="freight"
-                    value={formData.freight}
-                    onChange={handleInputChange}
-                    className="w-full bg-gray-100 p-2 rounded focus:ring-2 focus:ring-primary"
-                    min="0"
-                    step="0.01"
-                    required
-                  />
-                  
-                </div>
-                <div className="form-control">
-                  <label className="label">
-                    <span className="label-text">OTHC</span>
-                  </label>
-                  <input
-                    type="number"
-                    name="othc"
-                    value={formData.othc}
-                    onChange={handleInputChange}
-                    className="w-full bg-gray-100 p-2 rounded focus:ring-2 focus:ring-primary"
-                    min="0"
-                    step="0.01"
-                    required
-                  />
-                  
-                </div>
-                </>
-              )}
-
-               <div className="form-control">
-                  <label className="label">
-                    <span className="label-text">Remark</span>
-                  </label>
-                  <textarea
-                    rows={3}
-                    name={formData.remark}
-                    onChange={handleInputChange}
-                    className="w-full bg-gray-100 p-2 rounded focus:ring-2 focus:ring-primary"
-                  />
-                </div>
-            </div>
-            {/* Modal Action Buttons */}
-            <div className="modal-action">
-              <button
-                type="button"
-                className="px-2 py-1 bg-red-50 rounded gap-2"
-                onClick={() => {
-                  closeModal();
-                  resetForm();
-                }}
-              >
-                Cancel
-              </button>
-              <button type="submit" className="px-3 py-1 bg-blue-50 rounded gap-2" disabled={loading}>
-                {loading ? (
-                  <span className="loading loading-spinner loading-sm"></span>
-                ) : editingCard ? (
-                  'Update'
-                ) : (
-                  'Create'
-                )}
-              </button>
-            </div>
-          </form>
-        </div>
-      </dialog>
+      {showModal && (
+        <RateCardModal
+          editingCard={editingCard}
+          formData={formData}
+          loading={loading}
+          onChange={handleInputChange}
+          onLocationChange={handleLocationChange}
+          onSubmit={handleSubmit}
+          onClose={() => { setShowModal(false); setEditingCard(null); setFormData(EMPTY_FORM); }}
+        />
+      )}
     </div>
   );
 };

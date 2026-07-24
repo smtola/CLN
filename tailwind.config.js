@@ -1,4 +1,6 @@
 /** @type {import('tailwindcss').Config} */
+import daisyui from 'daisyui'
+
 export default {
   content: [
     "./index.html",
@@ -7,13 +9,13 @@ export default {
   theme: {
     extend: {
       screens: {
-        xs: "380px",  // ≥380px
-        xss: "430px", // ≥430px
-        smx: "500px", // ≥500px
+        xs: "380px",
+        xss: "430px",
+        smx: "500px",
       },
       fontFamily: {
         'playwrite-nz': ['"Playwrite NZ"', 'sans-serif'],
-      },     
+      },
       keyframes: {
         marquee: {
           '0%': { transform: 'translateX(100%)' },
@@ -22,12 +24,12 @@ export default {
       },
       animation: {
         marquee: 'marquee 60s linear infinite',
-      }, 
+      },
     },
   },
-  plugins: [require('daisyui')],
+  plugins: [daisyui],
   daisyui: {
-    themes: ["light", "dark", "cupcake"], // your theme list
-    darkTheme: "dark",                     // optional: default dark theme
+    themes: ["light", "dark", "cupcake"],
+    darkTheme: "dark",
   },
 }

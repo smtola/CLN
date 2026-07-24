@@ -33,6 +33,46 @@ interface CRUDFormProps<T> {
   extraSelectOptions?: { [key in keyof T]?: { _id: string; name: string }[] };
 }
 
+const normalizeImages = (input: string | string[]): string[] => {
+  const result: string[] = [];
+
+  const walk = (v: string | string[]) => {
+    if (!v) return;
+
+    if (typeof v === "string") {
+      // JSON array string
+      if (v.startsWith("[") && v.endsWith("]")) {
+        try {
+          const parsed = JSON.parse(v);
+          if (Array.isArray(parsed)) {
+            parsed.forEach(walk);
+            return;
+          }
+        } catch {
+          // ignore invalid JSON
+        }
+      }
+
+      // comma-separated
+      if (v.includes(",")) {
+        v.split(",").map(s => s.trim()).filter(Boolean).forEach(walk);
+        return;
+      }
+
+      result.push(v);
+      return;
+    }
+
+    if (Array.isArray(v)) {
+      v.forEach(walk);
+    }
+  };
+
+  walk(input);
+  return result;
+};
+
+
 function CRUDForm<T>({
   fetchItem,
   createItem,
@@ -58,98 +98,31 @@ function CRUDForm<T>({
     if (id && fetchItem) {
       (async () => {
         const data = await fetchItem(id);
-        const processedData = { ...data };
-        
-        // Convert string image fields to arrays for multi-image fields
+        const processed: Partial<T> = { ...data };
+  
         fields.forEach(f => {
-          if (f.type === "multi-image" && processedData[f.name]) {
-            const value = processedData[f.name];
-            if (typeof value === "string") {
-              try {
-                const parsed = JSON.parse(value);
-                if (Array.isArray(parsed)) {
-                  (processedData as Record<string, unknown>)[f.name as string] = parsed;
-                } else {
-                  (processedData as Record<string, unknown>)[f.name as string] = [value];
-                }
-              } catch {
-                (processedData as Record<string, unknown>)[f.name as string] = [value];
-              }
-            }
-          }
-        });
-        
-        setForm(processedData);
-
-        // If there are existing images (URL strings), set as previews
-        // Also store original URLs to track which images were removed during update
-        fields.forEach(f => {
-          const value = processedData[f.name];
-          if ((f.type === "file" || f.type === "multi-image") && value) {
+          if (f.type === "file" || f.type === "multi-image") {
             const fieldKey = String(f.name);
-            let originalUrls: string[] = [];
-            
-            if (Array.isArray(value)) {
-              originalUrls = value as string[];
-              // Existing URLs - create upload states for display
+            const urls = normalizeImages(processed[f.name] as string | string[]);
+  
+            if (urls.length > 0) {
+              (processed as Record<string, unknown>)[f.name as string] = urls as unknown as T[keyof T];
+              originalImagesRef.current[fieldKey] = urls;
+  
               setUploadStates(prev => ({
                 ...prev,
-                [fieldKey]: originalUrls.map((url, idx) => ({
-                  file: new File([], `existing-${idx}.jpg`), // Placeholder file
+                [fieldKey]: urls.map((url, idx) => ({
+                  file: new File([], `existing-${idx}.jpg`),
                   preview: url,
                   progress: 100,
                   uploading: false,
                 })),
               }));
-            } else if (typeof value === "string") {
-              // Try to parse as JSON array first (for multi-image stored as JSON string)
-              try {
-                const parsed = JSON.parse(value);
-                if (Array.isArray(parsed)) {
-                  originalUrls = parsed;
-                  setUploadStates(prev => ({
-                    ...prev,
-                    [fieldKey]: parsed.map((url: string, idx: number) => ({
-                      file: new File([], `existing-${idx}.jpg`),
-                      preview: url,
-                      progress: 100,
-                      uploading: false,
-                    })),
-                  }));
-                } else {
-                  // Single URL string
-                  originalUrls = [value];
-                  setUploadStates(prev => ({
-                    ...prev,
-                    [fieldKey]: [{
-                      file: new File([], "existing.jpg"),
-                      preview: value,
-                      progress: 100,
-                      uploading: false,
-                    }],
-                  }));
-                }
-              } catch {
-                // Not JSON, treat as single URL string
-                originalUrls = [value];
-                setUploadStates(prev => ({
-                  ...prev,
-                  [fieldKey]: [{
-                    file: new File([], "existing.jpg"),
-                    preview: value,
-                    progress: 100,
-                    uploading: false,
-                  }],
-                }));
-              }
-            }
-            
-            // Store original URLs for this field to track deletions
-            if (originalUrls.length > 0) {
-              originalImagesRef.current[fieldKey] = originalUrls;
             }
           }
         });
+  
+        setForm(processed);
       })();
     } else {
       const initial = fields.reduce((acc, f) => {
@@ -159,6 +132,7 @@ function CRUDForm<T>({
       setForm(initial);
     }
   }, [id, fetchItem, fields]);
+  
 
   // Handle text, textarea, select changes
   const handleChange = (
@@ -587,7 +561,7 @@ function CRUDForm<T>({
       setIsSubmitting(false);
     }
   };
-
+  
   return (
     <div className="p-3 md:p-6 bg-white rounded w-full mx-auto mt-[2rem]">
       <h1 className="text-xl md:text-2xl font-bold mb-4 md:mb-6">{id ? "Edit" : "Add"} {entityName}</h1>
@@ -700,13 +674,13 @@ function CRUDForm<T>({
                                 onClick={() => removePreview(f.name, idx)}
                                 className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600"
                               >
-                                &times;
+                                &times; 
                               </button>
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-gray-900 truncate">
-                              {uploadState.file.name}
+                              {uploadState.file.name} 
                             </p>
                             <p className="text-xs text-gray-500 mt-1">
                               {formatFileSize(uploadState.file.size)}

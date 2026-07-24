@@ -39,4 +39,8 @@ export default defineConfig({
     },
   },
   base: '/',
+  server: {
+    host: true,
+    port: 5199,
+  }
 });

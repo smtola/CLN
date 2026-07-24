@@ -66,6 +66,7 @@ export default function LoginPage() {
           navigate("/");
         }
       }
+      console.log(res)
       setError(res.msg!)
     } catch (err: unknown) {
       Swal.fire(

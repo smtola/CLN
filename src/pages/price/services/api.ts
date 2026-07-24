@@ -1,4 +1,4 @@
-import axios, {AxiosHeaders} from 'axios';
+import axios, { AxiosHeaders } from 'axios';
 import type {
   AxiosInstance,
   AxiosRequestConfig,
@@ -23,19 +23,24 @@ class ApiService {
   }
 
   private setupInterceptors(): void {
-    this.axiosInstance.interceptors.request.use((config) => {
-      const token = localStorage.getItem('auth_token');
-    
-      if (token) {
-        if (!config.headers) {
-          config.headers = new AxiosHeaders();
+    this.axiosInstance.interceptors.request.use(
+      (config) => {
+        if (typeof window !== 'undefined') {
+          const token = localStorage.getItem('accessToken');
+
+          if (token) {
+            if (!config.headers) {
+              config.headers = new AxiosHeaders();
+            }
+
+            config.headers.set('Authorization', `Bearer ${token}`);
+          }
         }
-    
-        config.headers.set('Authorization', `Bearer ${token}`);
-      }
-    
-      return config;
-    });
+
+        return config;
+      },
+      (error) => Promise.reject(error)
+    );
 
     this.axiosInstance.interceptors.response.use(
       (response) => response,

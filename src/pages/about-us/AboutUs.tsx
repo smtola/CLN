@@ -25,7 +25,7 @@ const AboutCLN: React.FC = () => {
                     keywords: "CLN Cambodia, about, logistics, transportation, company",
                     ogTitle: "CLN Cambodia - About Us",
                     ogDescription: "Learn about CLN Cambodia and our logistics expertise.",
-                    ogImage: "https://clncambodia.com/assets/image/logo.png",
+                    ogImage: "https://clncambodia.com/assets/image/seo.jpg",
                     canonical: "https://clncambodia.com/about-us",
                     url: "https://clncambodia.com/about-us"
                 });
@@ -56,10 +56,10 @@ const AboutCLN: React.FC = () => {
             data-aos-easing="ease-in-sine"
             className="w-full md:w-[60%]"
           >
-            <h1 className="text-[24px] font-medium text-center md:text-start text-white">
+            <h1 className="text-[18px] font-medium text-center md:text-start text-white">
               ABOUT CLN
             </h1>
-            <p className="text-[18px] font-light text-justify text-white hyphens-auto mt-2">
+            <p className="text-[16px] font-light text-justify text-white mt-2">
               <span className="font-semibold">CLN Cambodia logistics </span>&nbsp; is a registered company that established its own office in Cambodia since 2015. Currently, we have an office in Phnom Penh and collaborate with many shipping companies both locally and overseas. Our company is now 30 years of experience in handling import and export logistics, along with advanced information technology, we are dedicated to offering the best international and domestic logistics services and networks that enable our customers to make “All the Possible Moves” in their supply chains. We also comply with Cambodia’s labor laws and are committed to providing the best services to meet our customers’ expectations.
               
             </p>
@@ -110,9 +110,9 @@ const AboutCLN: React.FC = () => {
                         </defs>
                         </svg>    
               </span>
-              <h2 className="text-[18px] md:text-[24px] font-bold text-black">OUR VISION</h2>
+              <h2 className="text-[18px] font-bold text-black">OUR VISION</h2>
             </div>
-            <p className="text-[14px] md:text-[22px] font-light text-justify text-black hyphens-auto">
+            <p className="text-[16px] font-light text-justify text-black">
             At CLN Logistics, we’re here to make logistics simple, smooth, and stress-free for our customers. We take care of every part of the supply chain from moving cargo and coordinating partners to handling documents and sharing information so you always know what’s happening with your shipments.
               <br />
               <br />
@@ -144,9 +144,9 @@ const AboutCLN: React.FC = () => {
                         </defs>
                         </svg>
               </span>
-              <h2 className="text-[18px] md:text-[24px] font-bold text-black">OUR MISSION</h2>
+              <h2 className="text-[18px] font-bold text-black">OUR MISSION</h2>
             </div>
-            <p className="text-[14px] md:text-[22px] font-light text-justify text-black whitespace-pre-line">
+            <p className="text-[16px] font-light text-justify text-black whitespace-pre-line">
               We provide our customers with full control and visibility both in choosing the best-in-class service providers and in managing their own supply chains. Our reward comes from the satisfaction of our customers, their customers, associates and we strive to become a trust link in our customers business success.
             </p>
           </div>
@@ -202,8 +202,8 @@ const AboutCLN: React.FC = () => {
           data-aos-easing="ease-in-sine"
           className="w-full md:w-[70%] px-3 flex flex-col justify-start"
         >
-          <h2 className="text-[18px] md:text-[24px] font-bold text-black">Your Trusted Logistics in Agriculture Industry</h2>
-          <p className="text-[14px] md:text-[22px] font-light text-justify text-black hyphens-auto mt-2">
+          <h2 className="text-[18px] font-bold text-black">Your Trusted Logistics in Agriculture Industry</h2>
+          <p className="text-[16px] font-light text-justify text-black hyphens-auto mt-2">
             CLN Logistics has a full capability in handling shipment for Our customers from A to Z with full correspondence of backup, feedback, and responsibility. We have successfully handled Our customersʼ shipments with different commodities and delivery times, as illustrated in the attached images.
           </p>
         </div>
@@ -211,13 +211,16 @@ const AboutCLN: React.FC = () => {
 
           {/* FCL - LCL SHIPPING */}
       <section className="flex flex-col md:flex-row w-full h-fit overflow-hidden p-3 xl:max-w-screen-xl mx-auto gap-3">
-      <div
+        <div className="flex items-start gap-2">
+          <div className="w-1 h-6 bg-[#4F9748] rounded-full" />
+          <span className="text-[16px] font-semibold text-[#4F9748] uppercase tracking-wider">FCL</span>
+        </div>      
+        <div
           data-aos="fade-right"
           data-aos-offset="300"
           data-aos-easing="ease-in-sine"
-          className="w-full md:w-[70%] px-3 flex flex-col justify-start"
+          className="w-full md:w-[70%] mx-auto px-3 flex flex-col justify-start"
         >
-          <h2 className="text-[18px] md:text-[24px] font-bold text-black">FCL/FCL</h2>
           <img
             src={lcl}
             alt="Sample Shipment"
