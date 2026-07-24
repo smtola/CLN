@@ -345,7 +345,7 @@ const QuoteForm: React.FC = () => {
 
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl md:text-5xl font-bold tracking-tight text-slate-900">
+        <h1 className="text-2xl md:text-5xl text-center font-bold tracking-tight text-slate-900">
           Request an Instant Shipping Quote
         </h1>
         <p className="text-slate-500 text-lg mt-3">

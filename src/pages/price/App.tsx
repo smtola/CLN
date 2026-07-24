@@ -61,7 +61,7 @@ const PriceApp: React.FC<PriceAppProps> = ({
               <div className="w-14 h-14 rounded-lg flex items-center justify-center" style={{ background: '#4F9848' }}>
                 <ShipIcon />
               </div>
-              <span className="font-bold text-xl tracking-tight ">Quote System</span>
+              <span className="font-bold text-xl sm:block hidden tracking-tight text-nowrap">Quote System</span>
             </div>
 
             {/* Tabs */}
@@ -81,7 +81,7 @@ const PriceApp: React.FC<PriceAppProps> = ({
                     {tab.label}
                     {active && (
                       <span
-                        className="absolute bottom-0 left-3 right-3 h-0.5 rounded-t-full"
+                        className="absolute bottom-0 left-3 right-3 h-0.5 rounded-t-full text-nowrap"
                         style={{ background: '#EE3A23' }}
                       />
                     )}
