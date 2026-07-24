@@ -8,20 +8,28 @@
     // Cargo details
     equipmentType: string; // e.g., 'Container'
     soc?: boolean; // Shipper Owned Container
-    containerSize: string; // "20' Dry" | "40' Dry"
+    clearance: 'import' | 'export'; // Clearance direction — determines container type options & rate lookup
+    containerSize: string; // e.g. "20'GP" | "40'GP" | "40'RF" | "45'RF"
     containerQuantity: number; 
     containerMaxWeight?: number; // in kg
     commodity:string;
     mode:string;
   }
   
+  // Cost-line breakdown returned per quoted service. `docs` is kept as an
+  // optional legacy alias for `clearance` so any older stored quotes still render.
   export interface QuoteBreakdown {
-    docs: number;
-    trucking: number;
-    freight: number;
-    othc: number;
+    clearance?: number;
+    trucking?: number;
+    freight?: number;
+    othc?: number;
+    clearance_type?: 'import' | 'export';
+    container_type?: string;
+    /** @deprecated use `clearance` — kept for backward compatibility with older quotes */
+    docs?: number;
     subtotal: number;
     total: number;
+    minimum_applied?: boolean;
     breakdown:QuoteBreakdown;
   }
   

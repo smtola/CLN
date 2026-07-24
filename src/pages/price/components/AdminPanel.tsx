@@ -1,12 +1,19 @@
 import React, { useState } from 'react';
 import { useRateCards } from '../hooks/useRateCards';
-import type { RateCard, RateCardFormData } from '../types/rateCard.types';
+import type {
+  RateCard,
+  RateCardFormData,
+  ClearanceDirection,
+  ContainerType,
+} from '../types/rateCard.types';
 import { validateRateCard } from '../utils/validators';
 import {
   CURRENCIES,
   TRANSPORT_MODES,
   SERVICE_LEVELS,
   SERVICE_COLORS,
+  CLEARANCE_OPTIONS,
+  CONTAINER_TYPE_OPTIONS,
 } from '../utils/constants';
 import { formatCurrency, capitalizeFirst } from '../utils/formatters';
 import LocationSearch from './LocationSearch';
@@ -15,6 +22,9 @@ import { showError } from '../../../admin/utils/swalHelper';
 
 type Option = { value?: string; label?: string; name?: string };
 type Service = keyof typeof SERVICE_COLORS;
+const COST_LINES = ['clearance', 'trucking'] as const;
+type CostLine = (typeof COST_LINES)[number];
+
 // ── Shared input style ──────────────────────────────────────────────
 const inputCls =
   'w-full px-3 py-2.5 rounded-lg border text-sm bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all';
@@ -35,6 +45,93 @@ const ServiceBadge = ({ service }: { service: Service }) => {
   );
 };
 
+// ── Empty container-pricing scaffold ─────────────────────────────────
+const emptyContainerPricing = (): RateCardFormData['containers'] => ({
+  export: { clearance: {}, trucking: {} },
+  import: { clearance: {}, trucking: {} },
+});
+
+// ── Container pricing block (per clearance direction) ────────────────
+// This is the "parent -> child" structure the user asked for: the clearance
+// direction (export/import) is the parent, and it shares its price down to
+// the two cost lines (clearance & trucking), each priced per container type.
+const ContainerPricingGroup = ({
+  direction,
+  formData,
+  currency,
+  onPriceChange,
+}: {
+  direction: ClearanceDirection;
+  formData: RateCardFormData;
+  currency: string;
+  onPriceChange: (direction: ClearanceDirection, line: CostLine, type: ContainerType, value: number) => void;
+}) => {
+  const containerTypes = CONTAINER_TYPE_OPTIONS[direction];
+  const dirLabel = direction === 'export' ? 'Export' : 'Import';
+
+  return (
+    <div className="rounded-xl border p-4" style={{ borderColor: '#e2e8f0' }}>
+      <p className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: direction === 'export' ? '#1B4F8A' : '#66a55f' }}>
+        {dirLabel} — Clearance &amp; Trucking by Container Type
+      </p>
+
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr>
+              <th className="text-left text-xs font-semibold text-slate-500 pb-2 pr-2">Container Type</th>
+              {COST_LINES.map(line => (
+                <th key={line} className="text-left text-xs font-semibold text-slate-500 pb-2 pr-2 capitalize">
+                  {line}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {containerTypes.map(type => (
+              <tr key={type}>
+                <td className="pr-2 py-1 text-xs font-semibold text-slate-700 whitespace-nowrap">{type}</td>
+                {COST_LINES.map(line => (
+                  <td key={line} className="pr-2 py-1">
+                    <input
+                      type="number"
+                      min={0}
+                      step={0.01}
+                      value={formData.containers[direction][line][type] ?? ''}
+                      onChange={e => onPriceChange(direction, line, type, parseFloat(e.target.value) || 0)}
+                      placeholder="0.00"
+                      className={inputCls}
+                    />
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Preview for customers */}
+      {containerTypes.some(t => (formData.containers[direction].clearance[t] ?? 0) > 0 || (formData.containers[direction].trucking[t] ?? 0) > 0) && (
+        <div className="mt-3 flex flex-wrap gap-2">
+          {containerTypes.map(type => {
+            const clearancePrice = formData.containers[direction].clearance[type] ?? 0;
+            const truckingPrice = formData.containers[direction].trucking[type] ?? 0;
+            if (!clearancePrice && !truckingPrice) return null;
+            return (
+              <span key={type} className="px-2 py-1 rounded-lg bg-slate-50 border text-xs" style={{ borderColor: '#e2e8f0' }}>
+                <span className="font-semibold text-slate-700">{type}</span>
+                <span className="text-slate-500">
+                  {' '}· Clearance {formatCurrency(clearancePrice, currency)} · Trucking {formatCurrency(truckingPrice, currency)}
+                </span>
+              </span>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
+
 // ── Form modal ───────────────────────────────────────────────────────
 interface ModalProps {
   editingCard: RateCard | null;
@@ -42,19 +139,20 @@ interface ModalProps {
   loading: boolean;
   onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => void;
   onLocationChange: (name: string, location: Location) => void;
+  onContainerPriceChange: (direction: ClearanceDirection, line: CostLine, type: ContainerType, value: number) => void;
   onSubmit: (e: React.FormEvent) => void;
   onClose: () => void;
 }
 
 const RateCardModal: React.FC<ModalProps> = ({
-  editingCard, formData, loading, onChange, onLocationChange, onSubmit, onClose,
+  editingCard, formData, loading, onChange, onLocationChange, onContainerPriceChange, onSubmit, onClose,
 }) => (
   <div
     className="fixed inset-0 z-50 flex items-center justify-center p-4"
     style={{ background: 'rgba(10,22,50,0.65)', backdropFilter: 'blur(2px)' }}
     onClick={e => { if (e.target === e.currentTarget) onClose(); }}
   >
-    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
+    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden">
 
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-4 flex-shrink-0" style={{ background: '#66a55f' }}>
@@ -117,62 +215,53 @@ const RateCardModal: React.FC<ModalProps> = ({
               </select>
             </div>
           ))}
+        </div>
 
-          {/* ── Conditional cost fields ── */}
-          {formData.service === 'local_charge' && (
-            <>
-              <div>
-                <FieldLabel>Export Clearance *</FieldLabel>
-                <input type="number" name="docs" value={formData.docs}
-                  onChange={onChange} min={0} step={0.01} required className={inputCls} />
-              </div>
-              <div>
-                <FieldLabel>Trucking *</FieldLabel>
-                <input type="number" name="trucking" value={formData.trucking}
-                  onChange={onChange} min={0} step={0.01} required className={inputCls} />
-              </div>
-            </>
-          )}
-
-          {formData.service === 'freight' && (
-            <>
-              <div>
-                <FieldLabel>Freight *</FieldLabel>
-                <input type="number" name="freight" value={formData.freight}
-                  onChange={onChange} min={0} step={0.01} required className={inputCls} />
-              </div>
-              <div>
-                <FieldLabel>OTHC *</FieldLabel>
-                <input type="number" name="othc" value={formData.othc}
-                  onChange={onChange} min={0} step={0.01} required className={inputCls} />
-              </div>
-            </>
-          )}
-
-          {/* Remark — FIX: name="remark" not name={formData.remark} */}
-          <div className="md:col-span-2">
-            <FieldLabel>Remark</FieldLabel>
-            <textarea
-              rows={2}
-              name="remark"
-              value={formData.remark}
-              onChange={onChange}
-              placeholder="e.g. Subject to space availability"
-              className={`${inputCls} resize-none`}
-            />
+        {/* ── Local charge: container-type pricing, grouped by clearance direction ── */}
+        {formData.service === 'local_charge' && (
+          <div className="mt-4 space-y-4">
+            {(CLEARANCE_OPTIONS.map(o => o.value) as ClearanceDirection[]).map(direction => (
+              <ContainerPricingGroup
+                key={direction}
+                direction={direction}
+                formData={formData}
+                currency={formData.currency}
+                onPriceChange={onContainerPriceChange}
+              />
+            ))}
           </div>
+        )}
+
+        {/* ── Freight fields (unchanged) ── */}
+        {formData.service === 'freight' && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+            <div>
+              <FieldLabel>Freight *</FieldLabel>
+              <input type="number" name="freight" value={formData.freight}
+                onChange={onChange} min={0} step={0.01} required className={inputCls} />
+            </div>
+            <div>
+              <FieldLabel>OTHC *</FieldLabel>
+              <input type="number" name="othc" value={formData.othc}
+                onChange={onChange} min={0} step={0.01} required className={inputCls} />
+            </div>
+          </div>
+        )}
+
+        {/* Remark */}
+        <div className="mt-4">
+          <FieldLabel>Remark</FieldLabel>
+          <textarea
+            rows={2}
+            name="remark"
+            value={formData.remark}
+            onChange={onChange}
+            placeholder="e.g. Subject to space availability"
+            className={`${inputCls} resize-none`}
+          />
         </div>
 
         {/* Rate preview */}
-        {formData.service === 'local_charge' && formData.docs > 0 && (
-          <div className="mt-4 p-3 rounded-lg border text-sm" style={{ background: '#f0f9ff', borderColor: '#bae6fd' }}>
-            <p className="text-xs font-semibold text-blue-600 mb-1">Preview for customers</p>
-            <p className="font-bold text-blue-800">
-              Clearance: {formatCurrency(formData.docs, formData.currency)} &nbsp;·&nbsp;
-              Trucking: {formatCurrency(formData.trucking, formData.currency)}
-            </p>
-          </div>
-        )}
         {formData.service === 'freight' && formData.freight > 0 && (
           <div className="mt-4 p-3 rounded-lg border text-sm" style={{ background: '#f0f9ff', borderColor: '#bae6fd' }}>
             <p className="text-xs font-semibold text-blue-600 mb-1">Preview for customers</p>
@@ -208,10 +297,37 @@ const RateCardModal: React.FC<ModalProps> = ({
   </div>
 );
 
+// ── Container pricing summary (table cell) ───────────────────────────
+const ContainerPricingSummary = ({ card, direction }: { card: RateCard; direction: ClearanceDirection }) => {
+  const pricing = card.containers?.[direction];
+  const types = CONTAINER_TYPE_OPTIONS[direction].filter(
+    t => (pricing?.clearance[t] ?? 0) > 0 || (pricing?.trucking[t] ?? 0) > 0
+  );
+
+  if (!pricing || types.length === 0) {
+    return <span className="text-slate-300">—</span>;
+  }
+
+  return (
+    <div className="flex flex-wrap gap-1 max-w-[220px]">
+      {types.map(type => (
+        <span
+          key={type}
+          title={`Clearance ${formatCurrency(pricing.clearance[type] ?? 0, card.currency)} · Trucking ${formatCurrency(pricing.trucking[type] ?? 0, card.currency)}`}
+          className="px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 text-[11px] font-medium cursor-default"
+        >
+          {type}
+        </span>
+      ))}
+    </div>
+  );
+};
+
 // ── Main AdminPanel ───────────────────────────────────────────────────
 const EMPTY_FORM: RateCardFormData = {
   origin: '', destination: '', mode: 'road', service: 'local_charge',
-  docs: 0, trucking: 0, freight: 0, othc: 0, currency: 'USD', remark: '',
+  containers: emptyContainerPricing(),
+  freight: 0, othc: 0, currency: 'USD', remark: '',
 };
 
 const AdminPanel: React.FC = () => {
@@ -228,9 +344,33 @@ const AdminPanel: React.FC = () => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: ['docs', 'trucking', 'freight', 'othc'].includes(name)
+      [name]: ['freight', 'othc'].includes(name)
         ? parseFloat(value) || 0
         : value,
+    }));
+  };
+
+  // Updates a single container-type price. The clearance direction (export/
+  // import) is the parent; it shares its price down into the two cost lines
+  // (clearance & trucking), each keyed by container type.
+  const handleContainerPriceChange = (
+    direction: ClearanceDirection,
+    line: CostLine,
+    type: ContainerType,
+    value: number,
+  ) => {
+    setFormData(prev => ({
+      ...prev,
+      containers: {
+        ...prev.containers,
+        [direction]: {
+          ...prev.containers[direction],
+          [line]: {
+            ...prev.containers[direction][line],
+            [type]: value,
+          },
+        },
+      },
     }));
   };
 
@@ -258,7 +398,7 @@ const AdminPanel: React.FC = () => {
     setFormData({
       origin: card.origin, destination: card.destination,
       mode: card.mode, service: card.service,
-      docs: card.docs, trucking: card.trucking,
+      containers: card.containers ?? emptyContainerPricing(),
       freight: card.freight, othc: card.othc,
       currency: card.currency, remark: card.remark,
     });
@@ -287,7 +427,7 @@ const AdminPanel: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h2 className="text-xl font-bold" style={{ color: '#0A1628' }}>Rate Card Management</h2>
-          <p className="text-sm text-slate-500 mt-0.5">Manage pricing by route, transport & service type</p>
+          <p className="text-sm text-slate-500 mt-0.5">Manage pricing by route, transport &amp; service type</p>
         </div>
         <button
           onClick={openCreate}
@@ -328,7 +468,7 @@ const AdminPanel: React.FC = () => {
             <table className="min-w-full text-sm">
               <thead>
                 <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
-                  {['Origin', 'Destination', 'Mode', 'Service', 'Export Clearance', 'Trucking', 'Freight', 'OTHC', 'Remark', 'Currency', 'Actions'].map(h => (
+                  {['Origin', 'Destination', 'Mode', 'Service', 'Export (Clearance/Trucking)', 'Import (Clearance/Trucking)', 'Freight', 'OTHC', 'Remark', 'Currency', 'Actions'].map(h => (
                     <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider" style={{ color: '#64748b' }}>
                       {h}
                     </th>
@@ -351,13 +491,12 @@ const AdminPanel: React.FC = () => {
                     <td className="px-4 py-3 capitalize text-slate-600 text-xs">{card.mode}</td>
                     <td className="px-4 py-3"><ServiceBadge service={card.service} /></td>
 
-                    {/* FIX: Always render all 4 cells — show N/A when not applicable.
-                        This keeps column alignment correct regardless of service type. */}
-                    <td className="px-4 py-3 text-right text-slate-700 font-mono text-xs">
-                      {card.service === 'local_charge' ? formatCurrency(card.docs, card.currency) : <span className="text-slate-300">—</span>}
+                    {/* Container-type pricing, per clearance direction. Non-local_charge rows show N/A. */}
+                    <td className="px-4 py-3 text-slate-700 text-xs">
+                      {card.service === 'local_charge' ? <ContainerPricingSummary card={card} direction="export" /> : <span className="text-slate-300">—</span>}
                     </td>
-                    <td className="px-4 py-3 text-right text-slate-700 font-mono text-xs">
-                      {card.service === 'local_charge' ? formatCurrency(card.trucking, card.currency) : <span className="text-slate-300">—</span>}
+                    <td className="px-4 py-3 text-slate-700 text-xs">
+                      {card.service === 'local_charge' ? <ContainerPricingSummary card={card} direction="import" /> : <span className="text-slate-300">—</span>}
                     </td>
                     <td className="px-4 py-3 text-right text-slate-700 font-mono text-xs">
                       {card.service === 'freight' ? formatCurrency(card.freight, card.currency) : <span className="text-slate-300">—</span>}
@@ -412,6 +551,7 @@ const AdminPanel: React.FC = () => {
           loading={loading}
           onChange={handleInputChange}
           onLocationChange={handleLocationChange}
+          onContainerPriceChange={handleContainerPriceChange}
           onSubmit={handleSubmit}
           onClose={() => { setShowModal(false); setEditingCard(null); setFormData(EMPTY_FORM); }}
         />

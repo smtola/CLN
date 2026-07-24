@@ -45,6 +45,10 @@ const PriceBreakdown: React.FC<PriceBreakdownProps> = ({
   className = '',
 }) => {
   const b = breakdown.breakdown;
+  // `clearance` is the current field name; `docs` is kept only so older,
+  // already-saved quotes (from before this field was renamed) still render.
+  const clearanceAmount = b.clearance ?? b.docs ?? 0;
+  const clearanceLabel = b.clearance_type === 'import' ? 'Import Clearance' : 'Export Clearance';
 
   return (
     <div className={`flex-1 ${className}`}>
@@ -52,21 +56,21 @@ const PriceBreakdown: React.FC<PriceBreakdownProps> = ({
         className="text-xs font-bold uppercase tracking-wider mb-2"
         style={{ color: '#94a3b8' }}
       >
-        Breakdown
+        Breakdown{b.container_type ? ` · ${b.container_type}` : ''}
       </p>
 
       <div className="space-y-0.5">
-        {b.docs > 0 && (
-          <Row label="Export Clearance" value={formatCurrency(b.docs, currency)} />
+        {clearanceAmount > 0 && (
+          <Row label={clearanceLabel} value={formatCurrency(clearanceAmount, currency)} />
         )}
-        {b.trucking > 0 && (
-          <Row label="Trucking" value={formatCurrency(b.trucking, currency)} />
+        {(b.trucking ?? 0) > 0 && (
+          <Row label="Trucking" value={formatCurrency(b.trucking!, currency)} />
         )}
-        {b.freight > 0 && (
-          <Row label="Freight" value={formatCurrency(b.freight, currency)} />
+        {(b.freight ?? 0) > 0 && (
+          <Row label="Freight" value={formatCurrency(b.freight!, currency)} />
         )}
-        {b.othc > 0 && (
-          <Row label="OTHC" value={formatCurrency(b.othc, currency)} />
+        {(b.othc ?? 0) > 0 && (
+          <Row label="OTHC" value={formatCurrency(b.othc!, currency)} />
         )}
 
         {/* Divider + totals */}

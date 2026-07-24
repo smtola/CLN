@@ -4,7 +4,7 @@ import type { Location } from '../types/common.types';
 import type { TransportMode } from '../types/quote.types';
 import { useQuotes } from '../hooks/useQuotes';
 import { validateQuoteRequest } from '../utils/validators';
-import { MODE_STYLES, SERVICE_STYLES } from '../utils/constants';
+import { MODE_STYLES, SERVICE_STYLES, CLEARANCE_OPTIONS, CONTAINER_TYPE_OPTIONS } from '../utils/constants';
 import LocationSearch from './LocationSearch';
 import QuoteCard from './QuoteCard';
 import CommoditySearch from './CommoditySearch';
@@ -12,19 +12,6 @@ import CommoditySearch from './CommoditySearch';
 type Mode = keyof typeof MODE_STYLES; // 'sea' | 'air' | 'road'
 type Service = keyof typeof SERVICE_STYLES;
 type Clearance = 'import' | 'export';
-
-const CLEARANCE_OPTIONS: readonly { value: Clearance; label: string }[] = [
-  { value: 'import', label: 'Import' },
-  { value: 'export', label: 'Export' },
-];
-
-// Container type choices differ by clearance direction, and apply to Sea + Road.
-// These reuse the existing `containerSize` field on QuoteRequest so the API
-// contract doesn't change, only the labels + choices shown to the person.
-const CONTAINER_TYPE_OPTIONS: Record<Clearance, readonly string[]> = {
-  import: ["20'GP", "40'GP"],
-  export: ["20'GP", "40'GP", "40'RF", "45'RF"],
-};
 
 // Common air-freight packaging unit types.
 const PACKAGING_UNIT_OPTIONS: readonly string[] = [
@@ -191,6 +178,7 @@ const QuoteForm: React.FC = () => {
   const [formData, setFormData] = useState<QuoteRequest>({
     origin:             '',
     destination:        '',
+    clearance:          'import',
     containerSize:      '',
     containerQuantity:  1,
     containerMaxWeight: 0,
@@ -243,7 +231,9 @@ const QuoteForm: React.FC = () => {
     setClearance(next);
     // Container type options depend on clearance (export has more options
     // than import), so drop any selection that may no longer be valid.
-    setFormData(prev => ({ ...prev, containerSize: '' }));
+    // Also push clearance onto formData — rate lookup and pricing are keyed
+    // by clearance direction (export/import), so it must reach the backend.
+    setFormData(prev => ({ ...prev, clearance: next, containerSize: '' }));
   };
 
   const handleServiceChange = (next: Service) => {
@@ -293,7 +283,7 @@ const QuoteForm: React.FC = () => {
     setService(Object.keys(SERVICE_STYLES)[0] as Service);
     setClearance('import');
     setFormData({
-      origin: '', destination: '', containerSize: '', containerQuantity: 1,
+      origin: '', destination: '', clearance: 'import', containerSize: '', containerQuantity: 1,
       containerMaxWeight: 0, soc: false, equipmentType: '', commodity: '',
       vesselDeparture: '', country: '', mode: 'sea',
     });

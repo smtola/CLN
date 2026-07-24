@@ -1,5 +1,6 @@
 import type { Country, Currency, Local } from '../types/common.types';
 import type { TransportMode, ServiceLevel, ShipmentType } from '../types/quote.types';
+import type { ClearanceDirection, ContainerType } from '../types/rateCard.types';
 
 export const API_BASE_URL =  'https://clnrestapi.vercel.app/api/v1/price';
 // 'https://clnrestapi.vercel.app/api/v1/price';
@@ -33,6 +34,20 @@ export const SERVICE_LEVELS: { value: ServiceLevel; label: string; description: 
   { value: 'local_charge', label: 'Local Charges', description: 'Only Local' },
   { value: 'freight', label: 'Freight', description: 'Balanced price and speed' }
 ];
+
+export const CLEARANCE_OPTIONS: readonly { value: ClearanceDirection; label: string }[] = [
+  { value: 'import', label: 'Import' },
+  { value: 'export', label: 'Export' },
+];
+
+// Container type choices differ by clearance direction (export supports reefers/
+// high-cubes that import doesn't) — kept in one place so the quote form and the
+// rate card admin panel (which stores price per container type) never drift apart.
+// Mirrors CONTAINER_TYPES_BY_CLEARANCE in the backend (app/routes/price.py).
+export const CONTAINER_TYPE_OPTIONS: Record<ClearanceDirection, readonly ContainerType[]> = {
+  import: ["20'GP", "40'GP"],
+  export: ["20'GP", "40'GP", "40'RF", "45'RF"],
+};
 
 export const SHIPMENT_TYPES: { value: ShipmentType; label: string; icon: string }[] = [
   { value: 'document', label: 'Document', icon: '📄' },

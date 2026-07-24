@@ -55,6 +55,13 @@ export const validateQuoteRequest = (
     });
   }
 
+  if (data.containerSize && !data.clearance) {
+    errors.push({
+      field: 'clearance',
+      message: 'Clearance (import/export) is required to look up container pricing',
+    });
+  }
+
   return errors;
 };
 
@@ -66,40 +73,35 @@ export const validateRateCard = (
 ): ValidationError[] => {
   const errors: ValidationError[] = [];
 
-  // if (data.rate_per_km === undefined || data.rate_per_km < 0) {
-  //   errors.push({
-  //     field: 'rate_per_km',
-  //     message: 'Rate per km must be 0 or greater',
-  //   });
-  // }
-
-  // if (data.rate_per_kg === undefined || data.rate_per_kg < 0) {
-  //   errors.push({
-  //     field: 'rate_per_kg',
-  //     message: 'Rate per kg must be 0 or greater',
-  //   });
-  // }
-
-  // if (
-  //   data.fuel_surcharge === undefined ||
-  //   data.fuel_surcharge < 0 ||
-  //   data.fuel_surcharge > 100
-  // ) {
-  //   errors.push({
-  //     field: 'fuel_surcharge',
-  //     message: 'Fuel surcharge must be between 0 and 100%',
-  //   });
-  // }
-
-  // if (data.handling_fee === undefined || data.handling_fee < 0) {
-  //   errors.push({
-  //     field: 'handling_fee',
-  //     message: 'Handling fee must be 0 or greater',
-  //   });
-  // }
-
   if (!data.currency) {
     errors.push({ field: 'currency', message: 'Currency is required' });
+  }
+
+  if (data.service === 'local_charge') {
+    const containers = data.containers;
+    const hasAnyPrice =
+      !!containers &&
+      (['export', 'import'] as const).some(direction =>
+        (['clearance', 'trucking'] as const).some(line =>
+          Object.values(containers[direction]?.[line] ?? {}).some(v => (v ?? 0) > 0)
+        )
+      );
+
+    if (!hasAnyPrice) {
+      errors.push({
+        field: 'containers',
+        message: 'Enter at least one clearance or trucking price for a container type',
+      });
+    }
+  }
+
+  if (data.service === 'freight') {
+    if (data.freight === undefined || data.freight < 0) {
+      errors.push({ field: 'freight', message: 'Freight must be 0 or greater' });
+    }
+    if (data.othc === undefined || data.othc < 0) {
+      errors.push({ field: 'othc', message: 'OTHC must be 0 or greater' });
+    }
   }
 
   return errors;
