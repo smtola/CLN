@@ -3,10 +3,10 @@ import type { QuoteRequest, ServiceLevel } from '../types/quote.types';
 import type { Location } from '../types/common.types';
 import type { TransportMode } from '../types/quote.types';
 import { useQuotes } from '../hooks/useQuotes';
-import { useCommodities } from '../hooks/useCommodities';
 import { validateQuoteRequest } from '../utils/validators';
 import { MODE_STYLES, SERVICE_STYLES, CLEARANCE_OPTIONS, CONTAINER_TYPE_OPTIONS } from '../utils/constants';
 import LocationSearch from './LocationSearch';
+import CommoditySearch from './CommoditySearch';
 import QuoteCard from './QuoteCard';
 
 type Mode = keyof typeof MODE_STYLES; // 'sea' | 'air' | 'road'
@@ -195,7 +195,6 @@ const QuoteForm: React.FC = () => {
   // Commodity is the parent for Import/Export clearance & trucking pricing on
   // the backend, so the customer must pick from the same canonical list the
   // admin prices against — a free-text field would never match.
-  const { commodities } = useCommodities(true);
 
   const activeStyle = MODE_STYLES[mode];
   const cargoConfig = CARGO_FIELD_OPTIONS[mode];
@@ -210,6 +209,10 @@ const QuoteForm: React.FC = () => {
     if (errors[name]) setErrors(prev => { const n = { ...prev }; delete n[name]; return n; });
   };
 
+  const handleCommodityChange = (value: string) => {
+    setFormData(prev => ({ ...prev, commodity: value }));
+    if (errors.commodity) setErrors(prev => { const n = { ...prev }; delete n.commodity; return n; });
+  };
   const handleLocationChange = (field: 'origin' | 'destination', location: Location) => {
     setFormData(prev => ({
       ...prev,
@@ -265,10 +268,11 @@ const QuoteForm: React.FC = () => {
     if (!formData.origin)          errs.origin          = 'Origin is required.';
     if (!formData.destination)     errs.destination     = 'Destination is required.';
     if (!formData.vesselDeparture) errs.vesselDeparture  = 'Departure date is required.';
-
+    if (!formData.commodity)       errs.commodity        = 'Please select a commodity from the list.';
+  
     const vErrs = validateQuoteRequest(formData);
     if (vErrs.length > 0) errs.general = vErrs[0].message;
-
+  
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -404,7 +408,7 @@ const QuoteForm: React.FC = () => {
 
         {/* SECTION 2 — Transport Mode */}
         <div>
-          <h2 className="text-sm font-bold uppercase tracking-wider text-slate-500 mb-3 px-1">Transport Mode</h2>
+        <FieldLabel required>Transport Mode</FieldLabel>
           <div className="grid md:grid-cols-3 gap-4">
             {(Object.keys(MODE_STYLES) as Mode[]).map(key => (
               <ModeCard
@@ -419,7 +423,7 @@ const QuoteForm: React.FC = () => {
 
         {/* SECTION 3 — Service Level */}
         <div>
-          <h2 className="text-sm font-bold uppercase tracking-wider text-slate-500 mb-3 px-1">Services</h2>
+        <FieldLabel required>Services</FieldLabel>
           <div className="grid md:grid-cols-3 gap-4">
             {(Object.keys(SERVICE_STYLES) as Service[]).map(key => (
               <ServiceCard
@@ -436,7 +440,7 @@ const QuoteForm: React.FC = () => {
         <Section title="Cargo Details">
           <div className="grid md:grid-cols-2 gap-4">
             <div>
-              <FieldLabel>Clearance</FieldLabel>
+              <FieldLabel required>Clearance</FieldLabel>
               <div className="flex flex-wrap gap-2">
                 {CLEARANCE_OPTIONS.map(opt => {
                   const selected = clearance === opt.value;
@@ -461,7 +465,7 @@ const QuoteForm: React.FC = () => {
 
             {cargoConfig.showContainerType && (
               <div>
-                <FieldLabel>Container Type</FieldLabel>
+                <FieldLabel required>Container Type</FieldLabel>
                 <OptionPill
                   options={CONTAINER_TYPE_OPTIONS[clearance]}
                   value={formData.containerSize}
@@ -473,7 +477,7 @@ const QuoteForm: React.FC = () => {
 
             {cargoConfig.showPackagingUnit && (
               <div>
-                <FieldLabel>Packaging Unit</FieldLabel>
+                <FieldLabel required>Packaging Unit</FieldLabel>
                 <OptionPill
                   options={PACKAGING_UNIT_OPTIONS}
                   value={formData.equipmentType}
@@ -484,24 +488,18 @@ const QuoteForm: React.FC = () => {
             )}
 
             <div>
-              <FieldLabel>Commodity</FieldLabel>
-              <select
-                name="commodity"
+              <FieldLabel required>Commodity</FieldLabel>
+              <CommoditySearch 
+                label=''
                 value={formData.commodity}
-                onChange={handleInputChange}
-                className={inputCls}
-              >
-                <option value="">Select a commodity…</option>
-                {commodities.map(c => (
-                  <option key={c.id} value={c.name}>
-                    {c.code ? `HS ${c.code} — ${c.name}` : c.name}
-                  </option>
-                ))}
-              </select>
+                onChange={handleCommodityChange}
+                required
+              />
+              <FieldError msg={errors.commodity} />
             </div>
 
             <div>
-              <FieldLabel>Gross Weight (kg)</FieldLabel>
+              <FieldLabel required>Gross Weight (kg)</FieldLabel>
               <input
                 type="number"
                 name="containerMaxWeight"
@@ -510,12 +508,13 @@ const QuoteForm: React.FC = () => {
                 placeholder="e.g. 18000"
                 min={0}
                 className={inputCls}
+                required
               />
             </div>
 
             {cargoConfig.showQuantity && (
               <div>
-                <FieldLabel>Container Quantity</FieldLabel>
+                <FieldLabel required>Container Quantity</FieldLabel>
                 <div className="w-full flex items-center gap-3">
                   <button
                     type="button"

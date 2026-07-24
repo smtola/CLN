@@ -22,6 +22,7 @@ import { formatCurrency, capitalizeFirst } from '../utils/formatters';
 import LocationSearch from './LocationSearch';
 import type { Location } from '../types/common.types';
 import { showError } from '../../../admin/utils/swalHelper';
+import CommoditySearch from './CommoditySearch';
 
 type Option = { value?: string; label?: string; name?: string };
 type Service = keyof typeof SERVICE_COLORS;
@@ -32,9 +33,10 @@ type CostLine = (typeof COST_LINES)[number];
 const inputCls =
   'w-full px-3 py-2.5 rounded-lg border text-sm bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all';
 
-const FieldLabel = ({ children }: { children: React.ReactNode }) => (
-  <label className="block text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: '#64748b' }}>
-    {children}
+// ── Field label ──────────────────────────────────────────────────────
+const FieldLabel = ({ children, required }: { children: React.ReactNode; required?: boolean }) => (
+  <label className="block text-sm font-semibold text-slate-600 mb-2">
+    {children}{required && <span className="text-red-500 ml-1">*</span>}
   </label>
 );
 
@@ -139,12 +141,11 @@ const ContainerPricingGroup = ({
 
 // ── Commodity selector (the "parent" picker) ──────────────────────────
 // Lets the admin pick which commodity's Import/Export pricing grid they're
-// editing. Selecting a commodity from the dropdown and clicking "Add" adds
-// it as a priced commodity on this rate card; its chip can then be clicked
-// to switch the grids below to that commodity.
+// editing. Selecting a commodity from search and clicking "Add" adds it as
+// a priced commodity on this rate card; its chip can then be clicked to
+// switch the grids below to that commodity.
 const CommodityPicker = ({
   containers,
-  commodities,
   commodityToAdd,
   activeCommodity,
   onCommodityToAddChange,
@@ -153,7 +154,6 @@ const CommodityPicker = ({
   onRemoveCommodity,
 }: {
   containers: RateCardFormData['containers'];
-  commodities: { id: string; name: string; code?: string }[];
   commodityToAdd: string;
   activeCommodity: string;
   onCommodityToAddChange: (name: string) => void;
@@ -162,7 +162,7 @@ const CommodityPicker = ({
   onRemoveCommodity: (name: string) => void;
 }) => {
   const addedNames = Object.keys(containers);
-  const available = commodities.filter(c => !addedNames.includes(c.name));
+  const alreadyAdded = commodityToAdd.length > 0 && addedNames.includes(commodityToAdd);
 
   return (
     <div className="rounded-xl border p-4" style={{ borderColor: '#e2e8f0' }}>
@@ -173,37 +173,33 @@ const CommodityPicker = ({
         Commodity is the parent for both Import and Export — Clearance &amp; Trucking by Container Type. Select a commodity to price it.
       </p>
 
-      <div className="flex flex-wrap items-end gap-2 mb-3">
+      <div className="flex flex-wrap items-end gap-2 mb-1">
         <div className="flex-1 min-w-[220px]">
           <FieldLabel>Select commodity</FieldLabel>
-          <select
+          <CommoditySearch
+            label=""
             value={commodityToAdd}
-            onChange={e => onCommodityToAddChange(e.target.value)}
-            className={inputCls}
-          >
-            <option value="">Choose a commodity…</option>
-            {available.map(c => (
-              <option key={c.id} value={c.name}>
-                {c.code ? `HS ${c.code} — ${c.name}` : c.name}
-              </option>
-            ))}
-          </select>
+            onChange={onCommodityToAddChange}
+          />
         </div>
         <button
           type="button"
           onClick={onAddCommodity}
-          disabled={!commodityToAdd}
-          className="h-[42px] px-4 rounded-lg text-sm font-semibold text-white transition-colors disabled:opacity-40"
+          disabled={!commodityToAdd || alreadyAdded}
+          className="h-[64px] px-4 rounded-lg text-sm font-semibold text-white transition-colors disabled:opacity-40"
           style={{ background: '#1B4F8A' }}
         >
           + Add
         </button>
       </div>
+      {alreadyAdded && (
+        <p className="text-xs text-amber-600 mb-2">This commodity is already priced on this rate card.</p>
+      )}
 
       {addedNames.length === 0 ? (
-        <p className="text-xs text-slate-400">No commodities priced yet. Select one above and click Add.</p>
+        <p className="text-xs text-slate-400 mt-2">No commodities priced yet. Select one above and click Add.</p>
       ) : (
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 mt-2">
           {addedNames.map(name => {
             const selected = activeCommodity === name;
             return (
@@ -239,7 +235,6 @@ interface ModalProps {
   editingCard: RateCard | null;
   formData: RateCardFormData;
   loading: boolean;
-  commodities: { id: string; name: string; code?: string }[];
   activeCommodity: string;
   commodityToAdd: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => void;
@@ -254,7 +249,7 @@ interface ModalProps {
 }
 
 const RateCardModal: React.FC<ModalProps> = ({
-  editingCard, formData, loading, commodities, activeCommodity, commodityToAdd,
+  editingCard, formData, loading, activeCommodity, commodityToAdd,
   onChange, onLocationChange, onContainerPriceChange,
   onCommodityToAddChange, onAddCommodity, onSelectCommodity, onRemoveCommodity,
   onSubmit, onClose,
@@ -284,7 +279,7 @@ const RateCardModal: React.FC<ModalProps> = ({
 
           {/* Origin / Destination */}
           <div>
-            <FieldLabel>Origin *</FieldLabel>
+            <FieldLabel required>Origin </FieldLabel>
             <LocationSearch
               label=""
               value={formData.origin}
@@ -294,7 +289,7 @@ const RateCardModal: React.FC<ModalProps> = ({
             />
           </div>
           <div>
-            <FieldLabel>Destination *</FieldLabel>
+            <FieldLabel required>Destination</FieldLabel>
             <LocationSearch
               label=""
               value={formData.destination}
@@ -311,7 +306,7 @@ const RateCardModal: React.FC<ModalProps> = ({
             { label: 'Currency',       name: 'currency', options: CURRENCIES      },
           ] as const).map(({ label, name, options }) => (
             <div key={name}>
-              <FieldLabel>{label} *</FieldLabel>
+              <FieldLabel required>{label}</FieldLabel>
               <select
                 name={name}
                 value={formData[name as keyof RateCardFormData] as string}
@@ -334,7 +329,6 @@ const RateCardModal: React.FC<ModalProps> = ({
           <div className="mt-4 space-y-4">
             <CommodityPicker
               containers={formData.containers}
-              commodities={commodities}
               commodityToAdd={commodityToAdd}
               activeCommodity={activeCommodity}
               onCommodityToAddChange={onCommodityToAddChange}
@@ -368,12 +362,12 @@ const RateCardModal: React.FC<ModalProps> = ({
         {formData.service === 'freight' && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
             <div>
-              <FieldLabel>Freight *</FieldLabel>
+              <FieldLabel required>Freight</FieldLabel>
               <input type="number" name="freight" value={formData.freight}
                 onChange={onChange} min={0} step={0.01} required className={inputCls} />
             </div>
             <div>
-              <FieldLabel>OTHC *</FieldLabel>
+              <FieldLabel required>OTHC</FieldLabel>
               <input type="number" name="othc" value={formData.othc}
                 onChange={onChange} min={0} step={0.01} required className={inputCls} />
             </div>
@@ -429,46 +423,122 @@ const RateCardModal: React.FC<ModalProps> = ({
   </div>
 );
 
-// ── Container pricing summary (table cell) ───────────────────────────
-// Commodity is now the parent, so a rate card can carry pricing for many
-// commodities at once — show one chip per priced commodity, with a tooltip
-// breaking down every Import/Export container-type price underneath it.
-const ContainerPricingSummary = ({ card }: { card: RateCard }) => {
+// ── Pricing detail modal (read-only view of a rate card's commodities) ──
+const PricingDetailModal = ({
+  card,
+  onClose,
+}: {
+  card: RateCard;
+  onClose: () => void;
+}) => {
   const containers = card.containers ?? {};
-  const commodityNames = Object.keys(containers);
-
-  if (commodityNames.length === 0) {
-    return <span className="text-slate-300">—</span>;
-  }
+  const names = Object.keys(containers);
 
   return (
-    <div className="flex flex-wrap gap-1 max-w-[260px]">
-      {commodityNames.map(name => {
-        const pricing = containers[name];
-        const lines: string[] = [];
-        (['import', 'export'] as ClearanceDirection[]).forEach(direction => {
-          CONTAINER_TYPE_OPTIONS[direction].forEach(type => {
-            const clearancePrice = pricing?.[direction]?.clearance[type] ?? 0;
-            const truckingPrice = pricing?.[direction]?.trucking[type] ?? 0;
-            if (clearancePrice > 0 || truckingPrice > 0) {
-              lines.push(
-                `${direction === 'import' ? 'Import' : 'Export'} ${type}: Clearance ${formatCurrency(clearancePrice, card.currency)} · Trucking ${formatCurrency(truckingPrice, card.currency)}`
-              );
-            }
-          });
-        });
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ background: 'rgba(10,22,50,0.65)', backdropFilter: 'blur(2px)' }}
+      onClick={e => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col overflow-hidden">
+        <div className="flex items-center justify-between px-6 py-4 flex-shrink-0" style={{ background: '#1B4F8A' }}>
+          <div>
+            <h3 className="text-white font-bold text-base">Commodity Pricing</h3>
+            <p className="text-blue-100 text-xs mt-0.5">{card.origin} → {card.destination}</p>
+          </div>
+          <button onClick={onClose} className="text-slate-100 hover:text-white transition-colors">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-5 h-5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
 
-        return (
-          <span
-            key={name}
-            title={lines.length > 0 ? lines.join('\n') : 'No pricing set'}
-            className="px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 text-[11px] font-medium cursor-default"
-          >
-            {name}
-          </span>
-        );
-      })}
+        <div className="overflow-y-auto flex-1 px-6 py-5 space-y-6">
+          {names.length === 0 ? (
+            <p className="text-sm text-slate-400">No commodity pricing set for this rate card.</p>
+          ) : (
+            names.map(name => (
+              <div key={name}>
+                <p className="text-sm font-bold mb-3" style={{ color: '#0A1628' }}>{name}</p>
+                <div className="space-y-3">
+                  {(['export', 'import'] as ClearanceDirection[]).map(direction => {
+                    const pricing = containers[name][direction];
+                    const containerTypes = CONTAINER_TYPE_OPTIONS[direction];
+                    const rows = containerTypes.filter(
+                      t => (pricing.clearance[t] ?? 0) > 0 || (pricing.trucking[t] ?? 0) > 0
+                    );
+                    if (rows.length === 0) return null;
+
+                    return (
+                      <div key={direction} className="rounded-xl border p-3" style={{ borderColor: '#e2e8f0' }}>
+                        <p
+                          className="text-xs font-bold uppercase tracking-wider mb-2"
+                          style={{ color: direction === 'export' ? '#1B4F8A' : '#66a55f' }}
+                        >
+                          {direction === 'export' ? 'Export' : 'Import'}
+                        </p>
+                        <table className="w-full text-xs">
+                          <thead>
+                            <tr>
+                              <th className="text-left font-semibold text-slate-500 pb-1.5 pr-2">Container</th>
+                              <th className="text-right font-semibold text-slate-500 pb-1.5 pr-2">Clearance</th>
+                              <th className="text-right font-semibold text-slate-500 pb-1.5">Trucking</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {rows.map(type => (
+                              <tr key={type} style={{ borderTop: '1px solid #f1f5f9' }}>
+                                <td className="py-1.5 pr-2 font-semibold text-slate-700">{type}</td>
+                                <td className="py-1.5 pr-2 text-right font-mono text-slate-600">
+                                  {formatCurrency(pricing.clearance[type] ?? 0, card.currency)}
+                                </td>
+                                <td className="py-1.5 text-right font-mono text-slate-600">
+                                  {formatCurrency(pricing.trucking[type] ?? 0, card.currency)}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
     </div>
+  );
+};
+
+// ── Container pricing summary (table cell) ───────────────────────────
+// Commodity is the parent, so a rate card can carry pricing for many
+// commodities at once — show a compact "N commodities" button that opens
+// the full read-only detail modal instead of relying on a cramped tooltip.
+const ContainerPricingSummary = ({
+  card,
+  onView,
+}: {
+  card: RateCard;
+  onView: () => void;
+}) => {
+  const count = Object.keys(card.containers ?? {}).length;
+  if (count === 0) return <span className="text-slate-300">—</span>;
+
+  return (
+    <button
+      type="button"
+      onClick={onView}
+      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-xs font-semibold transition-colors hover:bg-blue-50"
+      style={{ borderColor: '#e2e8f0', color: '#1B4F8A' }}
+    >
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-3.5 h-3.5">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+      </svg>
+      {count} {count === 1 ? 'commodity' : 'commodities'}
+    </button>
   );
 };
 
@@ -482,14 +552,15 @@ const EMPTY_FORM: RateCardFormData = {
 const AdminPanel: React.FC = () => {
   const { loading, error, rateCards, createRateCard, updateRateCard, deleteRateCard } =
     useRateCards(true);
-  const { commodities } = useCommodities(true);
+  useCommodities(true); // kept mounted to warm the commodities list used by CommoditySearch's own hook/service
 
   const [editingCard, setEditingCard] = useState<RateCard | null>(null);
   const [showModal,   setShowModal]   = useState(false);
+  const [viewingCard, setViewingCard] = useState<RateCard | null>(null);
   const [formData,    setFormData]    = useState<RateCardFormData>(EMPTY_FORM);
 
   // Which commodity's Import/Export pricing grid is currently shown/edited,
-  // and which commodity is picked in the dropdown ready to be added.
+  // and which commodity is picked in the search box ready to be added.
   const [activeCommodity, setActiveCommodity] = useState('');
   const [commodityToAdd,  setCommodityToAdd]  = useState('');
 
@@ -505,9 +576,9 @@ const AdminPanel: React.FC = () => {
     }));
   };
 
-  // Adds the commodity picked in the dropdown as a newly-priced commodity on
-  // this rate card (parent), scaffolding an empty Import/Export grid for it,
-  // and makes it the active commodity being edited.
+  // Adds the commodity picked in the search box as a newly-priced commodity
+  // on this rate card (parent), scaffolding an empty Import/Export grid for
+  // it, and makes it the active commodity being edited.
   const handleAddCommodity = () => {
     if (!commodityToAdd) return;
     const name = commodityToAdd;
@@ -686,9 +757,11 @@ const AdminPanel: React.FC = () => {
                     <td className="px-4 py-3 capitalize text-slate-600 text-xs">{card.mode}</td>
                     <td className="px-4 py-3"><ServiceBadge service={card.service} /></td>
 
-                    {/* One chip per priced commodity (the parent); non-local_charge rows show N/A. */}
+                    {/* Compact "N commodities" button; non-local_charge rows show N/A. */}
                     <td className="px-4 py-3 text-slate-700 text-xs">
-                      {card.service === 'local_charge' ? <ContainerPricingSummary card={card} /> : <span className="text-slate-300">—</span>}
+                      {card.service === 'local_charge'
+                        ? <ContainerPricingSummary card={card} onView={() => setViewingCard(card)} />
+                        : <span className="text-slate-300">—</span>}
                     </td>
                     <td className="px-4 py-3 text-right text-slate-700 font-mono text-xs">
                       {card.service === 'freight' ? formatCurrency(card.freight, card.currency) : <span className="text-slate-300">—</span>}
@@ -735,13 +808,12 @@ const AdminPanel: React.FC = () => {
         )}
       </div>
 
-      {/* Modal */}
+      {/* Edit / Create modal */}
       {showModal && (
         <RateCardModal
           editingCard={editingCard}
           formData={formData}
           loading={loading}
-          commodities={commodities}
           activeCommodity={activeCommodity}
           commodityToAdd={commodityToAdd}
           onChange={handleInputChange}
@@ -757,6 +829,11 @@ const AdminPanel: React.FC = () => {
             setActiveCommodity(''); setCommodityToAdd('');
           }}
         />
+      )}
+
+      {/* Read-only pricing detail modal */}
+      {viewingCard && (
+        <PricingDetailModal card={viewingCard} onClose={() => setViewingCard(null)} />
       )}
     </div>
   );

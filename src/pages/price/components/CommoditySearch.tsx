@@ -13,6 +13,7 @@ interface CommoditySearchProps {
   placeholder?: string;
   required?:   boolean;
   disabled?:   boolean;
+  className?:   string;
 }
 
 export const CommoditySearch: React.FC<CommoditySearchProps> = ({
@@ -22,6 +23,7 @@ export const CommoditySearch: React.FC<CommoditySearchProps> = ({
   placeholder = 'Search for commodity',
   required    = false,
   disabled    = false,
+  className,
 }) => {
   const [searchTerm,      setSearchTerm]      = useState(value);
   const [suggestions,     setSuggestions]     = useState<Commodity[]>([]);
@@ -61,12 +63,15 @@ export const CommoditySearch: React.FC<CommoditySearchProps> = ({
     setSearchTerm(v);
     setHasSelected(false);
     hasSelectedRef.current = false;
-    onChange(v);
+    // Don't call onChange(v) here — typed text isn't a valid commodity yet.
+    // Clear the parent's committed value instead, so a stale valid value
+    // can't accidentally get submitted after the user starts retyping.
+    onChange('');
   };
 
   const handleSelect = (commodity: Commodity) => {
     setSearchTerm(commodity.name);
-    onChange(commodity.name);
+    onChange(commodity.name); // only commit here, on explicit selection
     setSuggestions([]);
     setShowSuggestions(false);
     setHasSelected(true);
@@ -94,7 +99,7 @@ export const CommoditySearch: React.FC<CommoditySearchProps> = ({
           placeholder={disabled ? 'Fill origin and destination first' : placeholder}
           required={required}
           disabled={disabled}
-          className={`${inputCls} pr-8 ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+          className={`${inputCls} pr-8 ${className ?? ''} ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
         />
         {loading && (
           <div className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-slate-300 border-t-transparent rounded-full animate-spin" />
