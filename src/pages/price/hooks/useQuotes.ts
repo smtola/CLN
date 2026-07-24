@@ -62,7 +62,7 @@ export const useQuoteHistory = (initialPage: number = 1, initialLimit: number = 
     total: 0,
     pages: 0,
   });
-
+  
   const fetchQuotes = useCallback(async (page?: number, limit?: number) => {
     setLoading(true);
     setError(null);

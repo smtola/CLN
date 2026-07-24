@@ -4,44 +4,63 @@ import type { Location } from '../types/common.types';
 import type { TransportMode } from '../types/quote.types';
 import { useQuotes } from '../hooks/useQuotes';
 import { validateQuoteRequest } from '../utils/validators';
-import { MODE_STYLES } from '../utils/constants';
+import { MODE_STYLES, SERVICE_STYLES } from '../utils/constants';
 import LocationSearch from './LocationSearch';
 import QuoteCard from './QuoteCard';
 import CommoditySearch from './CommoditySearch';
 
 type Mode = keyof typeof MODE_STYLES; // 'sea' | 'air' | 'road'
+type Service = keyof typeof SERVICE_STYLES;
+type Clearance = 'import' | 'export';
 
-// Cargo-field option sets, keyed per transport mode. These reuse the existing
-// `equipmentType` / `containerSize` fields on QuoteRequest so the API contract
-// doesn't change, only the labels + choices shown to the person.
+const CLEARANCE_OPTIONS: readonly { value: Clearance; label: string }[] = [
+  { value: 'import', label: 'Import' },
+  { value: 'export', label: 'Export' },
+];
+
+// Container type choices differ by clearance direction, and apply to Sea + Road.
+// These reuse the existing `containerSize` field on QuoteRequest so the API
+// contract doesn't change, only the labels + choices shown to the person.
+const CONTAINER_TYPE_OPTIONS: Record<Clearance, readonly string[]> = {
+  import: ["20'GP", "40'GP"],
+  export: ["20'GP", "40'GP", "40'RF", "45'RF"],
+};
+
+// Common air-freight packaging unit types.
+const PACKAGING_UNIT_OPTIONS: readonly string[] = [
+  'Carton',
+  'Pallet',
+  'Crate',
+  'Box',
+  'Drum',
+  'Bag',
+  'Skid',
+  'Roll',
+  'Bundle',
+  'Envelope',
+  'Case',
+  'Barrel',
+  'Sack',
+  'Tube',
+  'Pail',
+  'Bale',
+  'Basket',
+  'Bin',
+  'Reel',
+  'Tote',
+];
+
+// Per-mode cargo section shape. Sea and Road share the same fields
+// (clearance → container type, commodity, weight, quantity). Air swaps
+// container type for a packaging unit and drops quantity entirely.
 const CARGO_FIELD_OPTIONS: Record<Mode, {
-  primaryLabel: string;
-  primaryOptions: readonly string[];
-  secondaryLabel: string | null;
-  secondaryOptions: readonly string[];
-  showQuantityAndSoc: boolean;
+  showContainerType: boolean;
+  showPackagingUnit: boolean;
+  showQuantity: boolean;
 }> = {
-  sea: {
-    primaryLabel: 'Shipment Type',
-    primaryOptions: ['Dry Van', 'Flat Rack', 'Open Top'],
-    secondaryLabel: 'Container Size',
-    secondaryOptions: ['20', '40'],
-    showQuantityAndSoc: true,
-  },
-  air: {
-    primaryLabel: 'Packaging Unit',
-    primaryOptions: ['Pallet', 'Carton', 'Crate'],
-    secondaryLabel: null,
-    secondaryOptions: [],
-    showQuantityAndSoc: false,
-  },
-  road: {
-    primaryLabel: 'Trucking Service',
-    primaryOptions: ['FTL', 'LTL', 'Dedicated'],
-    secondaryLabel: 'Vehicle Size',
-    secondaryOptions: ['10ft', '20ft', '40ft'],
-    showQuantityAndSoc: false,
-  },
+  sea:  { showContainerType: true,  showPackagingUnit: false, showQuantity: true },
+  road: { showContainerType: true,  showPackagingUnit: false, showQuantity: true },
+  air:  { showContainerType: false, showPackagingUnit: true,  showQuantity: false },
 };
 
 // ── Field label ──────────────────────────────────────────────────────
@@ -66,7 +85,7 @@ const OptionPill = <T extends string>({
   onChange: (v: T) => void;
   accent: string;
 }) => (
-  <div className="flex flex-wrap gap-2">
+  <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto overflow-x-hidden pr-1">
     {options.map(opt => {
       const selected = value === opt;
       return (
@@ -132,10 +151,43 @@ const ModeCard = ({
   );
 };
 
+// ── Service level selector card ──────────────────────────────────────
+const ServiceCard = ({
+  serviceKey,
+  selected,
+  onSelect,
+}: {
+  serviceKey: Service;
+  selected: boolean;
+  onSelect: () => void;
+}) => {
+  const style = SERVICE_STYLES[serviceKey];
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      className="h-[130px] rounded-2xl border-2 px-5 flex flex-col items-start justify-center gap-1 text-left transition-all duration-300 hover:shadow-md"
+      style={{
+        borderColor: selected ? style.border : '#e2e8f0',
+        background:  selected ? style.bg : '#ffffff',
+      }}
+    >
+      <span className="text-2xl">{style.icon}</span>
+      <span className="font-bold text-base" style={{ color: selected ? style.primary : '#0f172a' }}>
+        {style.label}
+      </span>
+      <span className="text-xs text-slate-500">{style.tagline}</span>
+    </button>
+  );
+};
+
 const inputCls = "w-full h-16 px-4 rounded-xl border border-slate-300 text-base text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-slate-300 transition-all";
 
 const QuoteForm: React.FC = () => {
   const [mode, setMode] = useState<Mode>('sea');
+  // NOTE: pick whatever the real default key in SERVICE_STYLES is (e.g. 'standard').
+  const [service, setService] = useState<Service>(Object.keys(SERVICE_STYLES)[0] as Service);
+  const [clearance, setClearance] = useState<Clearance>('import');
   const [formData, setFormData] = useState<QuoteRequest>({
     origin:             '',
     destination:        '',
@@ -187,6 +239,20 @@ const QuoteForm: React.FC = () => {
     }));
   };
 
+  const handleClearanceChange = (next: Clearance) => {
+    setClearance(next);
+    // Container type options depend on clearance (export has more options
+    // than import), so drop any selection that may no longer be valid.
+    setFormData(prev => ({ ...prev, containerSize: '' }));
+  };
+
+  const handleServiceChange = (next: Service) => {
+    setService(next);
+    // If service level ever needs to travel with the request payload, set it
+    // on formData here too (once QuoteRequest has a matching field), e.g.:
+    // setFormData(prev => ({ ...prev, serviceLevel: next }));
+  };
+
   const handleQuantityChange = (delta: number) => {
     setFormData(prev => ({
       ...prev,
@@ -224,6 +290,8 @@ const QuoteForm: React.FC = () => {
     resetQuote();
     setErrors({});
     setMode('sea');
+    setService(Object.keys(SERVICE_STYLES)[0] as Service);
+    setClearance('import');
     setFormData({
       origin: '', destination: '', containerSize: '', containerQuantity: 1,
       containerMaxWeight: 0, soc: false, equipmentType: '', commodity: '',
@@ -259,12 +327,12 @@ const QuoteForm: React.FC = () => {
         </div>
 
         <div className="grid md:grid-cols-3 gap-4">
-          {Object.entries(quoteResult.quotes).map(([service, quote]) => (
+          {Object.entries(quoteResult.quotes).map(([svc, quote]) => (
             <QuoteCard
-              key={service}
-              service={service as ServiceLevel}
+              key={svc}
+              service={svc as ServiceLevel}
               quote={quote}
-              isPopular={service === 'standard'}
+              isPopular={svc === 'standard'}
               accentColor={activeStyle.primary}
             />
           ))}
@@ -355,30 +423,81 @@ const QuoteForm: React.FC = () => {
           </div>
         </div>
 
-        {/* SECTION 3 — Cargo Details */}
+        {/* SECTION 3 — Service Level */}
+        <div>
+          <h2 className="text-sm font-bold uppercase tracking-wider text-slate-500 mb-3 px-1">Services</h2>
+          <div className="grid md:grid-cols-3 gap-4">
+            {(Object.keys(SERVICE_STYLES) as Service[]).map(key => (
+              <ServiceCard
+                key={key}
+                serviceKey={key}
+                selected={service === key}
+                onSelect={() => handleServiceChange(key)}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* SECTION 4 — Cargo Details */}
         <Section title="Cargo Details">
           <div className="grid md:grid-cols-2 gap-4">
             <div>
-              <FieldLabel>{cargoConfig.primaryLabel}</FieldLabel>
-              <OptionPill
-                options={cargoConfig.primaryOptions}
-                value={formData.equipmentType}
-                onChange={v => setFormData(p => ({ ...p, equipmentType: v }))}
-                accent={activeStyle.primary}
-              />
+              <FieldLabel>Clearance</FieldLabel>
+              <div className="flex flex-wrap gap-2">
+                {CLEARANCE_OPTIONS.map(opt => {
+                  const selected = clearance === opt.value;
+                  return (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => handleClearanceChange(opt.value)}
+                      className="px-4 h-16 rounded-xl border text-sm font-semibold transition-all duration-200"
+                      style={{
+                        borderColor: selected ? activeStyle.primary : '#cbd5e1',
+                        background:  selected ? activeStyle.primary : '#ffffff',
+                        color:       selected ? '#ffffff' : '#475569',
+                      }}
+                    >
+                      {opt.label}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
-            {cargoConfig.secondaryLabel && (
+            {cargoConfig.showContainerType && (
               <div>
-                <FieldLabel>{cargoConfig.secondaryLabel}</FieldLabel>
+                <FieldLabel>Container Type</FieldLabel>
                 <OptionPill
-                  options={cargoConfig.secondaryOptions}
+                  options={CONTAINER_TYPE_OPTIONS[clearance]}
                   value={formData.containerSize}
                   onChange={v => setFormData(p => ({ ...p, containerSize: v }))}
                   accent={activeStyle.primary}
                 />
               </div>
             )}
+
+            {cargoConfig.showPackagingUnit && (
+              <div>
+                <FieldLabel>Packaging Unit</FieldLabel>
+                <OptionPill
+                  options={PACKAGING_UNIT_OPTIONS}
+                  value={formData.equipmentType}
+                  onChange={v => setFormData(p => ({ ...p, equipmentType: v }))}
+                  accent={activeStyle.primary}
+                />
+              </div>
+            )}
+
+            <div>
+              <FieldLabel>Commodity (HS Code)</FieldLabel>
+              <CommoditySearch
+                label=""
+                value={formData.commodity}
+                onChange={v => setFormData(p => ({ ...p, commodity: v }))}
+                disabled={!formData.origin || !formData.destination}
+              />
+            </div>
 
             <div>
               <FieldLabel>Gross Weight (kg)</FieldLabel>
@@ -393,55 +512,29 @@ const QuoteForm: React.FC = () => {
               />
             </div>
 
-            <div>
-              <FieldLabel>Commodity (HS Code)</FieldLabel>
-              <CommoditySearch
-                label=""
-                value={formData.commodity}
-                onChange={v => setFormData(p => ({ ...p, commodity: v }))}
-                disabled={!formData.origin || !formData.destination}
-              />
-            </div>
-
-            {cargoConfig.showQuantityAndSoc && (
-              <>
-                <div>
-                  <FieldLabel>Container Quantity</FieldLabel>
-                  <div className="w-full flex items-center gap-3">
-                    <button
-                      type="button"
-                      onClick={() => handleQuantityChange(-1)}
-                      className="w-[20%] h-16 rounded-xl border border-slate-300 flex items-center justify-center font-bold text-xl transition-colors hover:bg-slate-100 text-slate-600"
-                    >
-                      −
-                    </button>
-                    <span className="w-12 text-center text-lg font-semibold text-slate-900">
-                      {formData.containerQuantity}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => handleQuantityChange(1)}
-                      className="w-[20%] h-16 rounded-xl border border-slate-300 flex items-center justify-center font-bold text-xl transition-colors hover:bg-slate-100 text-slate-600"
-                    >
-                      +
-                    </button>
-                  </div>
+            {cargoConfig.showQuantity && (
+              <div>
+                <FieldLabel>Container Quantity</FieldLabel>
+                <div className="w-full flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => handleQuantityChange(-1)}
+                    className="w-[20%] h-16 rounded-xl border border-slate-300 flex items-center justify-center font-bold text-xl transition-colors hover:bg-slate-100 text-slate-600"
+                  >
+                    −
+                  </button>
+                  <span className="w-12 text-center text-lg font-semibold text-slate-900">
+                    {formData.containerQuantity}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => handleQuantityChange(1)}
+                    className="w-[20%] h-16 rounded-xl border border-slate-300 flex items-center justify-center font-bold text-xl transition-colors hover:bg-slate-100 text-slate-600"
+                  >
+                    +
+                  </button>
                 </div>
-
-                <div className="flex items-end">
-                  <label className="flex items-center gap-3 cursor-pointer h-16">
-                    <input
-                      type="checkbox"
-                      name="soc"
-                      checked={formData.soc}
-                      onChange={handleInputChange}
-                      className="w-5 h-5 rounded border-slate-300"
-                      style={{ accentColor: activeStyle.primary }}
-                    />
-                    <span className="text-sm font-medium text-slate-700">Shipper Owned Container (SOC)</span>
-                  </label>
-                </div>
-              </>
+              </div>
             )}
           </div>
         </Section>

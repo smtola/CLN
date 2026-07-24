@@ -72,7 +72,7 @@ export const MODE_STYLES: Record<TransportMode extends infer M ? Extract<M, 'sea
   icon: string;
 }> = {
   sea: {
-    label: 'Sea Freight',
+    label: 'Sea',
     tagline: 'Container / LCL',
     primary: '#5B4CF4',
     bg: '#EEF0FF',
@@ -80,7 +80,7 @@ export const MODE_STYLES: Record<TransportMode extends infer M ? Extract<M, 'sea
     icon: '🚢',
   },
   air: {
-    label: 'Air Freight',
+    label: 'Air',
     tagline: 'Express Cargo',
     primary: '#0EA5E9',
     bg: '#E0F2FE',
@@ -88,11 +88,37 @@ export const MODE_STYLES: Record<TransportMode extends infer M ? Extract<M, 'sea
     icon: '✈️',
   },
   road: {
-    label: 'Road Freight',
+    label: 'Road',
     tagline: 'Cross-border Truck',
     primary: '#0F9D8A',
     bg: '#E7F8F5',
     border: '#0F9D8A',
     icon: '🚚',
   },
+};
+// Palette used by the QuoteForm transport-mode selector, cargo cards and CTA button.
+export const SERVICE_STYLES: Record<ServiceLevel extends infer M ? Extract<M, 'local_charge'> : never, {
+  label: string;
+  tagline: string;
+  primary: string;
+  bg: string;
+  border: string;
+  icon: string;
+}> = {
+  local_charge: {
+    label: 'Local Charge',
+    tagline: 'Clearance / Trucking',
+    primary: '#5B4CF4',
+    bg: '#EEF0FF',
+    border: '#5B4CF4',
+    icon: '🚢',
+  },
+  // freight: {
+  //   label: 'Freight',
+  //   tagline: 'Clearance / Trucking',
+  //   primary: '#0EA5E9',
+  //   bg: '#E0F2FE',
+  //   border: '#0EA5E9',
+  //   icon: '✈️',
+  // }
 };
