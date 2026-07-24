@@ -3,11 +3,11 @@ import type { QuoteRequest, ServiceLevel } from '../types/quote.types';
 import type { Location } from '../types/common.types';
 import type { TransportMode } from '../types/quote.types';
 import { useQuotes } from '../hooks/useQuotes';
+import { useCommodities } from '../hooks/useCommodities';
 import { validateQuoteRequest } from '../utils/validators';
 import { MODE_STYLES, SERVICE_STYLES, CLEARANCE_OPTIONS, CONTAINER_TYPE_OPTIONS } from '../utils/constants';
 import LocationSearch from './LocationSearch';
 import QuoteCard from './QuoteCard';
-import CommoditySearch from './CommoditySearch';
 
 type Mode = keyof typeof MODE_STYLES; // 'sea' | 'air' | 'road'
 type Service = keyof typeof SERVICE_STYLES;
@@ -192,6 +192,10 @@ const QuoteForm: React.FC = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const { quoteResult, getQuote, resetQuote, loading } = useQuotes();
+  // Commodity is the parent for Import/Export clearance & trucking pricing on
+  // the backend, so the customer must pick from the same canonical list the
+  // admin prices against — a free-text field would never match.
+  const { commodities } = useCommodities(true);
 
   const activeStyle = MODE_STYLES[mode];
   const cargoConfig = CARGO_FIELD_OPTIONS[mode];
@@ -480,13 +484,20 @@ const QuoteForm: React.FC = () => {
             )}
 
             <div>
-              <FieldLabel>Commodity (HS Code)</FieldLabel>
-              <CommoditySearch
-                label=""
+              <FieldLabel>Commodity</FieldLabel>
+              <select
+                name="commodity"
                 value={formData.commodity}
-                onChange={v => setFormData(p => ({ ...p, commodity: v }))}
-                disabled={!formData.origin || !formData.destination}
-              />
+                onChange={handleInputChange}
+                className={inputCls}
+              >
+                <option value="">Select a commodity…</option>
+                {commodities.map(c => (
+                  <option key={c.id} value={c.name}>
+                    {c.code ? `HS ${c.code} — ${c.name}` : c.name}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div>

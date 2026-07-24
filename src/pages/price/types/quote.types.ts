@@ -25,6 +25,7 @@
     othc?: number;
     clearance_type?: 'import' | 'export';
     container_type?: string;
+    commodity?: string;
     /** @deprecated use `clearance` — kept for backward compatibility with older quotes */
     docs?: number;
     subtotal: number;

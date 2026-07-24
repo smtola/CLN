@@ -78,20 +78,29 @@ export const validateRateCard = (
   }
 
   if (data.service === 'local_charge') {
-    const containers = data.containers;
-    const hasAnyPrice =
-      !!containers &&
-      (['export', 'import'] as const).some(direction =>
-        (['clearance', 'trucking'] as const).some(line =>
-          Object.values(containers[direction]?.[line] ?? {}).some(v => (v ?? 0) > 0)
+    const containers = data.containers ?? {};
+    const commodityNames = Object.keys(containers);
+
+    if (commodityNames.length === 0) {
+      errors.push({
+        field: 'containers',
+        message: 'Add at least one commodity and set its pricing',
+      });
+    } else {
+      const hasAnyPrice = commodityNames.some(name =>
+        (['export', 'import'] as const).some(direction =>
+          (['clearance', 'trucking'] as const).some(line =>
+            Object.values(containers[name]?.[direction]?.[line] ?? {}).some(v => (v ?? 0) > 0)
+          )
         )
       );
 
-    if (!hasAnyPrice) {
-      errors.push({
-        field: 'containers',
-        message: 'Enter at least one clearance or trucking price for a container type',
-      });
+      if (!hasAnyPrice) {
+        errors.push({
+          field: 'containers',
+          message: 'Enter at least one clearance or trucking price for a container type',
+        });
+      }
     }
   }
 
