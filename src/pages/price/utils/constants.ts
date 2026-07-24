@@ -61,3 +61,38 @@ export const MODE_COLORS = {
   sea: 'badge-accent',
   rail: 'badge-info',
 };
+
+// Palette used by the QuoteForm transport-mode selector, cargo cards and CTA button.
+export const MODE_STYLES: Record<TransportMode extends infer M ? Extract<M, 'sea' | 'air' | 'road'> : never, {
+  label: string;
+  tagline: string;
+  primary: string;
+  bg: string;
+  border: string;
+  icon: string;
+}> = {
+  sea: {
+    label: 'Sea Freight',
+    tagline: 'Container / LCL',
+    primary: '#5B4CF4',
+    bg: '#EEF0FF',
+    border: '#5B4CF4',
+    icon: '🚢',
+  },
+  air: {
+    label: 'Air Freight',
+    tagline: 'Express Cargo',
+    primary: '#0EA5E9',
+    bg: '#E0F2FE',
+    border: '#0EA5E9',
+    icon: '✈️',
+  },
+  road: {
+    label: 'Road Freight',
+    tagline: 'Cross-border Truck',
+    primary: '#0F9D8A',
+    bg: '#E7F8F5',
+    border: '#0F9D8A',
+    icon: '🚚',
+  },
+};

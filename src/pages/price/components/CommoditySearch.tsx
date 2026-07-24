@@ -4,7 +4,7 @@ import quoteService from '../services/quoteService';
 import { useDebounce } from '../hooks/useDebounce';
 import type { Commodity } from '../types/common.types';
 const inputCls =
-  'w-full px-3 py-2.5 rounded-lg border text-sm bg-slate-50 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all';
+  'w-full h-16 px-4 rounded-xl border border-slate-300 text-base bg-white text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-300 transition-all';
 
 interface CommoditySearchProps {
   label:       string;
@@ -97,7 +97,7 @@ export const CommoditySearch: React.FC<CommoditySearchProps> = ({
           className={`${inputCls} pr-8 ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
         />
         {loading && (
-          <div className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
+          <div className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-slate-300 border-t-transparent rounded-full animate-spin" />
         )}
       </div>
 

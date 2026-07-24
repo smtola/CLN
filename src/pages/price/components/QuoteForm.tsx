@@ -1,37 +1,70 @@
 import React, { useState } from 'react';
 import type { QuoteRequest, ServiceLevel } from '../types/quote.types';
-import type { FormStep, Location } from '../types/common.types';
+import type { Location } from '../types/common.types';
+import type { TransportMode } from '../types/quote.types';
 import { useQuotes } from '../hooks/useQuotes';
 import { validateQuoteRequest } from '../utils/validators';
+import { MODE_STYLES } from '../utils/constants';
 import LocationSearch from './LocationSearch';
 import QuoteCard from './QuoteCard';
 import CommoditySearch from './CommoditySearch';
 
-const EQUIPMENT_TYPES = ['Dry Van', 'Flat Rack', 'Open Top'] as const;
-const CONTAINER_SIZES  = ['20', '40'] as const;
-const TRANSPORT_MODES  = ['Sea', 'Air', 'Road'] as const;
+type Mode = keyof typeof MODE_STYLES; // 'sea' | 'air' | 'road'
 
-// ── Shared field label ──────────────────────────────────────────────
+// Cargo-field option sets, keyed per transport mode. These reuse the existing
+// `equipmentType` / `containerSize` fields on QuoteRequest so the API contract
+// doesn't change, only the labels + choices shown to the person.
+const CARGO_FIELD_OPTIONS: Record<Mode, {
+  primaryLabel: string;
+  primaryOptions: readonly string[];
+  secondaryLabel: string | null;
+  secondaryOptions: readonly string[];
+  showQuantityAndSoc: boolean;
+}> = {
+  sea: {
+    primaryLabel: 'Shipment Type',
+    primaryOptions: ['Dry Van', 'Flat Rack', 'Open Top'],
+    secondaryLabel: 'Container Size',
+    secondaryOptions: ['20', '40'],
+    showQuantityAndSoc: true,
+  },
+  air: {
+    primaryLabel: 'Packaging Unit',
+    primaryOptions: ['Pallet', 'Carton', 'Crate'],
+    secondaryLabel: null,
+    secondaryOptions: [],
+    showQuantityAndSoc: false,
+  },
+  road: {
+    primaryLabel: 'Trucking Service',
+    primaryOptions: ['FTL', 'LTL', 'Dedicated'],
+    secondaryLabel: 'Vehicle Size',
+    secondaryOptions: ['10ft', '20ft', '40ft'],
+    showQuantityAndSoc: false,
+  },
+};
+
+// ── Field label ──────────────────────────────────────────────────────
 const FieldLabel = ({ children, required }: { children: React.ReactNode; required?: boolean }) => (
-  <label className="block text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: '#64748b' }}>
+  <label className="block text-sm font-semibold text-slate-600 mb-2">
     {children}{required && <span className="text-red-500 ml-1">*</span>}
   </label>
 );
 
-// ── Error text ──────────────────────────────────────────────────────
 const FieldError = ({ msg }: { msg?: string }) =>
-  msg ? <p className="mt-1 text-xs text-red-500">{msg}</p> : null;
+  msg ? <p className="mt-1.5 text-xs text-red-500">{msg}</p> : null;
 
-// ── Radio group ─────────────────────────────────────────────────────
-const RadioGroup = <T extends string>({
+// ── Pill option button (used for cargo-detail choices) ───────────────
+const OptionPill = <T extends string>({
   options,
   value,
   onChange,
+  accent,
 }: {
-  name: string;
   options: readonly T[];
   value: string;
   onChange: (v: T) => void;
+  accent: string;
 }) => (
   <div className="flex flex-wrap gap-2">
     {options.map(opt => {
@@ -41,10 +74,10 @@ const RadioGroup = <T extends string>({
           key={opt}
           type="button"
           onClick={() => onChange(opt)}
-          className="px-3 py-1.5 rounded-lg border text-sm font-medium transition-all"
+          className="px-4 h-16 rounded-xl border text-sm font-semibold transition-all duration-200"
           style={{
-            borderColor: selected ? '#1B4F8A' : '#e2e8f0',
-            background:  selected ? '#1B4F8A' : '#ffffff',
+            borderColor: selected ? accent : '#cbd5e1',
+            background:  selected ? accent : '#ffffff',
             color:       selected ? '#ffffff' : '#475569',
           }}
         >
@@ -55,46 +88,54 @@ const RadioGroup = <T extends string>({
   </div>
 );
 
-// ── Step indicator ──────────────────────────────────────────────────
-const STEPS = ['Route & Schedule', 'Cargo Details'];
-
-const StepBar = ({ active }: { active: FormStep }) => (
-  <div className="flex items-center mb-8">
-    {STEPS.map((label, i) => {
-      const done    = i + 1 < active;
-      const current = i + 1 === active;
-      return (
-        <React.Fragment key={i}>
-          <div className="flex items-center gap-2">
-            <div
-              className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-colors"
-              style={{
-                background: done ? '#4F9848' : current ? '#1B4F8A' : '#e2e8f0',
-                color:      done || current ? '#fff' : '#94a3b8',
-              }}
-            >
-              {done
-                ? <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={3} className="w-3.5 h-3.5"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
-                : i + 1}
-            </div>
-            <span className="text-sm font-medium" style={{ color: current ? '#1B4F8A' : done ? '#4F9848' : '#94a3b8' }}>
-              {label}
-            </span>
-          </div>
-          {i < STEPS.length - 1 && (
-            <div className="flex-1 h-px mx-3" style={{ background: done ? '#4F9848' : '#e2e8f0' }} />
-          )}
-        </React.Fragment>
-      );
-    })}
+// ── Section wrapper ──────────────────────────────────────────────────
+const Section = ({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) => (
+  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-6">
+    <h2 className="text-sm font-bold uppercase tracking-wider text-slate-500 mb-5">{title}</h2>
+    {children}
   </div>
 );
 
-// ── Input style ─────────────────────────────────────────────────────
-const inputCls = "w-full px-3 py-2.5 rounded-lg border text-sm text-slate-800 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all";
+// ── Transport mode selector card ─────────────────────────────────────
+const ModeCard = ({
+  modeKey,
+  selected,
+  onSelect,
+}: {
+  modeKey: Mode;
+  selected: boolean;
+  onSelect: () => void;
+}) => {
+  const style = MODE_STYLES[modeKey];
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      className="h-[130px] rounded-2xl border-2 px-5 flex flex-col items-start justify-center gap-1 text-left transition-all duration-300 hover:shadow-md"
+      style={{
+        borderColor: selected ? style.border : '#e2e8f0',
+        background:  selected ? style.bg : '#ffffff',
+      }}
+    >
+      <span className="text-2xl">{style.icon}</span>
+      <span className="font-bold text-base" style={{ color: selected ? style.primary : '#0f172a' }}>
+        {style.label}
+      </span>
+      <span className="text-xs text-slate-500">{style.tagline}</span>
+    </button>
+  );
+};
+
+const inputCls = "w-full h-16 px-4 rounded-xl border border-slate-300 text-base text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-slate-300 transition-all";
 
 const QuoteForm: React.FC = () => {
-  const [activeStep, setActiveStep] = useState<FormStep>(1);
+  const [mode, setMode] = useState<Mode>('sea');
   const [formData, setFormData] = useState<QuoteRequest>({
     origin:             '',
     destination:        '',
@@ -106,11 +147,14 @@ const QuoteForm: React.FC = () => {
     commodity:          '',
     vesselDeparture:    '',
     country:            '',
-    mode:               '',
+    mode:               'sea',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const { quoteResult, getQuote, resetQuote } = useQuotes();
+  const { quoteResult, getQuote, resetQuote, loading } = useQuotes();
+
+  const activeStyle = MODE_STYLES[mode];
+  const cargoConfig = CARGO_FIELD_OPTIONS[mode];
 
   // ── Handlers ──────────────────────────────────────────────────────
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -131,6 +175,18 @@ const QuoteForm: React.FC = () => {
     if (errors[field]) setErrors(prev => { const n = { ...prev }; delete n[field]; return n; });
   };
 
+  const handleModeChange = (next: Mode) => {
+    setMode(next);
+    // Reset the shared cargo fields so a stale value from another mode's
+    // option set (e.g. "40" from Sea) can't leak into Air/Road submissions.
+    setFormData(prev => ({
+      ...prev,
+      mode: next as TransportMode,
+      equipmentType: '',
+      containerSize: '',
+    }));
+  };
+
   const handleQuantityChange = (delta: number) => {
     setFormData(prev => ({
       ...prev,
@@ -144,17 +200,15 @@ const QuoteForm: React.FC = () => {
   };
 
   // ── Validation ────────────────────────────────────────────────────
-  const validateStep = (step: FormStep): boolean => {
+  const validateAll = (): boolean => {
     const errs: Record<string, string> = {};
-    if (step === 1) {
-      if (!formData.origin)         errs.origin         = 'Origin is required.';
-      if (!formData.destination)    errs.destination    = 'Destination is required.';
-      if (!formData.vesselDeparture) errs.vesselDeparture = 'Vessel departure date is required.';
-    }
-    if (step === 2) {
-      const vErrs = validateQuoteRequest(formData);
-      if (vErrs.length > 0) errs.general = vErrs[0].message;
-    }
+    if (!formData.origin)          errs.origin          = 'Origin is required.';
+    if (!formData.destination)     errs.destination     = 'Destination is required.';
+    if (!formData.vesselDeparture) errs.vesselDeparture  = 'Departure date is required.';
+
+    const vErrs = validateQuoteRequest(formData);
+    if (vErrs.length > 0) errs.general = vErrs[0].message;
+
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -162,41 +216,40 @@ const QuoteForm: React.FC = () => {
   // ── Submit ────────────────────────────────────────────────────────
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validateStep(2)) return;
+    if (!validateAll()) return;
     await getQuote(formData);
-    setActiveStep(2);
   };
 
   const handleReset = () => {
     resetQuote();
-    setActiveStep(1);
     setErrors({});
+    setMode('sea');
     setFormData({
       origin: '', destination: '', containerSize: '', containerQuantity: 1,
       containerMaxWeight: 0, soc: false, equipmentType: '', commodity: '',
-      vesselDeparture: '', country: '', mode: '',
+      vesselDeparture: '', country: '', mode: 'sea',
     });
   };
 
   // ── Result view ───────────────────────────────────────────────────
   if (quoteResult) {
     return (
-      <div className="max-w-4xl mx-auto">
-        {/* Result header */}
-        <div className="mb-6 flex items-center justify-between">
+      <div className="max-w-[1000px] mx-auto bg-white rounded-3xl border border-slate-200 shadow-sm p-6 md:p-10">
+        <div className="mb-8 flex items-center justify-between flex-wrap gap-4">
           <div>
-            <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: '#4F9848' }}>Quote Results</p>
-            <h2 className="text-2xl font-bold" style={{ color: '#0A1628' }}>
+            <p className="text-sm font-bold uppercase tracking-widest mb-2" style={{ color: activeStyle.primary }}>
+              Quote Results
+            </p>
+            <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-900">
               {quoteResult.origin} → {quoteResult.destination}
             </h2>
-            <p className="text-sm text-slate-500 mt-1">
+            <p className="text-slate-500 mt-2">
               {(quoteResult.distance_km ?? 0).toLocaleString()} km · {quoteResult.chargeable_weight ?? 0} kg chargeable weight
             </p>
           </div>
           <button
             onClick={handleReset}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border transition-colors"
-            style={{ borderColor: '#e2e8f0', color: '#475569' }}
+            className="flex items-center gap-2 px-5 py-3 text-sm font-semibold rounded-xl border border-slate-300 text-slate-600 transition-colors hover:bg-slate-50"
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-4 h-4">
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
@@ -212,6 +265,7 @@ const QuoteForm: React.FC = () => {
               service={service as ServiceLevel}
               quote={quote}
               isPopular={service === 'standard'}
+              accentColor={activeStyle.primary}
             />
           ))}
         </div>
@@ -221,243 +275,194 @@ const QuoteForm: React.FC = () => {
 
   // ── Form ──────────────────────────────────────────────────────────
   return (
-    <div className="max-w-2xl mx-auto">
-      {/* Card */}
-      <div className="bg-white rounded-2xl shadow-sm border overflow-hidden" style={{ borderColor: '#ee3a23' }}>
+    <div className="max-w-[1000px] mx-auto bg-white rounded-3xl border border-slate-200 shadow-sm p-6 md:p-10">
 
-        {/* Card header */}
-        <div className="px-6 pt-6 pb-5" style={{ background: 'rgb(102, 165, 95, 0.50)' }}>
-          <div className="flex items-center gap-3 mb-5">
-            <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'rgb(102, 165, 95, 0.50)' }}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={2} className="w-5 h-5">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-            </div>
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="text-3xl md:text-5xl font-bold tracking-tight text-slate-900">
+          Request an Instant Shipping Quote
+        </h1>
+        <p className="text-slate-500 text-lg mt-3">
+          Calculate rates instantly with our upgraded logistics engine
+        </p>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+
+        {errors.general && (
+          <div className="flex gap-2 p-4 rounded-xl bg-red-50 border border-red-200">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth={2} className="w-4 h-4 flex-shrink-0 mt-0.5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <p className="text-sm text-red-600">{errors.general}</p>
+          </div>
+        )}
+
+        {/* SECTION 1 — Route Details */}
+        <Section title="Route Details">
+          <div className="grid md:grid-cols-2 gap-4">
             <div>
-              <h1 className="text-white font-bold text-lg">Freight Quote Calculator</h1>
-              <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.5)' }}>Get instant indicative rates</p>
+              <FieldLabel required>Origin Location</FieldLabel>
+              <LocationSearch
+                label=""
+                value={formData.origin}
+                onChange={l => handleLocationChange('origin', l)}
+                placeholder="e.g. Phnom Penh"
+                required
+              />
+              <FieldError msg={errors.origin} />
+            </div>
+
+            <div>
+              <FieldLabel required>Destination Location</FieldLabel>
+              <LocationSearch
+                label=""
+                value={formData.destination}
+                onChange={l => handleLocationChange('destination', l)}
+                placeholder="e.g. Shanghai"
+                required
+              />
+              <FieldError msg={errors.destination} />
+            </div>
+
+            <div className="md:col-span-2">
+              <FieldLabel required>Departure Date</FieldLabel>
+              <input
+                type="date"
+                name="vesselDeparture"
+                value={formData.vesselDeparture}
+                min={getMinDate()}
+                onChange={handleInputChange}
+                className={inputCls}
+              />
+              <FieldError msg={errors.vesselDeparture} />
             </div>
           </div>
-          <StepBar active={activeStep} />
+        </Section>
+
+        {/* SECTION 2 — Transport Mode */}
+        <div>
+          <h2 className="text-sm font-bold uppercase tracking-wider text-slate-500 mb-3 px-1">Transport Mode</h2>
+          <div className="grid md:grid-cols-3 gap-4">
+            {(Object.keys(MODE_STYLES) as Mode[]).map(key => (
+              <ModeCard
+                key={key}
+                modeKey={key}
+                selected={mode === key}
+                onSelect={() => handleModeChange(key)}
+              />
+            ))}
+          </div>
         </div>
 
-        {/* Form body */}
-        <form onSubmit={handleSubmit}>
-          <div className="px-6 py-6 space-y-5">
+        {/* SECTION 3 — Cargo Details */}
+        <Section title="Cargo Details">
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <FieldLabel>{cargoConfig.primaryLabel}</FieldLabel>
+              <OptionPill
+                options={cargoConfig.primaryOptions}
+                value={formData.equipmentType}
+                onChange={v => setFormData(p => ({ ...p, equipmentType: v }))}
+                accent={activeStyle.primary}
+              />
+            </div>
 
-            {/* ── Step 1 ── */}
-            {activeStep === 1 && (
-              <>
-                <div>
-                  <FieldLabel required>Origin Port / City</FieldLabel>
-                  <LocationSearch
-                    label=""
-                    value={formData.origin}
-                    onChange={l => handleLocationChange('origin', l)}
-                    placeholder="e.g. Phnom Penh"
-                    required
-                  />
-                  <FieldError msg={errors.origin} />
-                </div>
-
-                <div>
-                  <FieldLabel required>Destination Port / City</FieldLabel>
-                  <LocationSearch
-                    label=""
-                    value={formData.destination}
-                    onChange={l => handleLocationChange('destination', l)}
-                    placeholder="e.g. Shanghai"
-                    required
-                  />
-                  <FieldError msg={errors.destination} />
-                </div>
-
-                <div>
-                  <FieldLabel required>Vessel Departure Date</FieldLabel>
-                  <input
-                    type="date"
-                    name="vesselDeparture"
-                    value={formData.vesselDeparture}
-                    min={getMinDate()}
-                    onChange={handleInputChange}
-                    className={inputCls}
-                  />
-                  <FieldError msg={errors.vesselDeparture} />
-                </div>
-              </>
+            {cargoConfig.secondaryLabel && (
+              <div>
+                <FieldLabel>{cargoConfig.secondaryLabel}</FieldLabel>
+                <OptionPill
+                  options={cargoConfig.secondaryOptions}
+                  value={formData.containerSize}
+                  onChange={v => setFormData(p => ({ ...p, containerSize: v }))}
+                  accent={activeStyle.primary}
+                />
+              </div>
             )}
 
-            {/* ── Step 2 ── */}
-            {activeStep === 2 && (
+            <div>
+              <FieldLabel>Gross Weight (kg)</FieldLabel>
+              <input
+                type="number"
+                name="containerMaxWeight"
+                value={formData.containerMaxWeight || ''}
+                onChange={handleInputChange}
+                placeholder="e.g. 18000"
+                min={0}
+                className={inputCls}
+              />
+            </div>
+
+            <div>
+              <FieldLabel>Commodity (HS Code)</FieldLabel>
+              <CommoditySearch
+                label=""
+                value={formData.commodity}
+                onChange={v => setFormData(p => ({ ...p, commodity: v }))}
+                disabled={!formData.origin || !formData.destination}
+              />
+            </div>
+
+            {cargoConfig.showQuantityAndSoc && (
               <>
-                {errors.general && (
-                  <div className="flex gap-2 p-3 rounded-lg bg-red-50 border border-red-200">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth={2} className="w-4 h-4 flex-shrink-0 mt-0.5">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <p className="text-sm text-red-600">{errors.general}</p>
-                  </div>
-                )}
-
-                {/* Equipment type */}
-                <div>
-                  <FieldLabel>Equipment Type</FieldLabel>
-                  <RadioGroup
-                    name="equipmentType"
-                    options={EQUIPMENT_TYPES}
-                    value={formData.equipmentType}
-                    onChange={v => setFormData(p => ({ ...p, equipmentType: v }))}
-                  />
-                </div>
-
-                {/* Container size */}
-                <div>
-                  <FieldLabel>Container Size</FieldLabel>
-                  <RadioGroup
-                    name="containerSize"
-                    options={CONTAINER_SIZES}
-                    value={formData.containerSize}
-                    onChange={v => setFormData(p => ({ ...p, containerSize: v }))}
-                  />
-                </div>
-
-                {/* Transport mode */}
-                <div>
-                  <FieldLabel>Transport Mode</FieldLabel>
-                  <RadioGroup
-                    name="mode"
-                    options={TRANSPORT_MODES}
-                    value={formData.mode}
-                    onChange={v => setFormData(p => ({ ...p, mode: v }))}
-                  />
-                </div>
-
-                {/* Quantity */}
                 <div>
                   <FieldLabel>Container Quantity</FieldLabel>
-                  <div className="flex items-center gap-3">
-                    {/* FIX: type="button" prevents accidental form submission */}
+                  <div className="w-full flex items-center gap-3">
                     <button
                       type="button"
                       onClick={() => handleQuantityChange(-1)}
-                      className="w-9 h-9 rounded-lg border flex items-center justify-center font-bold text-lg transition-colors hover:bg-slate-100"
-                      style={{ borderColor: '#e2e8f0', color: '#475569' }}
+                      className="w-[20%] h-16 rounded-xl border border-slate-300 flex items-center justify-center font-bold text-xl transition-colors hover:bg-slate-100 text-slate-600"
                     >
                       −
                     </button>
-                    <span className="w-10 text-center text-lg font-semibold" style={{ color: '#0A1628' }}>
+                    <span className="w-12 text-center text-lg font-semibold text-slate-900">
                       {formData.containerQuantity}
                     </span>
                     <button
                       type="button"
                       onClick={() => handleQuantityChange(1)}
-                      className="w-9 h-9 rounded-lg border flex items-center justify-center font-bold text-lg transition-colors hover:bg-slate-100"
-                      style={{ borderColor: '#e2e8f0', color: '#475569' }}
+                      className="w-[20%] h-16 rounded-xl border border-slate-300 flex items-center justify-center font-bold text-xl transition-colors hover:bg-slate-100 text-slate-600"
                     >
                       +
                     </button>
                   </div>
                 </div>
 
-                {/* Gross weight */}
-                <div>
-                  <FieldLabel>Gross Weight (kg)</FieldLabel>
-                  <input
-                    type="number"
-                    name="containerMaxWeight"
-                    value={formData.containerMaxWeight || ''}
-                    onChange={handleInputChange}
-                    placeholder="e.g. 18000"
-                    min={0}
-                    className={inputCls}
-                  />
+                <div className="flex items-end">
+                  <label className="flex items-center gap-3 cursor-pointer h-16">
+                    <input
+                      type="checkbox"
+                      name="soc"
+                      checked={formData.soc}
+                      onChange={handleInputChange}
+                      className="w-5 h-5 rounded border-slate-300"
+                      style={{ accentColor: activeStyle.primary }}
+                    />
+                    <span className="text-sm font-medium text-slate-700">Shipper Owned Container (SOC)</span>
+                  </label>
                 </div>
-
-                {/* Commodity */}
-                <div>
-                  <FieldLabel>Commodity (HS Code)</FieldLabel>
-                  <CommoditySearch
-                    label=""
-                    value={formData.commodity}
-                    onChange={v => setFormData(p => ({ ...p, commodity: v }))}
-                    disabled={!formData.origin || !formData.destination}
-                  />
-                </div>
-
-                {/* SOC */}
-                <label className="flex items-center gap-3 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    name="soc"
-                    checked={formData.soc}
-                    onChange={handleInputChange}
-                    className="w-4 h-4 rounded border-slate-300 accent-blue-600"
-                  />
-                  <span className="text-sm font-medium text-slate-700">Shipper Owned Container (SOC)</span>
-                </label>
               </>
             )}
           </div>
+        </Section>
 
-          {/* Footer buttons */}
-          <div className="flex items-center justify-between px-6 py-4 border-t bg-slate-50" style={{ borderColor: '#e2e8f0' }}>
-            {activeStep > 1 ? (
-              <button
-                type="button"
-                onClick={() => setActiveStep(p => (p - 1) as FormStep)}
-                className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg border transition-colors hover:bg-white"
-                style={{ borderColor: '#e2e8f0', color: '#475569' }}
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-4 h-4">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-                </svg>
-                Back
-              </button>
-            ) : <div />}
-
-            {/* Step dots */}
-            <div className="flex gap-1.5">
-              {STEPS.map((_, i) => (
-                <div
-                  key={i}
-                  className="rounded-full transition-all"
-                  style={{
-                    width:      activeStep === i + 1 ? 20 : 6,
-                    height:     6,
-                    background: i + 1 < activeStep ? '#4F9848' : activeStep === i + 1 ? '#1B4F8A' : '#e2e8f0',
-                  }}
-                />
-              ))}
-            </div>
-
-            {/* FIX: only type="submit" on last step; type="button" on next */}
-            {activeStep < 2 ? (
-              <button
-                type="button"
-                onClick={() => { if (validateStep(activeStep)) setActiveStep(p => (p + 1) as FormStep); }}
-                className="flex items-center gap-1.5 px-5 py-2 text-sm font-semibold text-white rounded-lg transition-colors"
-                style={{ background: '#1B4F8A' }}
-              >
-                Next
-                <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={2} className="w-4 h-4">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
-            ) : (
-              <button
-                type="submit"
-                className="flex items-center gap-1.5 px-5 py-2 text-sm font-semibold text-white rounded-lg transition-colors"
-                style={{ background: '#4F9848' }}
-              >
-                Get Quote
-                <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={2} className="w-4 h-4">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-              </button>
-            )}
-          </div>
-        </form>
-      </div>
+        {/* BOTTOM CTA */}
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full h-[72px] rounded-2xl text-xl font-semibold text-white transition-all duration-300 hover:scale-[1.01] hover:shadow-lg disabled:opacity-60 disabled:hover:scale-100 flex items-center justify-center gap-2"
+          style={{ background: activeStyle.primary }}
+        >
+          {loading ? (
+            <>
+              <span className="w-5 h-5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+              Calculating…
+            </>
+          ) : (
+            <>Calculate Quote Instantly →</>
+          )}
+        </button>
+      </form>
     </div>
   );
 };

@@ -13,7 +13,7 @@ interface LocationSearchProps {
 }
 
 const inputCls =
-  'w-full px-3 py-2.5 rounded-lg border text-sm bg-slate-50 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all';
+  'w-full h-16 px-4 rounded-xl border border-slate-300 text-base bg-white text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-300 transition-all';
 
 const LocationSearch: React.FC<LocationSearchProps> = ({
   label,
@@ -89,7 +89,7 @@ const LocationSearch: React.FC<LocationSearchProps> = ({
         {/* Search icon */}
         <svg
           viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth={2}
-          className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none"
+          className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none"
         >
           <circle cx="11" cy="11" r="8" />
           <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35" />
@@ -102,10 +102,10 @@ const LocationSearch: React.FC<LocationSearchProps> = ({
           onBlur={handleBlur}
           placeholder={placeholder}
           required={required}
-          className={`${inputCls} pl-9 pr-8`}
+          className={`${inputCls} pl-10 pr-8`}
         />
         {loading && (
-          <div className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
+          <div className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-slate-300 border-t-transparent rounded-full animate-spin" />
         )}
       </div>
 
