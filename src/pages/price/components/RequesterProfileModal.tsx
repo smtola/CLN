@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { getUserById } from '../../../admin/services/userService';
 import type { Profile } from '../../../types/auth';
 import { getApiErrorMessage } from '../../../utils/swalHelper';

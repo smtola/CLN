@@ -68,7 +68,7 @@ const Products: React.FC = () => {
     try {
       const res = await getCategories();
       if (Array.isArray(res)) {
-        setCategories([{ name: "All" }, ...res]);
+        setCategories([{ _id: "all", name: "All" }, ...res]);
       } else {
         setCategories([]);
       }

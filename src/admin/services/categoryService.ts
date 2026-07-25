@@ -38,7 +38,7 @@ export const getCategoryById = async (id: string): Promise<Category> => {
 };
 
 // ✅ CREATE a new category
-export const createCategory = async (data: Omit<Category, "id">): Promise<Category> => {
+export const createCategory = async (data: Omit<Category, "_id">): Promise<Category> => {
   return baseApi.post<Category>("/web/categories", data);
 };
 

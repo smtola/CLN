@@ -156,6 +156,9 @@ function testSEO() {
   } else {
     console.log('❌ Some REQUIRED meta tags are missing!');
   }
+  if (!allPassed) {
+    console.log('⚠️  Some OPTIONAL checks (including image URL validation) did not pass — see warnings above.');
+  }
   
   // Additional checks
   console.log('\n📸 Image URL Validation:');

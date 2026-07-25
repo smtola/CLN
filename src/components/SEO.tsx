@@ -8,7 +8,11 @@ export interface SEOProps {
     ogTitle?: string;
     ogDescription?: string;
     ogImage?: string;
+    ogType?: string;
     url?: string;
+    canonical?: string;
+    // JSON-LD structured data object, e.g. from schemaExamples.ts
+    schemaMarkup?: Record<string, unknown>;
 }
 
 const SEO: React.FC<SEOProps> = ({
@@ -19,7 +23,10 @@ const SEO: React.FC<SEOProps> = ({
     ogTitle,
     ogDescription,
     ogImage,
-    url
+    ogType,
+    url,
+    canonical,
+    schemaMarkup
 }) => {
     // Default values if not provided
     const defaultTitle = "CLN CAMBODIA CO., LTD.";
@@ -38,6 +45,8 @@ const SEO: React.FC<SEOProps> = ({
     const effectiveOgDescription = (ogDescription && ogDescription.trim()) || effectiveDescription;
     const effectiveOgImage = (ogImage && ogImage.trim()) || effectiveImage;
     const effectiveUrl = (url && url.trim()) || defaultUrl;
+    const effectiveCanonical = (canonical && canonical.trim()) || effectiveUrl;
+    const effectiveOgType = (ogType && ogType.trim()) || "website";
 
     return (
         <Helmet prioritizeSeoTags>
@@ -48,10 +57,11 @@ const SEO: React.FC<SEOProps> = ({
             <meta name="description" content={effectiveDescription} />
             <meta name="keywords" content={effectiveKeywords} />
             <meta name="robots" content="index, follow" />
+            <link rel="canonical" href={effectiveCanonical} />
 
             {/* Open Graph for Facebook, LinkedIn */}
             <meta property="og:url" content={effectiveUrl} />
-            <meta property="og:type" content="website" />
+            <meta property="og:type" content={effectiveOgType} />
             <meta property="og:title" content={effectiveOgTitle} />
             <meta property="og:description" content={effectiveOgDescription} />
             <meta property="og:image" content={effectiveOgImage} />
@@ -68,6 +78,12 @@ const SEO: React.FC<SEOProps> = ({
             <meta name="twitter:description" content={effectiveOgDescription} />
             <meta name="twitter:image" content={effectiveOgImage} />
             <meta name="twitter:site" content="@CLNCambodia" />
+
+            {schemaMarkup && (
+                <script type="application/ld+json">
+                    {JSON.stringify(schemaMarkup)}
+                </script>
+            )}
 
         </Helmet>
     );
