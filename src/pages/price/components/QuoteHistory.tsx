@@ -303,7 +303,7 @@ const QuoteHistory: React.FC = () => {
               <thead>
                 <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
                   {[
-                    'Date', 'Route', 'Distance', 'Weight', 'Mode',
+                   'Ref', 'Date', 'Route', 'Distance', 'Weight', 'Mode',
                     ...(isAdmin ? ['Requested By'] : []),
                     '',
                   ].map(h => (
@@ -320,6 +320,9 @@ const QuoteHistory: React.FC = () => {
                     style={{ borderBottom: '1px solid #f1f5f9', background: i % 2 === 1 ? '#fafafa' : 'white' }}
                     className="hover:bg-slate-50 transition-colors"
                   >
+                    <td className="px-4 py-3 text-slate-500 text-xs whitespace-nowrap">
+                      {formatDate(quote.quote_ref)}
+                    </td>
                     <td className="px-4 py-3 text-slate-500 text-xs whitespace-nowrap">
                       {formatDate(quote.created_at.$date)}
                     </td>
