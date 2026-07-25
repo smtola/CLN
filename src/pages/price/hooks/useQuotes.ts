@@ -17,20 +17,21 @@ export const useQuotes = () => {
   const getQuote = useCallback(async (data: QuoteRequest): Promise<QuoteResponse | null> => {
     setLoading(true);
     setError(null);
+    setQuoteResult(null); // clear any stale result from a previous request
     try {
       const result = await quoteService.getQuote(data);
       setQuoteResult(result);
       return result;
-    }  catch (err: unknown) {
+    } catch (err: unknown) {
       let errorMessage = 'Failed to get quote';
-    
+  
       if (axios.isAxiosError(err)) {
         errorMessage =
           err.response?.data?.error ||
           err.response?.data?.message ||
           errorMessage;
       }
-    
+  
       setError(errorMessage);
       return null;
     } finally {
