@@ -7,6 +7,7 @@ interface PriceBreakdownProps {
   breakdown: QuoteBreakdown;
   currency?: string;
   className?: string;
+  accentColor?: string;
 }
 
 const Row = ({
@@ -14,11 +15,13 @@ const Row = ({
   value,
   bold,
   accent,
+  accentColor = '#1B4F8A',
 }: {
   label: string;
   value: string;
   bold?: boolean;
   accent?: boolean;
+  accentColor?: string;
 }) => (
   <div
     className="flex items-center justify-between py-1"
@@ -26,13 +29,13 @@ const Row = ({
   >
     <span
       className="text-xs"
-      style={{ color: bold ? (accent ? '#1B4F8A' : '#334155') : '#94a3b8', fontWeight: bold ? 600 : 400 }}
+      style={{ color: bold ? (accent ? accentColor : '#334155') : '#94a3b8', fontWeight: bold ? 600 : 400 }}
     >
       {label}
     </span>
     <span
       className="text-xs font-mono"
-      style={{ color: accent ? '#1B4F8A' : bold ? '#0A1628' : '#475569', fontWeight: bold ? 700 : 500 }}
+      style={{ color: accent ? accentColor : bold ? '#0A1628' : '#475569', fontWeight: bold ? 700 : 500 }}
     >
       {value}
     </span>
@@ -43,6 +46,7 @@ const PriceBreakdown: React.FC<PriceBreakdownProps> = ({
   breakdown,
   currency = 'USD',
   className = '',
+  accentColor = '#1B4F8A',
 }) => {
   const b = breakdown.breakdown;
   // `clearance` is the current field name; `docs` is kept only so older,
@@ -84,6 +88,7 @@ const PriceBreakdown: React.FC<PriceBreakdownProps> = ({
           value={formatCurrency(breakdown.total, currency)}
           bold
           accent
+          accentColor={accentColor}
         />
       </div>
     </div>

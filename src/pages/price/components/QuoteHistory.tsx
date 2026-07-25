@@ -9,118 +9,193 @@ import QuoteCard from './QuoteCard';
 import RequesterProfileModal from './RequesterProfileModal';
 
 type Mode = keyof typeof MODE_COLORS;
+
+// ── Brand tokens (derived from the CamFA logo) ──────────────────────────
+const BRAND = {
+  navy: '#0E3793',
+  navyDeep: '#081D42',
+  green: '#2E9E42',
+  coral: '#E5432A',
+  ink: '#0A1628',
+  slate: '#47536B',
+  border: '#e2e8f0',
+  bg: '#f8fafc',
+};
+
+const MODE_META: Record<Mode, { icon: string; color: string; bg: string }> = {
+  air: { icon: '✈️', color: BRAND.navy, bg: '#E7EDFA' },
+  road: { icon: '🚚', color: BRAND.green, bg: '#E9F7EA' },
+  sea: { icon: '🚢', color: BRAND.coral, bg: '#FDEAE6' },
+  rail: { icon: '🚆', color: BRAND.slate, bg: '#EEF1F5' },
+};
+
 // ── Mode badge ────────────────────────────────────────────────────────
 const ModeBadge = ({ mode }: { mode: Mode }) => {
-  const cls = MODE_COLORS[mode] ?? 'bg-slate-100 text-slate-600';
+  const meta = MODE_META[mode] ?? { icon: '•', color: BRAND.slate, bg: '#f1f5f9' };
   return (
-    <span className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold ${cls}`}>
+    <span
+      className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold"
+      style={{ color: meta.color, background: meta.bg }}
+    >
+      <span className="text-[11px] leading-none">{meta.icon}</span>
       {capitalizeFirst(mode)}
     </span>
   );
 };
 
 // ── Detail Modal (pure React state, no <dialog>) ──────────────────────
+// Styled after a cargo manifest / airway bill: a route line in the header,
+// a perforated ticket-stub seam, and mono-set data — the same idiom the
+// price breakdown already uses for numbers.
 const DetailModal = ({
   quote,
   onClose,
 }: {
   quote: Quote;
   onClose: () => void;
-}) => (
-  <div
-    className="fixed inset-0 z-50 flex items-center justify-center p-4"
-    style={{ background: 'rgba(10,22,40,0.65)', backdropFilter: 'blur(2px)' }}
-    onClick={e => { if (e.target === e.currentTarget) onClose(); }}
-  >
+}) => {
+  const modeMeta = MODE_META[quote.mode] ?? { icon: '•', color: BRAND.slate, bg: '#f1f5f9' };
+  const refCode = quote._id ? quote._id.slice(-8).toUpperCase() : null;
+
+  return (
     <div
-      className="bg-white rounded-2xl shadow-2xl w-full overflow-hidden flex flex-col"
-      style={{ maxWidth: 760, maxHeight: '90vh' }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ background: 'rgba(8,17,32,0.7)', backdropFilter: 'blur(3px)' }}
+      onClick={e => { if (e.target === e.currentTarget) onClose(); }}
     >
-      {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 flex-shrink-0" style={{ background: 'rgb(102, 165, 95)' }}>
-        <div>
-          <h3 className="text-white font-bold">Quote Details</h3>
-          <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.5)' }}>
-            {quote.origin} → {quote.destination}
-          </p>
-        </div>
-        <button onClick={onClose} className="text-slate-100 hover:text-white transition-colors">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-5 h-5">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-      </div>
-
-      {/* Body */}
-      <div className="overflow-y-auto flex-1 p-6 space-y-5">
-        {/* Route & shipment info */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="p-4 rounded-xl border" style={{ borderColor: '#e2e8f0', background: '#f8fafc' }}>
-            <p className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: '#64748b' }}>Route</p>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-slate-500">From</span>
-                <span className="font-semibold text-slate-800">{quote.origin}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-500">To</span>
-                <span className="font-semibold text-slate-800">{quote.destination}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-500">Distance</span>
-                <span className="font-semibold text-slate-800">{formatDistance(quote.distance_km)}</span>
-              </div>
+      <div
+        className="bg-white rounded-2xl shadow-2xl w-full overflow-hidden flex flex-col"
+        style={{ maxWidth: 760, maxHeight: '90vh' }}
+      >
+        {/* Header — navy gradient with route line */}
+        <div
+          className="relative flex-shrink-0 px-6 pt-5 pb-9"
+          style={{ background: `linear-gradient(135deg, ${BRAND.navy} 0%, ${BRAND.navyDeep} 100%)` }}
+        >
+          <div className="flex items-start justify-between">
+            <div>
+              <p
+                className="text-[10px] font-bold uppercase tracking-[0.2em]"
+                style={{ color: 'rgba(255,255,255,0.55)' }}
+              >
+                Quote Details{refCode ? ` · REF ${refCode}` : ''}
+              </p>
+              <h3 className="text-white text-lg font-bold mt-1 font-mono tracking-tight">
+                {quote.origin} <span style={{ color: 'rgba(255,255,255,0.4)' }}>→</span> {quote.destination}
+              </h3>
             </div>
+            <button onClick={onClose} className="text-slate-200 hover:text-white transition-colors mt-0.5">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-5 h-5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
           </div>
 
-          <div className="p-4 rounded-xl border" style={{ borderColor: '#e2e8f0', background: '#f8fafc' }}>
-            <p className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: '#64748b' }}>Shipment</p>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-slate-500">Chargeable Wt.</span>
-                <span className="font-semibold text-slate-800">{formatWeight(quote.chargeable_weight)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-500">Mode</span>
-                <ModeBadge mode={quote.mode} />
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-500">Country</span>
-                <span className="font-semibold text-slate-800">{quote.country}</span>
-              </div>
-            </div>
+          {/* Route line: origin → mode → destination */}
+          <div className="flex items-center gap-2 mt-6">
+            <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: '#fff' }} />
+            <span className="flex-1 border-t border-dashed" style={{ borderColor: 'rgba(255,255,255,0.35)' }} />
+            <span
+              className="flex items-center justify-center w-7 h-7 rounded-full flex-shrink-0 text-[13px]"
+              style={{ background: '#fff' }}
+            >
+              {modeMeta.icon}
+            </span>
+            <span className="flex-1 border-t border-dashed" style={{ borderColor: 'rgba(255,255,255,0.35)' }} />
+            <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: BRAND.coral }} />
           </div>
         </div>
 
-        {/* Quote cards */}
-        <div>
-          <p className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: '#64748b' }}>Available Options</p>
-          <div className="grid md:grid-cols-3 gap-3">
-            {Object.entries(quote.quotes).map(([service, q]) => (
-              <QuoteCard
-                key={service}
-                service={service as ServiceLevel}
-                quote={q}
-                isPopular={service === 'standard'}
-              />
+        {/* Perforated ticket-stub seam */}
+        <div className="relative flex-shrink-0" style={{ height: 1, background: BRAND.navyDeep }}>
+          <div className="absolute inset-x-0 flex justify-between px-4" style={{ top: -6 }}>
+            {Array.from({ length: 26 }).map((_, i) => (
+              <span key={i} className="w-[7px] h-[7px] rounded-full bg-white flex-shrink-0" />
             ))}
           </div>
         </div>
-      </div>
 
-      {/* Footer */}
-      <div className="flex-shrink-0 flex justify-end px-6 py-4 border-t bg-slate-50" style={{ borderColor: '#e2e8f0' }}>
-        <button
-          onClick={onClose}
-          className="px-4 py-2 text-sm font-medium rounded-lg border transition-colors hover:bg-white"
-          style={{ borderColor: '#e2e8f0', color: '#475569' }}
+        {/* Body */}
+        <div className="overflow-y-auto flex-1 p-6 pt-7 space-y-5">
+          {/* Route & shipment info */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="p-4 rounded-xl border" style={{ borderColor: BRAND.border, background: BRAND.bg }}>
+              <p className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: '#64748b' }}>Route</p>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-slate-500">From</span>
+                  <span className="font-semibold" style={{ color: BRAND.ink }}>{quote.origin}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-500">To</span>
+                  <span className="font-semibold" style={{ color: BRAND.ink }}>{quote.destination}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Distance</span>
+                  <span className="font-semibold font-mono" style={{ color: BRAND.ink }}>{formatDistance(quote.distance_km)}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-xl border" style={{ borderColor: BRAND.border, background: BRAND.bg }}>
+              <p className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: '#64748b' }}>Shipment</p>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Chargeable Wt.</span>
+                  <span className="font-semibold font-mono" style={{ color: BRAND.ink }}>{formatWeight(quote.chargeable_weight)}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-500">Mode</span>
+                  <ModeBadge mode={quote.mode} />
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Country</span>
+                  <span className="font-semibold" style={{ color: BRAND.ink }}>{quote.country}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Quote cards */}
+          <div>
+            <p className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: '#64748b' }}>Available Options</p>
+            <div className="grid md:grid-cols-3 gap-3">
+              {Object.entries(quote.quotes).map(([service, q]) => (
+                <QuoteCard
+                  key={service}
+                  service={service as ServiceLevel}
+                  quote={q}
+                  isPopular={service === 'standard'}
+                  accentColor={BRAND.navy}
+                  popularColor={BRAND.green}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div
+          className="flex-shrink-0 flex items-center justify-between px-6 py-4 border-t bg-slate-50"
+          style={{ borderColor: BRAND.border }}
         >
-          Close
-        </button>
+          {refCode ? (
+            <span className="text-[11px] font-mono tracking-wider" style={{ color: '#94a3b8' }}>
+              REF #{refCode}
+            </span>
+          ) : <span />}
+          <button
+            onClick={onClose}
+            className="px-4 py-2 text-sm font-medium rounded-lg border transition-colors hover:bg-white"
+            style={{ borderColor: BRAND.border, color: BRAND.slate }}
+          >
+            Close
+          </button>
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 // ── Pagination ────────────────────────────────────────────────────────
 const Pagination = ({
