@@ -320,7 +320,7 @@ export async function fetchProfile() {
   try {
     const token = localStorage.getItem("accessToken");
     
-    const { data } = await api.get("/profile", {
+    const { data } = await api.get("/auth/profile", {
       headers: { Authorization: `Bearer ${token}` },
     });    
     
