@@ -1,11 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import type { SignupPayload } from "../../types/auth";
+import { useEffect, useRef, useState } from "react";
+import type { ExtractedDocumentFields, SignupPayload } from "../../types/auth";
 import { getPublicIp } from "../../utils/getIp";
-import { signup } from "../../authService";
+import { extractDocument, signup, uploadDocument } from "../../authService";
 import { showError, showSuccess } from "../../admin/utils/swalHelper";
 import { useNavigate } from "react-router-dom";
+
+const ALLOWED_DOCUMENT_TYPES = ["application/pdf", "image/png", "image/jpeg", "image/webp"];
+const MAX_DOCUMENT_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
 
 const Banner = "/assets/image/banner.png";
 
@@ -96,6 +99,12 @@ const defaultFormData = {
     contact: "",
     comment: "",
   },
+  document: {
+    fileName: "",
+    url: "",
+    extracted: {} as ExtractedDocumentFields,
+    isVerified: false,
+  },
 };
 
 export default function SignupPage() {
@@ -113,6 +122,11 @@ export default function SignupPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  /* ---------------- DOCUMENT UPLOAD (Step 2) ---------------- */
+  const [documentFile, setDocumentFile] = useState<File | null>(null);
+  const [verifyingDocument, setVerifyingDocument] = useState(false);
+  const documentInputRef = useRef<HTMLInputElement>(null);
 
   const savedData = localStorage.getItem("user_information");
   const navigate = useNavigate();
@@ -190,10 +204,10 @@ export default function SignupPage() {
 
     if (step === 2) {
       const VAT_TIN_PATTERNS: Record<string, RegExp> = {
-        KH: /^[A-Z]{1}\d[0-9]{9}$/,             // Cambodia
-        US: /^\d{2}-\d{7}$/,          // Example EIN
-        IN: /^[A-Z]{5}\d{4}[A-Z]$/,   // India PAN
-        UK: /^[A-Z]{2}\d{6}[A-D]$/,   // UK NINO
+        Cambodia: /^[A-Z]\d{3}-\d{9}$/,       // Cambodia TIN, e.g. K001-901204066
+        "United States": /^\d{2}-\d{7}$/,     // Example EIN
+        India: /^[A-Z]{5}\d{4}[A-Z]$/,        // India PAN
+        "United Kingdom": /^[A-Z]{2}\d{6}[A-D]$/, // UK NINO
       };
       
       const isValidTINorVAT = (country: string, number: string) => {
@@ -217,6 +231,13 @@ export default function SignupPage() {
       if (!formData.ci.country) newErrors.country = "Country is required.";
       if (!formData.ci.department) newErrors.department = "Department is required.";
       if (!formData.ci.trade) newErrors.trade = "Trade is required.";
+
+      // Business registration / TIN document
+      if (!formData.document.url) {
+        newErrors.document = documentFile
+          ? "Please verify the document before continuing."
+          : "Please upload your business registration / TIN document.";
+      }
     }
 
     if (step === 3) {
@@ -259,6 +280,124 @@ export default function SignupPage() {
 
     setActiveTab(tab);
   };
+
+  /* ---------------- DOCUMENT UPLOAD + OCR VALIDATION ---------------- */
+  const handleDocumentSelect = (file: File | null) => {
+    setErrors((prev) => ({ ...prev, document: "" }));
+
+    // Reset any previously verified document — a new file needs re-verification.
+    setFormData((prev) => ({
+      ...prev,
+      document: { fileName: "", url: "", extracted: {}, isVerified: false },
+    }));
+
+    if (!file) {
+      setDocumentFile(null);
+      return;
+    }
+
+    if (!ALLOWED_DOCUMENT_TYPES.includes(file.type)) {
+      setErrors((prev) => ({ ...prev, document: "Unsupported file type. Please upload a PDF, JPG, or PNG." }));
+      setDocumentFile(null);
+      if (documentInputRef.current) documentInputRef.current.value = "";
+      return;
+    }
+
+    if (file.size > MAX_DOCUMENT_SIZE_BYTES) {
+      setErrors((prev) => ({ ...prev, document: "File is too large. Maximum size is 10MB." }));
+      setDocumentFile(null);
+      if (documentInputRef.current) documentInputRef.current.value = "";
+      return;
+    }
+
+    setDocumentFile(file);
+  };
+
+  const handleRemoveDocument = () => {
+    setDocumentFile(null);
+    setFormData((prev) => ({
+      ...prev,
+      document: { fileName: "", url: "", extracted: {}, isVerified: false },
+    }));
+    setErrors((prev) => ({ ...prev, document: "" }));
+    if (documentInputRef.current) documentInputRef.current.value = "";
+  };
+
+  // Runs OCR on the backend, auto-fills company fields from the result, then
+  // uploads the file to storage so its URL can be submitted with signup.
+  const handleVerifyDocument = async () => {
+    if (!documentFile) {
+      setErrors((prev) => ({ ...prev, document: "Please choose a document first." }));
+      return;
+    }
+
+    setVerifyingDocument(true);
+    setErrors((prev) => ({ ...prev, document: "" }));
+
+    // Step 1: OCR. extractDocument() catches its own errors and always
+    // resolves with { status, msg, data } rather than throwing, but we
+    // still guard defensively in case something upstream misbehaves.
+    let ocrRes;
+    try {
+      ocrRes = await extractDocument(documentFile);
+    } catch (err) {
+      console.error("[handleVerifyDocument] extractDocument threw unexpectedly:", err);
+      setErrors((prev) => ({
+        ...prev,
+        document: "Could not reach the document scanning service. Please check your connection and try again.",
+      }));
+      setVerifyingDocument(false);
+      return;
+    }
+
+    if (!ocrRes.status) {
+      setErrors((prev) => ({
+        ...prev,
+        document: ocrRes.msg || "Could not verify this document. Please try a clearer scan.",
+      }));
+      setVerifyingDocument(false);
+      return;
+    }
+
+    const extracted = ocrRes.data || {};
+
+    // Step 2: upload the verified document to storage, kept in its own
+    // try/catch so an upload failure is reported distinctly from an OCR
+    // failure, with the real error message instead of a generic one.
+    // This goes through the backend (server-to-server to R2) rather than
+    // the browser talking to R2 directly, so R2 CORS doesn't come into play.
+    const uploadRes = await uploadDocument(documentFile);
+
+    if (!uploadRes.status || !uploadRes.url) {
+      setErrors((prev) => ({
+        ...prev,
+        document: `The document was scanned, but we couldn't save it: ${uploadRes.msg || "Unknown upload error."}`,
+      }));
+      setVerifyingDocument(false);
+      return;
+    }
+
+    const url = uploadRes.url;
+
+    setFormData((prev) => ({
+      ...prev,
+      ci: {
+        ...prev.ci,
+        companyRegisterNumber: prev.ci.companyRegisterNumber || extracted.tin || "",
+        companyName: prev.ci.companyName || extracted.companyName || "",
+      },
+      document: {
+        fileName: documentFile.name,
+        url,
+        extracted,
+        isVerified: true,
+      },
+    }));
+
+    showSuccess("Document verified. We've pre-filled what we could read from it — please double-check the fields.");
+    setVerifyingDocument(false);
+  };
+
   /* ---------------- Submit ------------- */
   const handleSubmit = async () => {
     setLoading(true);
@@ -268,6 +407,12 @@ export default function SignupPage() {
       uai: formData.uai,
       ci: formData.ci,
       ai: formData.ai,
+      document: {
+        fileName: formData.document.fileName,
+        url: formData.document.url,
+        extracted: formData.document.extracted,
+        is_ocr_verified: formData.document.isVerified,
+      },
       local_ip: ip,
       role: "USER"
     };
@@ -659,7 +804,7 @@ export default function SignupPage() {
               Company Information
             </h2>
 
-            <form className="flex flex-col sm:flex-row sm:justify-center sm:gap-2 space-y-2 sm:space-y-0">
+            <form className="flex flex-col sm:flex-row sm:flex-wrap sm:justify-center sm:gap-2 space-y-2 sm:space-y-0">
               <div className="sm:w-[48%] border-r-0 sm:border-b-0 sm:border-r-2 sm:pe-2 space-y-2">
                 <div className="space-y-2">
                   <div className="flex flex-row gap-1">
@@ -667,16 +812,17 @@ export default function SignupPage() {
                     <span className="text-red-600">*</span>
                   </div>
                   <input
-                    className="input input-bordered w-full mt-2 rounded"
-                    placeholder="Enter Company Name"
-                    value={formData.ci.companyName}
-                    onChange={(e) =>
-                      setFormData({ ...formData, ci: {
-                        ...formData.ci,
-                        companyName: e.target.value,
-                      }})
-                    }
-                  />
+                      className="input input-bordered w-full mt-2 rounded disabled:bg-gray-100 disabled:cursor-not-allowed"
+                      placeholder="Enter Company Name"
+                      value={formData.ci.companyName}
+                      disabled={formData.document.isVerified}
+                      onChange={(e) =>
+                        setFormData({ ...formData, ci: {
+                          ...formData.ci,
+                          companyName: e.target.value,
+                        }})
+                      }
+                    />
                   {errors.companyName && <p className="text-red-600 font-light text-[11px]">{errors.companyName}</p>}
                 </div>
 
@@ -686,16 +832,17 @@ export default function SignupPage() {
                     <span className="text-red-600">*</span>
                   </div>
                   <input
-                    className="input input-bordered w-full mt-2 rounded"
-                    placeholder="Enter Company Register Number"
-                    value={formData.ci.companyRegisterNumber}
-                    onChange={(e) =>
-                      setFormData({ ...formData, ci: {
-                        ...formData.ci,
-                        companyRegisterNumber: e.target.value,
-                      } })
-                    }
-                  />
+                      className="input input-bordered w-full mt-2 rounded disabled:bg-gray-100 disabled:cursor-not-allowed"
+                      placeholder="Enter Company Register Number"
+                      value={formData.ci.companyRegisterNumber}
+                      disabled={formData.document.isVerified}
+                      onChange={(e) =>
+                        setFormData({ ...formData, ci: {
+                          ...formData.ci,
+                          companyRegisterNumber: e.target.value,
+                        } })
+                      }
+                    />
                   {errors.companyRegisterNumber && <p className="text-red-600 font-light text-[11px]">{errors.companyRegisterNumber}</p>}
                 </div>
 
@@ -928,6 +1075,75 @@ export default function SignupPage() {
                   {errors.trade && <p className="text-red-600 font-light text-[11px]">{errors.trade}</p>}
                 </div>
               </div>
+
+              {/* ---------------- Business Document Upload + OCR ---------------- */}
+              <div className="w-full mt-2 space-y-2 border-t pt-3">
+                <div className="flex flex-row gap-1">
+                  <label htmlFor="document">Business Registration / TIN Document</label>
+                  <span className="text-red-600">*</span>
+                </div>
+                <p className="text-gray-500 text-[12px]">
+                  Upload a clear photo or PDF of your company's registration certificate or TIN certificate.
+                  We'll scan it to help pre-fill the fields above — please double-check them afterwards.
+                </p>
+
+                <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
+                  <input
+                    ref={documentInputRef}
+                    id="document"
+                    type="file"
+                    accept=".pdf,.png,.jpg,.jpeg,.webp,application/pdf,image/png,image/jpeg,image/webp"
+                    className="file-input file-input-bordered w-full sm:w-auto rounded"
+                    onChange={(e) => handleDocumentSelect(e.target.files ? e.target.files[0] : null)}
+                    disabled={verifyingDocument}
+                  />
+
+                  <button
+                    type="button"
+                    onClick={handleVerifyDocument}
+                    disabled={!documentFile || verifyingDocument || formData.document.isVerified}
+                    className="px-3 py-2 text-[14px] rounded bg-[#4fb748] text-white hover:bg-[#4fb748]/80 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                  >
+                    {verifyingDocument
+                      ? "Verifying..."
+                      : formData.document.isVerified
+                      ? "Verified ✓"
+                      : "Verify Document"}
+                  </button>
+
+                  {(documentFile || formData.document.fileName) && (
+                    <button
+                      type="button"
+                      onClick={handleRemoveDocument}
+                      disabled={verifyingDocument}
+                      className="px-3 py-2 text-[14px] rounded text-[#ee3a23] hover:text-[#ee3a23]/80 transition-all duration-200 whitespace-nowrap"
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
+
+                {documentFile && (
+                  <p className="text-gray-600 text-[12px]">
+                    Selected: {documentFile.name} ({Math.round(documentFile.size / 1024)} KB)
+                  </p>
+                )}
+
+                {formData.document.isVerified && (
+                  <div className="bg-green-100 border border-green-400 rounded p-2 text-[12px] text-gray-700 space-y-1">
+                    <p className="font-semibold text-[#4f9748]">Document verified — detected fields:</p>
+                    <ul className="list-disc list-inside">
+                      {formData.document.extracted?.tin && <li>TIN: {formData.document.extracted.tin}</li>}
+                      {formData.document.extracted?.companyName && <li>Company Name: {formData.document.extracted.companyName}</li>}
+                      {!formData.document.extracted?.tin && !formData.document.extracted?.companyName && (
+                        <li>No fields could be auto-detected — please fill them in manually above.</li>
+                      )}
+                    </ul>
+                  </div>
+                )}
+
+                {errors.document && <p className="text-red-600 font-light text-[11px]">{errors.document}</p>}
+              </div>
             </form>
           </>
         );
@@ -1159,6 +1375,27 @@ export default function SignupPage() {
                       <tr>
                         <td>{userInformation.ci.department}</td>
                         <td className="text-end">{userInformation.ci.trade}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+
+                  <table className="table table-xs sm:table-md">
+                    <thead>
+                      <tr>
+                        <th className="text-start">Business Document</th>
+                        <th className="text-end">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>{userInformation.document?.fileName || "N/A"}</td>
+                        <td className="text-end">
+                          {userInformation.document?.isVerified ? (
+                            <span className="text-[#4fb748] font-semibold">Verified ✓</span>
+                          ) : (
+                            <span className="text-[#ee3a23] font-semibold">Not verified</span>
+                          )}
+                        </td>
                       </tr>
                     </tbody>
                   </table>

@@ -1,11 +1,69 @@
 import api from "./apiClient";
 import { setAuth, clearAuth } from "./authStorage";
-import type { LoginPayload, LoginResponse, LogoutPayload, LogoutResponse, SignupPayload, SignupResponse, VerifyEmailPayload, VerifyEmailResponse, VerifyOTPPayload, VerifyResponse } from "./types/auth";
+import type { ExtractDocumentResponse, LoginPayload, LoginResponse, LogoutPayload, LogoutResponse, SignupPayload, SignupResponse, VerifyEmailPayload, VerifyEmailResponse, VerifyOTPPayload, VerifyResponse } from "./types/auth";
 import { AxiosError } from "axios";
+
+// -------------------- Signup: Document Upload / OCR --------------------
+// Sends the uploaded business registration / TIN document to the backend,
+// which OCRs it and returns the fields we can auto-fill in Step 2 of the
+// signup form (tin, companyName, address, city, country).
+export async function extractDocument(file: File): Promise<ExtractDocumentResponse> {
+  try {
+    const formData = new FormData();
+    formData.append("document", file);
+
+    const res = await api.post<ExtractDocumentResponse>("/auth/extract-document", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+      skipGlobalErrorToast: true,
+    });
+
+    return { ...res.data, status: true };
+  } catch (error: unknown) {
+    const err = error as AxiosError<{ msg?: string; status?: boolean }>;
+
+    if (err.response?.data) {
+      return { ...err.response.data, status: false };
+    }
+
+    return {
+      msg: "Could not process the document. Please try again.",
+      status: false,
+    };
+  }
+}
+
+// -------------------- Signup: Document Upload (server-side R2 proxy) --------------------
+// Uploads the verified document through the backend rather than straight
+// from the browser to R2. This avoids R2 CORS configuration entirely (it's
+// a server-to-server call) and keeps storage credentials off the client.
+export async function uploadDocument(file: File): Promise<{ status: boolean; msg?: string; url?: string }> {
+  try {
+    const formData = new FormData();
+    formData.append("document", file);
+
+    const res = await api.post<{ status: boolean; msg?: string; data?: { url: string } }>(
+      "/auth/upload-document",
+      formData,
+      {
+        headers: { "Content-Type": "multipart/form-data" },
+        skipGlobalErrorToast: true,
+      }
+    );
+
+    return { status: true, msg: res.data.msg, url: res.data.data?.url };
+  } catch (error: unknown) {
+    const err = error as AxiosError<{ msg?: string }>;
+
+    return {
+      status: false,
+      msg: err.response?.data?.msg || "Could not upload the document. Please try again.",
+    };
+  }
+}
 
 export async function signup(payload: SignupPayload) {
   try {
-    const res = await api.post<SignupResponse>("/signup", payload);
+    const res = await api.post<SignupResponse>("/auth/signup", payload);
     return { ...res.data, httpStatus: res.status, status: true }; // success
   } catch (error: unknown) {
     const err = error as AxiosError<{ msg?: string; status?: boolean }>;
@@ -27,7 +85,7 @@ export async function signup(payload: SignupPayload) {
 
 export async function login(payload: LoginPayload) {
   try{
-    const { data } = await api.post<LoginResponse>("/login", payload);
+    const { data } = await api.post<LoginResponse>("/auth/login", payload);
   
     if (data.access_token && data.refresh_token) {
       setAuth({ accessToken: data.access_token, refreshToken: data.refresh_token });
@@ -49,7 +107,7 @@ export async function login(payload: LoginPayload) {
 
 export async function logout(payload?: LogoutPayload) {
   try {
-    const { data } = await api.post<LogoutResponse>("/logout", payload);
+    const { data } = await api.post<LogoutResponse>("/auth/logout", payload);
     return data;
   } catch (err: unknown){
     // If API sends { msg: "Invalid credentials" }
@@ -68,7 +126,7 @@ export async function logout(payload?: LogoutPayload) {
 
 export async function verifyOTP(payload: VerifyOTPPayload) {
  try{
-  const { data } = await api.post<VerifyResponse>("/verify-otp", payload);
+  const { data } = await api.post<VerifyResponse>("/auth/verify-otp", payload);
   
   // Set auth after OTP verification
   if (data.access_token && data.refresh_token) {
@@ -91,7 +149,7 @@ export async function verifyOTP(payload: VerifyOTPPayload) {
 
 export async function verifyEmail(payload: VerifyEmailPayload): Promise<VerifyEmailResponse> {
   try{
-    const { data } = await api.post<VerifyEmailResponse>("/verify-email", payload);
+    const { data } = await api.post<VerifyEmailResponse>("/auth/verify-email", payload);
     // Set auth after OTP verification
     if (data.access_token && data.refresh_token) {
       setAuth({ accessToken: data.access_token, refreshToken: data.refresh_token});
@@ -112,7 +170,7 @@ export async function verifyEmail(payload: VerifyEmailPayload): Promise<VerifyEm
 
 export async function resendOTP(businessEmail?:string) {
   try{
-    const { data } = await api.post<{msg?:string, status?:boolean}>("/resend-otp", {businessEmail});
+    const { data } = await api.post<{msg?:string, status?:boolean}>("/auth/resend-otp", {businessEmail});
     return data;
   }catch (err: unknown){
     // If API sends { msg: "Invalid credentials" }
@@ -132,7 +190,7 @@ export async function checkPassword(current_password: string) {
     const token = localStorage.getItem("accessToken");
     
     const { data } = await api.post(
-      "/check-password",
+      "/auth/check-password",
       { current_password }, // <-- send body
       {
         headers: { Authorization: `Bearer ${token}` },
@@ -168,7 +226,7 @@ export async function changePassword(
     const token = localStorage.getItem("accessToken");
 
     const { data } = await api.post(
-      "/change-password", // <-- call the actual change-password endpoint
+      "/auth/change-password", // <-- call the actual change-password endpoint
       {
         current_password,
         new_password,
@@ -207,7 +265,7 @@ export async function changeRole(
     const token = localStorage.getItem("accessToken");
 
     const { data } = await api.put(
-      `/change-role/${_id}`, // ✅ correct endpoint usage
+      `/auth/change-role/${_id}`, // ✅ correct endpoint usage
       { role },
       {
         headers: {
@@ -237,7 +295,7 @@ export async function changeRole(
 // -------------------- Forgot Password --------------------
 export async function forgotPassword(email: string) {
   try {
-    const { data } = await api.post("/forgot-password", { email });
+    const { data } = await api.post("/auth/forgot-password", { email });
     return data;
   } catch (err: unknown) {
     if (
@@ -264,7 +322,7 @@ export async function resetPassword(
   confirm_password: string
 ) {
   try {
-    const { data } = await api.post("/reset-password", {
+    const { data } = await api.post("/auth/reset-password", {
       token,
       new_password,
       confirm_password,
@@ -292,7 +350,7 @@ export async function fetchUsers() {
   try {
     const token = localStorage.getItem("accessToken");
     
-    const { data } = await api.get("/users", {
+    const { data } = await api.get("/auth/users", {
       headers: { Authorization: `Bearer ${token}` },
     });    
     

@@ -1,8 +1,20 @@
 import React, { useState, useEffect } from "react";
 import Logo from "/logo.png";
+import { getServices } from "../admin/services/serviceService";
+import type { ServiceItem } from "../admin/types/service";
+import { NavLink, useLocation } from "react-router-dom";
 
 const Footer: React.FC = () => {
+  const location = useLocation();
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const [services, setServices] = useState<ServiceItem[]>([]);
+  const [activeTab, setActiveTab] = useState<string>("Customs");
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const tab = params.get("tab");
+    setActiveTab(tab || "Customs");
+  }, [location]);
 
   useEffect(() => {
     const handleScroll = () => setShowScrollTop(window.scrollY > 300);
@@ -12,16 +24,22 @@ const Footer: React.FC = () => {
 
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
 
-  const services = [
-    "Customs Clearance",
-    "Cross Border (Land Transport)",
-    "Sea Freight",
-    "Air Freight",
-    "Packing & Warehouse",
-    "International Express Courier",
-    "Consolidation",
-    "Door to Door Service",
-  ];
+  const fetchServices = async () => {
+    try {
+      const res = await getServices({ page: 1, limit: 50 });
+      if (res.success && Array.isArray(res.data)) {
+        setServices(res.data);
+      } else {
+        setServices([]);
+      }
+    } catch {
+      setServices([]);
+    }
+  };
+
+  useEffect(() => {
+    fetchServices();
+  }, []);
 
   const links = [
     { name: "Home", href: "/" },
@@ -80,15 +98,16 @@ const Footer: React.FC = () => {
                 Our Services
               </h3>
               <ul className="space-y-2">
-                {services.map((service) => (
-                  <li key={service}>
-                    <a href="/services"
-                      className="flex items-center gap-2 text-[14px] md:text-[16px] text-white/80 hover:text-white transition-colors group">
-                      <span className="w-1 h-1 rounded-full bg-[#EE3A23] group-hover:bg-white transition-colors shrink-0" />
-                      {service}
-                    </a>
-                  </li>
-                ))}
+                {services.map((item) => (
+                    <li key={item.key}>
+                      <NavLink to={`/services?tab=${item.key}`}
+                        className={`flex items-center gap-2 px-4 py-2.5 text-[13px] hover:bg-[#fff]/10 hover:text-[#4F9748] transition-colors
+                          ${activeTab === item.key ? "bg-[#fff]/10 text-[#fff] font-medium" : ""}`}>
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#4F9748] shrink-0" />
+                        {item.title}
+                      </NavLink>
+                    </li>
+                  ))}
               </ul>
             </div>
 

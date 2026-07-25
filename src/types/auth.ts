@@ -164,6 +164,24 @@ export interface LoginPayload {
   status?:boolean;
 }
 
+export interface ExtractedDocumentFields {
+  tin?: string | null;
+  companyName?: string | null;
+}
+
+export interface ExtractDocumentResponse {
+  status?: boolean;
+  msg?: string;
+  data?: ExtractedDocumentFields;
+}
+
+export interface SignupDocument {
+  url?: string;
+  fileName?: string;
+  extracted?: ExtractedDocumentFields;
+  is_ocr_verified?: boolean;
+}
+
 export interface SignupPayload {
   uai: {
     firstName: string;
@@ -193,6 +211,7 @@ export interface SignupPayload {
     contact?: string;
     comment?: string;
   };
+  document?: SignupDocument;
   role?: "USER" | "ADMIN";
   local_ip?: string;
 }

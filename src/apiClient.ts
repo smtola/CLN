@@ -86,7 +86,7 @@ api.interceptors.response.use(
         }
 
         api
-          .post("/refresh", {}, { headers: { Authorization: `Bearer ${rToken}` } })
+          .post("/auth/refresh", {}, { headers: { Authorization: `Bearer ${rToken}` } })
           .then((res: { data: { access_token?: string } }) => {
             const newAccess = res.data?.access_token;
             if (!newAccess) throw new Error("No access_token in /refresh response");
