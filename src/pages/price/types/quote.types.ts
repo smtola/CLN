@@ -65,6 +65,7 @@ export interface QuoteResponse {
 
 export interface Quote {
   _id: string;
+  quote_ref: string;
   origin: string;
   destination: string;
   distance_km: number;

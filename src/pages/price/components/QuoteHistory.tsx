@@ -150,10 +150,6 @@ const DetailModal = ({
                   <span className="text-slate-500">Mode</span>
                   <ModeBadge mode={quote.mode} />
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-500">Country</span>
-                  <span className="font-semibold" style={{ color: BRAND.ink }}>{quote.country}</span>
-                </div>
               </div>
             </div>
           </div>
