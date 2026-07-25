@@ -977,6 +977,12 @@ const AdminPanel: React.FC = () => {
 
                     {/* Compact "N commodities" button; non-local_charge rows show N/A. */}
                     <td className="px-4 py-3 text-slate-700 text-xs">
+                      {card.service === 'local_charge' && (card.mode === 'road' || card.mode === 'sea') && (
+                        <PricingSummaryButton
+                          count={Object.keys(card.containers ?? {}).length}
+                          onView={() => setViewingCard(card)}
+                        />
+                      )}
                       {card.service === 'local_charge' && card.mode === 'road' && (
                         <PricingSummaryButton
                           count={Object.keys(card.containers ?? {}).length}
