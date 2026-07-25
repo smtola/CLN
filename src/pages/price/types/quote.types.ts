@@ -88,3 +88,32 @@
   export type TransportMode = 'road' | 'air' | 'sea' | 'rail';
   export type ShipmentType = 'document' | 'parcel' | 'freight';
   export type ServiceLevel = 'local_charge' | 'freight';
+
+  export interface Quote {
+    _id: string;
+    origin: string;
+    destination: string;
+    distance_km: number;
+    actual_weight: number;
+    dimensions: number[];
+    chargeable_weight: number;
+    mode: TransportMode;
+    country: string;
+    shipment_type: ShipmentType;
+    quotes: {
+      economy?: ServiceQuote;
+      standard?: ServiceQuote;
+      express?: ServiceQuote;
+    };
+    created_at: {
+      $date: string
+    };
+    converted: boolean;
+    // Only present when the caller is an ADMIN — backend strips it for
+    // everyone else.
+    requested_by?: {
+      user_id: string;
+      username?: string;
+      email?: string;
+    };
+  }

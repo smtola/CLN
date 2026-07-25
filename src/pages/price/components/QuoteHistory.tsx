@@ -1,9 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useQuoteHistory } from '../hooks/useQuotes';
 import type { Quote, ServiceLevel } from '../types/quote.types';
+import type { DecodeToken } from '../../../types/auth';
+import { getUser } from '../../../authStorage';
 import { formatDate, formatDistance, formatWeight, capitalizeFirst } from '../utils/formatters';
 import { MODE_COLORS } from '../utils/constants';
 import QuoteCard from './QuoteCard';
+import RequesterProfileModal from './RequesterProfileModal';
+
 type Mode = keyof typeof MODE_COLORS;
 // ── Mode badge ────────────────────────────────────────────────────────
 const ModeBadge = ({ mode }: { mode: Mode }) => {
@@ -167,8 +171,13 @@ const QuoteHistory: React.FC = () => {
   const { loading, error, quotes, pagination, fetchQuotes, goToPage } = useQuoteHistory();
   // FIX: pure React state modal — no dependency on DaisyUI <dialog> JS
   const [selectedQuote, setSelectedQuote] = useState<Quote | null>(null);
+  const [viewingRequesterId, setViewingRequesterId] = useState<string | null>(null);
+  const [currentUser, setCurrentUser] = useState<DecodeToken | undefined>();
 
   useEffect(() => { fetchQuotes(); }, []);
+  useEffect(() => { getUser().then(setCurrentUser).catch(() => {}); }, []);
+
+  const isAdmin = currentUser?.role === 'ADMIN';
 
   return (
     <div className="max-w-5xl mx-auto">
@@ -220,7 +229,11 @@ const QuoteHistory: React.FC = () => {
             <table className="min-w-full text-sm">
               <thead>
                 <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
-                  {['Date', 'Route', 'Distance', 'Weight', 'Mode', ''].map(h => (
+                  {[
+                    'Date', 'Route', 'Distance', 'Weight', 'Mode',
+                    ...(isAdmin ? ['Requested By'] : []),
+                    '',
+                  ].map(h => (
                     <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider" style={{ color: '#64748b' }}>
                       {h}
                     </th>
@@ -244,6 +257,32 @@ const QuoteHistory: React.FC = () => {
                     <td className="px-4 py-3 text-slate-600 whitespace-nowrap">{formatDistance(quote.distance_km)}</td>
                     <td className="px-4 py-3 text-slate-600 whitespace-nowrap">{formatWeight(quote.chargeable_weight)}</td>
                     <td className="px-4 py-3"><ModeBadge mode={quote.mode} /></td>
+
+                    {/* Admin-only: who requested this quote + a link to their profile */}
+                    {isAdmin && (
+                      <td className="px-4 py-3">
+                        {quote.requested_by ? (
+                          <div className="flex items-center gap-2">
+                            <div>
+                              <p className="font-semibold text-slate-800 text-xs">
+                                {quote.requested_by.username ?? '—'}
+                              </p>
+                              <p className="text-xs text-slate-400">{quote.requested_by.email ?? ''}</p>
+                            </div>
+                            <button
+                              onClick={() => setViewingRequesterId(quote.requested_by!.user_id)}
+                              className="px-2 py-1 text-xs font-semibold rounded-lg border transition-colors hover:bg-slate-50"
+                              style={{ borderColor: '#e2e8f0', color: '#1B4F8A' }}
+                            >
+                              Profile
+                            </button>
+                          </div>
+                        ) : (
+                          <span className="text-slate-300">—</span>
+                        )}
+                      </td>
+                    )}
+
                     <td className="px-4 py-3">
                       <button
                         onClick={() => setSelectedQuote(quote)}
@@ -267,9 +306,14 @@ const QuoteHistory: React.FC = () => {
         )}
       </div>
 
-      {/* Detail modal — FIX: pure React state, no DaisyUI <dialog> */}
+      {/* Quote detail modal */}
       {selectedQuote && (
         <DetailModal quote={selectedQuote} onClose={() => setSelectedQuote(null)} />
+      )}
+
+      {/* Requester profile modal — admin only, gated by state that only admins can set */}
+      {viewingRequesterId && (
+        <RequesterProfileModal userId={viewingRequesterId} onClose={() => setViewingRequesterId(null)} />
       )}
     </div>
   );
