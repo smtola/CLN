@@ -815,7 +815,8 @@ export default function SignupPage() {
                       className="input input-bordered w-full mt-2 rounded disabled:bg-gray-100 disabled:cursor-not-allowed"
                       placeholder="Enter Company Name"
                       value={formData.ci.companyName}
-                      disabled={formData.document.isVerified}
+                      // disabled={formData.document.isVerified}
+                      disabled
                       onChange={(e) =>
                         setFormData({ ...formData, ci: {
                           ...formData.ci,
@@ -835,7 +836,8 @@ export default function SignupPage() {
                       className="input input-bordered w-full mt-2 rounded disabled:bg-gray-100 disabled:cursor-not-allowed"
                       placeholder="Enter Company Register Number"
                       value={formData.ci.companyRegisterNumber}
-                      disabled={formData.document.isVerified}
+                      // disabled={formData.document.isVerified}
+                      disabled
                       onChange={(e) =>
                         setFormData({ ...formData, ci: {
                           ...formData.ci,
