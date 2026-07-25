@@ -321,7 +321,7 @@ const QuoteHistory: React.FC = () => {
                     className="hover:bg-slate-50 transition-colors"
                   >
                     <td className="px-4 py-3 text-slate-500 text-xs whitespace-nowrap">
-                      {formatDate(quote.quote_ref)}
+                      {quote.quote_ref}
                     </td>
                     <td className="px-4 py-3 text-slate-500 text-xs whitespace-nowrap">
                       {formatDate(quote.created_at.$date)}
