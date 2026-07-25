@@ -51,9 +51,16 @@
       economy?: ServiceQuote;
       standard?: ServiceQuote;
       express?: ServiceQuote;
+      local_charge?: ServiceQuote;
+      freight?: ServiceQuote;
     };
     origin: string;
     destination: string;
+    commodity?: string;
+    mode?: string;
+    clearance?: 'import' | 'export';
+    container_type?: string;
+    weight_break?: string;
   }
   
   export interface Quote {

@@ -21,9 +21,14 @@ export default {
           '0%': { transform: 'translateX(100%)' },
           '100%': { transform: 'translateX(-100%)' },
         },
+        transit: {
+          '0%': { strokeDashoffset: '24' },
+          '100%': { strokeDashoffset: '0' },
+        },
       },
       animation: {
         marquee: 'marquee 60s linear infinite',
+        transit: 'transit 1.1s linear infinite',
       },
     },
   },
