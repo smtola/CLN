@@ -60,13 +60,23 @@ export const WEIGHT_BREAK_OPTIONS: readonly WeightBreak[] = [
 ];
 
 export const CONTAINER_WEIGHT_LIMITS: Record<ContainerType, { min: number; max: number }> = {
-  "20'GP": { min: 20000, max: 25000 },
-  "40'GP": { min: 22000, max: 27000 },
-  "40'RF": { min: 22000, max: 27000 },
-  "45'RF": { min: 22000, max: 27000 },
+  "20'GP": { min: 10000, max: 25000 },
+  "40'GP": { min: 10000, max: 27000 },
+  "40'RF": { min: 10000, max: 27000 },
+  "45'RF": { min: 10000, max: 27000 },
 };
 
 export const AIR_WEIGHT_LIMITS = { min: 100, max: 5000 };
+
+export const getWeightBreakFromWeight = (weightKg: number): WeightBreak | null => {
+  if (weightKg < AIR_WEIGHT_LIMITS.min || weightKg > AIR_WEIGHT_LIMITS.max) {
+    return null; // out of range — let validateQuoteRequest surface the real error
+  }
+  if (weightKg < 1000) return '-1,000Kgs';
+  if (weightKg < 2000) return '+1,000Kgs';
+  if (weightKg < 3000) return '+2,000Kgs';
+  return '+3,000Kgs';
+};
 
 export const SHIPMENT_TYPES: { value: ShipmentType; label: string; icon: string }[] = [
   { value: 'document', label: 'Document', icon: '📄' },

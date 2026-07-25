@@ -30,6 +30,13 @@ export const validateQuoteRequest = (
     });
   }
 
+  if (!data.commodity || !data.commodity.trim()) {
+    errors.push({
+      field: 'commodity',
+      message: 'Commodity is required to look up pricing',
+    });
+  }
+
   /* ===== Container validation (optional, sea freight) ===== */
   if (data.mode !== 'air' && data.containerQuantity !== undefined) {
     if (data.containerQuantity <= 0) {
@@ -56,22 +63,18 @@ export const validateQuoteRequest = (
     });
   }
 
+  /* ===== Weight bracket validation (air freight) ===== */
   if (data.mode === 'air' && !data.weightBreak) {
-    errors.push({ field: 'weightBreak', message: 'Weight bracket is required to look up air freight pricing' });
+    errors.push({
+      field: 'weightBreak',
+      message: 'Weight bracket is required to look up air freight pricing',
+    });
   }
 
   if (data.containerSize && !data.clearance) {
     errors.push({
       field: 'clearance',
       message: 'Clearance (import/export) is required to look up container pricing',
-    });
-  }
-
-  /* ===== Weight bracket validation (air freight) ===== */
-  if (data.mode === 'air' && !data.weightBreak) {
-    errors.push({
-      field: 'weightBreak',
-      message: 'Weight bracket is required to look up air freight pricing',
     });
   }
 

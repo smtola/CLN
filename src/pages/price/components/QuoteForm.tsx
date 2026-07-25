@@ -4,11 +4,12 @@ import type { Location } from '../types/common.types';
 import type { TransportMode } from '../types/quote.types';
 import { useQuotes } from '../hooks/useQuotes';
 import { validateQuoteRequest } from '../utils/validators';
-import { MODE_STYLES, SERVICE_STYLES, CLEARANCE_OPTIONS, CONTAINER_TYPE_OPTIONS, WEIGHT_BREAK_OPTIONS, CONTAINER_WEIGHT_LIMITS, AIR_WEIGHT_LIMITS } from '../utils/constants';
+import { MODE_STYLES, SERVICE_STYLES, CLEARANCE_OPTIONS, CONTAINER_TYPE_OPTIONS, WEIGHT_BREAK_OPTIONS, CONTAINER_WEIGHT_LIMITS, AIR_WEIGHT_LIMITS, getWeightBreakFromWeight } from '../utils/constants';
 import { showError } from '../../../utils/swalHelper';
 import LocationSearch from './LocationSearch';
 import CommoditySearch from './CommoditySearch';
 import QuoteCard from './QuoteCard';
+
 type Mode = keyof typeof MODE_STYLES; // 'sea' | 'air' | 'road'
 type Service = keyof typeof SERVICE_STYLES;
 type Clearance = 'import' | 'export';
@@ -196,11 +197,28 @@ const QuoteForm: React.FC = () => {
   // ── Handlers ──────────────────────────────────────────────────────
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target as HTMLInputElement;
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value,
-    }));
+    const nextValue = type === 'checkbox' ? (e.target as HTMLInputElement).checked : value;
+
+    setFormData(prev => {
+      const next = { ...prev, [name]: nextValue };
+
+      // Gross weight drives the weight bracket automatically in Air mode, so
+      // the two fields can never disagree with each other or with the
+      // backend's pricing table. Out-of-range weights clear the bracket
+      // rather than guessing wrong — validateQuoteRequest surfaces the
+      // range error via AIR_WEIGHT_LIMITS on submit.
+      if (name === 'containerMaxWeight' && mode === 'air') {
+        const weightKg = Number(value) || 0;
+        next.weightBreak = getWeightBreakFromWeight(weightKg) ?? '';
+      }
+
+      return next;
+    });
+
     if (errors[name]) setErrors(prev => { const n = { ...prev }; delete n[name]; return n; });
+    if (name === 'containerMaxWeight' && errors.weightBreak) {
+      setErrors(prev => { const n = { ...prev }; delete n.weightBreak; return n; });
+    }
   };
 
   const handleCommodityChange = (value: string) => {
@@ -485,6 +503,10 @@ const QuoteForm: React.FC = () => {
                   onChange={v => setFormData(p => ({ ...p, weightBreak: v }))}
                   accent={activeStyle.primary}
                 />
+                <p className="mt-1.5 text-xs text-slate-400">
+                  Auto-selected from Gross Weight — adjust the weight below or tap a bracket to override.
+                </p>
+                <FieldError msg={errors.weightBreak} />
               </div>
             )}
 
@@ -507,7 +529,7 @@ const QuoteForm: React.FC = () => {
                   name="containerMaxWeight"
                   value={formData.containerMaxWeight || ''}
                   onChange={handleInputChange}
-                  placeholder={weightLimits ? `${weightLimits.min.toLocaleString()} – ${weightLimits.max.toLocaleString()}` : 'e.g. 18000'}
+                  placeholder={weightLimits ? `${weightLimits.min.toLocaleString()} – ${weightLimits.max.toLocaleString()}` : 'e.g. 50000'}
                   min={weightLimits?.min ?? 0}
                   max={weightLimits?.max}
                   className={inputCls}
