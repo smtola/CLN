@@ -115,7 +115,7 @@ const ContainerPricingGroup = ({
                       min={0}
                       step={0.01}
                       value={pricing[line][type] ?? ''}
-                      onChange={e => onPriceChange(direction, line, type, parseFloat(e.target.value))}
+                      onChange={e => onPriceChange(direction, line, type, parseFloat(e.target.value) || 0)}
                       placeholder="0.00"
                       className={inputCls}
                     />
@@ -195,7 +195,7 @@ const WeightPricingGroup = ({
                       min={0}
                       step={0.01}
                       value={pricing[line][bracket] ?? ''}
-                      onChange={e => onPriceChange(direction, line, bracket, parseFloat(e.target.value))}
+                      onChange={e => onPriceChange(direction, line, bracket, parseFloat(e.target.value) || 0)}
                       placeholder="0.00"
                       className={inputCls}
                     />
@@ -983,19 +983,13 @@ const AdminPanel: React.FC = () => {
                           onView={() => setViewingCard(card)}
                         />
                       )}
-                      {card.service === 'local_charge' && card.mode === 'road' && (
-                        <PricingSummaryButton
-                          count={Object.keys(card.containers ?? {}).length}
-                          onView={() => setViewingCard(card)}
-                        />
-                      )}
                       {card.service === 'local_charge' && card.mode === 'air' && (
                         <PricingSummaryButton
                           count={Object.keys(card.weights ?? {}).length}
                           onView={() => setViewingCard(card)}
                         />
                       )}
-                      {!(card.service === 'local_charge' && (card.mode === 'road' || card.mode === 'air')) && (
+                      {!(card.service === 'local_charge' && (card.mode === 'road' || card.mode === 'sea' || card.mode === 'air')) && (
                         <span className="text-slate-300">—</span>
                       )}
                     </td>

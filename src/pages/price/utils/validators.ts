@@ -121,7 +121,7 @@ export const validateRateCard = (
     errors.push({ field: 'currency', message: 'Currency is required' });
   }
 
-  if (data.service === 'local_charge' && data.mode === 'road') {
+  if (data.service === 'local_charge' && (data.mode === 'road' || data.mode === 'sea')) {
     const containers = data.containers ?? {};
     const commodityNames = Object.keys(containers);
 
