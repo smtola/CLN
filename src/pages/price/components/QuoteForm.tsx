@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import type { QuoteRequest, ServiceLevel } from '../types/quote.types';
+import type { QuoteRequest } from '../types/quote.types';
 import type { Location } from '../types/common.types';
 import type { TransportMode } from '../types/quote.types';
 import { useQuotes } from '../hooks/useQuotes';
@@ -8,7 +8,7 @@ import { MODE_STYLES, SERVICE_STYLES, CLEARANCE_OPTIONS, CONTAINER_TYPE_OPTIONS,
 import { showError } from '../../../utils/swalHelper';
 import LocationSearch from './LocationSearch';
 import CommoditySearch from './CommoditySearch';
-import QuoteCard from './QuoteCard';
+import QuoteResultTicket from './QuoteResultTicket';
 
 type Mode = keyof typeof MODE_STYLES; // 'sea' | 'air' | 'road'
 type Service = keyof typeof SERVICE_STYLES;
@@ -315,47 +315,25 @@ const QuoteForm: React.FC = () => {
 
   // ── Result view ───────────────────────────────────────────────────
   if (quoteResult) {
+    const cargoLabel =
+      mode === 'air'
+        ? (formData.weightBreak || undefined)
+        : formData.containerSize
+        ? `${formData.containerQuantity} × ${formData.containerSize}`
+        : undefined;
+
     return (
       <div className="max-w-[1000px] mx-auto bg-white rounded-3xl border border-slate-200 shadow-sm p-6 md:p-10">
-        <div className="mb-8 flex items-center justify-between flex-wrap gap-4">
-          <div>
-            <p className="text-sm font-bold uppercase tracking-widest mb-2" style={{ color: activeStyle.primary }}>
-              Quote Results
-            </p>
-            <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-900">
-              {quoteResult.origin} → {quoteResult.destination}
-            </h2>
-            <p className="text-slate-500 mt-2">
-              {(quoteResult.distance_km ?? 0).toLocaleString()} km · {quoteResult.chargeable_weight ?? 0} kg chargeable weight
-            </p>
-            {quoteResult.quote_ref && (
-              <p className="text-xs font-mono tracking-wider text-slate-400 mt-1">
-                REF {quoteResult.quote_ref}
-              </p>
-            )}
-          </div>
-          <button
-            onClick={handleReset}
-            className="flex items-center gap-2 px-5 py-3 text-sm font-semibold rounded-xl border border-slate-300 text-slate-600 transition-colors hover:bg-slate-50"
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-4 h-4">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
-            New Quote
-          </button>
-        </div>
-
-        <div className="grid md:grid-cols-3 gap-4">
-          {Object.entries(quoteResult.quotes).map(([svc, quote]) => (
-            <QuoteCard
-              key={svc}
-              service={svc as ServiceLevel}
-              quote={quote}
-              isPopular={svc === 'standard'}
-              accentColor={activeStyle.primary}
-            />
-          ))}
-        </div>
+        <QuoteResultTicket
+          quoteResult={quoteResult}
+          origin={formData.origin || quoteResult.origin}
+          destination={formData.destination || quoteResult.destination}
+          commodity={formData.commodity || quoteResult.commodity || ''}
+          mode={mode}
+          clearance={clearance}
+          cargoLabel={cargoLabel}
+          onReset={handleReset}
+        />
       </div>
     );
   }
