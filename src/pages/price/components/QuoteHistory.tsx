@@ -55,7 +55,9 @@ const DetailModal = ({
   onClose: () => void;
 }) => {
   const modeMeta = MODE_META[quote.mode] ?? { icon: '•', color: BRAND.slate, bg: '#f1f5f9' };
-  const refCode = quote._id ? quote._id.slice(-8).toUpperCase() : null;
+  // Backend issues a proper quote_ref (e.g. "CLN-260725-9F3A2B"); older
+  // quotes created before that field existed fall back to a derived code.
+  const refCode = quote.quote_ref ?? (quote._id ? quote._id.slice(-8).toUpperCase() : null);
 
   return (
     <div

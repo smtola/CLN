@@ -45,22 +45,16 @@
   
   export interface QuoteResponse {
     quote_id: string;
+    quote_ref?: string;
     distance_km: number;
     chargeable_weight: number;
     quotes: {
       economy?: ServiceQuote;
       standard?: ServiceQuote;
       express?: ServiceQuote;
-      local_charge?: ServiceQuote;
-      freight?: ServiceQuote;
     };
     origin: string;
     destination: string;
-    commodity?: string;
-    mode?: string;
-    clearance?: 'import' | 'export';
-    container_type?: string;
-    weight_break?: string;
   }
   
   export interface Quote {
@@ -98,6 +92,10 @@
 
   export interface Quote {
     _id: string;
+    // Human-readable reference (e.g. "CLN-260725-9F3A2B"), generated and
+    // stored by the backend. Absent on quotes created before this field
+    // existed — callers should fall back to _id in that case.
+    quote_ref?: string;
     origin: string;
     destination: string;
     distance_km: number;
