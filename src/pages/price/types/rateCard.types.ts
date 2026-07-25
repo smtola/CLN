@@ -27,15 +27,43 @@ export interface ContainerPricing {
 // price grid you're editing/looking up. Keyed by commodity name.
 export type CommodityContainerPricing = Record<string, ContainerPricing>;
 
+// ── Air freight: priced by weight bracket instead of container type ───
+// Same weight-bracket options apply to both Import and Export.
+export type WeightBreak = '-1,000Kgs' | '+1,000Kgs' | '+3,000Kgs' | '-5,000Kgs';
+
+// Price per weight bracket, for a given cost line (clearance or trucking).
+export type WeightPriceMap = Partial<Record<WeightBreak, number>>;
+
+export interface WeightDirectionPricing {
+  clearance: WeightPriceMap;
+  trucking: WeightPriceMap;
+}
+
+// Both clearance directions (Import — Clearance & Trucking by Kilogram,
+// Export — Clearance & Trucking by Kilogram) for a single commodity.
+export interface WeightPricing {
+  export: WeightDirectionPricing;
+  import: WeightDirectionPricing;
+}
+
+// Commodity is the parent here too: selecting a commodity scopes which
+// weight-bracket price grid you're editing/looking up. Keyed by commodity name.
+export type CommodityWeightPricing = Record<string, WeightPricing>;
+
 export interface RateCard {
   _id: string;
   origin: string;
   destination: string;
   mode: TransportMode;
   service: ServiceLevel;
-  // Only present/used for service === 'local_charge'. Stores, per commodity,
-  // clearance + trucking price per container type, per clearance direction.
+  // Only present/used for mode === 'road' && service === 'local_charge'.
+  // Stores, per commodity, clearance + trucking price per container type,
+  // per clearance direction.
   containers?: CommodityContainerPricing;
+  // Only present/used for mode === 'air' && service === 'local_charge'.
+  // Stores, per commodity, clearance + trucking price per weight bracket
+  // (kilogram), per clearance direction.
+  weights?: CommodityWeightPricing;
   freight: number;
   othc: number;
   currency: string;
@@ -51,6 +79,7 @@ export interface RateCardFormData {
   mode: TransportMode;
   service: ServiceLevel;
   containers: CommodityContainerPricing;
+  weights: CommodityWeightPricing;
   freight: number;
   othc: number;
   currency: string;

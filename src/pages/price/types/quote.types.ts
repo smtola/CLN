@@ -12,6 +12,7 @@
     containerSize: string; // e.g. "20'GP" | "40'GP" | "40'RF" | "45'RF"
     containerQuantity: number; 
     containerMaxWeight?: number; // in kg
+    weightBreak?: string; // e.g. "-1,000Kgs" | "+1,000Kgs" | "+3,000Kgs" | "-5,000Kgs" — air mode only
     commodity:string;
     mode:string;
   }
@@ -25,6 +26,7 @@
     othc?: number;
     clearance_type?: 'import' | 'export';
     container_type?: string;
+    weight_break?: string;
     commodity?: string;
     /** @deprecated use `clearance` — kept for backward compatibility with older quotes */
     docs?: number;

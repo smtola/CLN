@@ -1,6 +1,6 @@
 import type { Country, Currency, Local } from '../types/common.types';
 import type { TransportMode, ServiceLevel, ShipmentType } from '../types/quote.types';
-import type { ClearanceDirection, ContainerType } from '../types/rateCard.types';
+import type { ClearanceDirection, ContainerType, WeightBreak } from '../types/rateCard.types';
 
 export const API_BASE_URL =  'https://clnrestapi.vercel.app/api/v1/price';
 // 'https://clnrestapi.vercel.app/api/v1/price';
@@ -48,6 +48,16 @@ export const CONTAINER_TYPE_OPTIONS: Record<ClearanceDirection, readonly Contain
   import: ["20'GP", "40'GP"],
   export: ["20'GP", "40'GP", "40'RF", "45'RF"],
 };
+
+// Air-freight local charge is priced by weight bracket instead of container
+// type. Same bracket set applies to both Import and Export. Mirrors
+// WEIGHT_BREAKS in the backend (app/routes/price.py).
+export const WEIGHT_BREAK_OPTIONS: readonly WeightBreak[] = [
+  '-1,000Kgs',
+  '+1,000Kgs',
+  '+3,000Kgs',
+  '-5,000Kgs',
+];
 
 export const SHIPMENT_TYPES: { value: ShipmentType; label: string; icon: string }[] = [
   { value: 'document', label: 'Document', icon: '📄' },

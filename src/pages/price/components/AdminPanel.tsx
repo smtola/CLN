@@ -8,6 +8,9 @@ import type {
   ContainerType,
   ContainerPricing,
   DirectionPricing,
+  WeightBreak,
+  WeightPricing,
+  WeightDirectionPricing,
 } from '../types/rateCard.types';
 import { validateRateCard } from '../utils/validators';
 import {
@@ -17,6 +20,7 @@ import {
   SERVICE_COLORS,
   CLEARANCE_OPTIONS,
   CONTAINER_TYPE_OPTIONS,
+  WEIGHT_BREAK_OPTIONS,
 } from '../utils/constants';
 import { formatCurrency, capitalizeFirst } from '../utils/formatters';
 import LocationSearch from './LocationSearch';
@@ -33,10 +37,9 @@ type CostLine = (typeof COST_LINES)[number];
 const inputCls =
   'w-full px-3 py-2.5 rounded-lg border text-sm bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all';
 
-// ── Field label ──────────────────────────────────────────────────────
-const FieldLabel = ({ children, required }: { children: React.ReactNode; required?: boolean }) => (
-  <label className="block text-sm font-semibold text-slate-600 mb-2">
-    {children}{required && <span className="text-red-500 ml-1">*</span>}
+const FieldLabel = ({ children }: { children: React.ReactNode }) => (
+  <label className="block text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: '#64748b' }}>
+    {children}
   </label>
 );
 
@@ -54,6 +57,13 @@ const ServiceBadge = ({ service }: { service: Service }) => {
 // Commodity is the parent: each commodity gets its own full Import/Export ×
 // Clearance/Trucking × Container-Type grid.
 const emptyDirectionPricing = (): ContainerPricing => ({
+  export: { clearance: {}, trucking: {} },
+  import: { clearance: {}, trucking: {} },
+});
+
+// Same idea, for air freight: each commodity gets its own full Import/Export ×
+// Clearance/Trucking × Weight-Bracket grid.
+const emptyWeightPricing = (): WeightPricing => ({
   export: { clearance: {}, trucking: {} },
   import: { clearance: {}, trucking: {} },
 });
@@ -139,29 +149,110 @@ const ContainerPricingGroup = ({
   );
 };
 
+// ── Weight pricing block (per clearance direction, for one commodity) ──
+// Air freight equivalent of ContainerPricingGroup: same idea, priced by
+// weight bracket (kilogram) instead of container type. Same bracket set
+// applies to both Import and Export.
+const WeightPricingGroup = ({
+  direction,
+  pricing,
+  currency,
+  onPriceChange,
+}: {
+  direction: ClearanceDirection;
+  pricing: WeightDirectionPricing;
+  currency: string;
+  onPriceChange: (direction: ClearanceDirection, line: CostLine, bracket: WeightBreak, value: number) => void;
+}) => {
+  const dirLabel = direction === 'export' ? 'Export' : 'Import';
+
+  return (
+    <div className="rounded-xl border p-4" style={{ borderColor: '#e2e8f0' }}>
+      <p className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: direction === 'export' ? '#1B4F8A' : '#66a55f' }}>
+        {dirLabel} — Clearance &amp; Trucking by Kilogram
+      </p>
+
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr>
+              <th className="text-left text-xs font-semibold text-slate-500 pb-2 pr-2">Weight Bracket</th>
+              {COST_LINES.map(line => (
+                <th key={line} className="text-left text-xs font-semibold text-slate-500 pb-2 pr-2 capitalize">
+                  {line}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {WEIGHT_BREAK_OPTIONS.map(bracket => (
+              <tr key={bracket}>
+                <td className="pr-2 py-1 text-xs font-semibold text-slate-700 whitespace-nowrap">{bracket}</td>
+                {COST_LINES.map(line => (
+                  <td key={line} className="pr-2 py-1">
+                    <input
+                      type="number"
+                      min={0}
+                      step={0.01}
+                      value={pricing[line][bracket] ?? ''}
+                      onChange={e => onPriceChange(direction, line, bracket, parseFloat(e.target.value) || 0)}
+                      placeholder="0.00"
+                      className={inputCls}
+                    />
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Preview for customers */}
+      {WEIGHT_BREAK_OPTIONS.some(b => (pricing.clearance[b] ?? 0) > 0 || (pricing.trucking[b] ?? 0) > 0) && (
+        <div className="mt-3 flex flex-wrap gap-2">
+          {WEIGHT_BREAK_OPTIONS.map(bracket => {
+            const clearancePrice = pricing.clearance[bracket] ?? 0;
+            const truckingPrice = pricing.trucking[bracket] ?? 0;
+            if (!clearancePrice && !truckingPrice) return null;
+            return (
+              <span key={bracket} className="px-2 py-1 rounded-lg bg-slate-50 border text-xs" style={{ borderColor: '#e2e8f0' }}>
+                <span className="font-semibold text-slate-700">{bracket}</span>
+                <span className="text-slate-500">
+                  {' '}· Clearance {formatCurrency(clearancePrice, currency)} · Trucking {formatCurrency(truckingPrice, currency)}
+                </span>
+              </span>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
+
 // ── Commodity selector (the "parent" picker) ──────────────────────────
 // Lets the admin pick which commodity's Import/Export pricing grid they're
-// editing. Selecting a commodity from search and clicking "Add" adds it as
-// a priced commodity on this rate card; its chip can then be clicked to
-// switch the grids below to that commodity.
+// editing. Selecting a commodity from the dropdown and clicking "Add" adds
+// it as a priced commodity on this rate card; its chip can then be clicked
+// to switch the grids below to that commodity.
 const CommodityPicker = ({
-  containers,
+  addedNames,
   commodityToAdd,
   activeCommodity,
   onCommodityToAddChange,
   onAddCommodity,
   onSelectCommodity,
   onRemoveCommodity,
+  pricingLabel,
 }: {
-  containers: RateCardFormData['containers'];
+  addedNames: string[];
   commodityToAdd: string;
   activeCommodity: string;
   onCommodityToAddChange: (name: string) => void;
   onAddCommodity: () => void;
   onSelectCommodity: (name: string) => void;
   onRemoveCommodity: (name: string) => void;
+  pricingLabel: string;
 }) => {
-  const addedNames = Object.keys(containers);
   const alreadyAdded = commodityToAdd.length > 0 && addedNames.includes(commodityToAdd);
 
   return (
@@ -170,7 +261,7 @@ const CommodityPicker = ({
         Commodity
       </p>
       <p className="text-xs text-slate-400 mb-3">
-        Commodity is the parent for both Import and Export — Clearance &amp; Trucking by Container Type. Select a commodity to price it.
+        Commodity is the parent for both Import and Export — Clearance &amp; Trucking by {pricingLabel}. Select a commodity to price it.
       </p>
 
       <div className="flex flex-wrap items-end gap-2 mb-1">
@@ -240,6 +331,7 @@ interface ModalProps {
   onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => void;
   onLocationChange: (name: string, location: Location) => void;
   onContainerPriceChange: (commodity: string, direction: ClearanceDirection, line: CostLine, type: ContainerType, value: number) => void;
+  onWeightPriceChange: (commodity: string, direction: ClearanceDirection, line: CostLine, bracket: WeightBreak, value: number) => void;
   onCommodityToAddChange: (name: string) => void;
   onAddCommodity: () => void;
   onSelectCommodity: (name: string) => void;
@@ -250,7 +342,7 @@ interface ModalProps {
 
 const RateCardModal: React.FC<ModalProps> = ({
   editingCard, formData, loading, activeCommodity, commodityToAdd,
-  onChange, onLocationChange, onContainerPriceChange,
+  onChange, onLocationChange, onContainerPriceChange, onWeightPriceChange,
   onCommodityToAddChange, onAddCommodity, onSelectCommodity, onRemoveCommodity,
   onSubmit, onClose,
 }) => (
@@ -279,7 +371,7 @@ const RateCardModal: React.FC<ModalProps> = ({
 
           {/* Origin / Destination */}
           <div>
-            <FieldLabel required>Origin </FieldLabel>
+            <FieldLabel>Origin *</FieldLabel>
             <LocationSearch
               label=""
               value={formData.origin}
@@ -289,7 +381,7 @@ const RateCardModal: React.FC<ModalProps> = ({
             />
           </div>
           <div>
-            <FieldLabel required>Destination</FieldLabel>
+            <FieldLabel>Destination *</FieldLabel>
             <LocationSearch
               label=""
               value={formData.destination}
@@ -306,7 +398,7 @@ const RateCardModal: React.FC<ModalProps> = ({
             { label: 'Currency',       name: 'currency', options: CURRENCIES      },
           ] as const).map(({ label, name, options }) => (
             <div key={name}>
-              <FieldLabel required>{label}</FieldLabel>
+              <FieldLabel>{label} *</FieldLabel>
               <select
                 name={name}
                 value={formData[name as keyof RateCardFormData] as string}
@@ -324,17 +416,18 @@ const RateCardModal: React.FC<ModalProps> = ({
           ))}
         </div>
 
-        {/* ── Local charge: commodity is the parent of Import/Export container-type pricing ── */}
-        {formData.service === 'local_charge' && (
+        {/* ── Local charge, Road: commodity is the parent of Import/Export container-type pricing ── */}
+        {formData.service === 'local_charge' && formData.mode === 'road' && (
           <div className="mt-4 space-y-4">
             <CommodityPicker
-              containers={formData.containers}
+              addedNames={Object.keys(formData.containers)}
               commodityToAdd={commodityToAdd}
               activeCommodity={activeCommodity}
               onCommodityToAddChange={onCommodityToAddChange}
               onAddCommodity={onAddCommodity}
               onSelectCommodity={onSelectCommodity}
               onRemoveCommodity={onRemoveCommodity}
+              pricingLabel="Container Type"
             />
 
             {activeCommodity && formData.containers[activeCommodity] && (
@@ -358,16 +451,51 @@ const RateCardModal: React.FC<ModalProps> = ({
           </div>
         )}
 
+        {/* ── Local charge, Air: commodity is the parent of Import/Export weight-bracket pricing ── */}
+        {formData.service === 'local_charge' && formData.mode === 'air' && (
+          <div className="mt-4 space-y-4">
+            <CommodityPicker
+              addedNames={Object.keys(formData.weights)}
+              commodityToAdd={commodityToAdd}
+              activeCommodity={activeCommodity}
+              onCommodityToAddChange={onCommodityToAddChange}
+              onAddCommodity={onAddCommodity}
+              onSelectCommodity={onSelectCommodity}
+              onRemoveCommodity={onRemoveCommodity}
+              pricingLabel="Kilogram"
+            />
+
+            {activeCommodity && formData.weights[activeCommodity] && (
+              <div className="space-y-4">
+                <p className="text-xs text-slate-500">
+                  Editing pricing for <span className="font-semibold text-slate-700">{activeCommodity}</span>
+                </p>
+                {(CLEARANCE_OPTIONS.map(o => o.value) as ClearanceDirection[]).map(direction => (
+                  <WeightPricingGroup
+                    key={direction}
+                    direction={direction}
+                    pricing={formData.weights[activeCommodity][direction]}
+                    currency={formData.currency}
+                    onPriceChange={(dir, line, bracket, value) =>
+                      onWeightPriceChange(activeCommodity, dir, line, bracket, value)
+                    }
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* ── Freight fields (unchanged) ── */}
         {formData.service === 'freight' && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
             <div>
-              <FieldLabel required>Freight</FieldLabel>
+              <FieldLabel>Freight *</FieldLabel>
               <input type="number" name="freight" value={formData.freight}
                 onChange={onChange} min={0} step={0.01} required className={inputCls} />
             </div>
             <div>
-              <FieldLabel required>OTHC</FieldLabel>
+              <FieldLabel>OTHC *</FieldLabel>
               <input type="number" name="othc" value={formData.othc}
                 onChange={onChange} min={0} step={0.01} required className={inputCls} />
             </div>
@@ -424,6 +552,8 @@ const RateCardModal: React.FC<ModalProps> = ({
 );
 
 // ── Pricing detail modal (read-only view of a rate card's commodities) ──
+// Generalized to handle both Road (container type) and Air (weight bracket)
+// rate cards based on card.mode.
 const PricingDetailModal = ({
   card,
   onClose,
@@ -431,8 +561,11 @@ const PricingDetailModal = ({
   card: RateCard;
   onClose: () => void;
 }) => {
+  const isAir = card.mode === 'air';
   const containers = card.containers ?? {};
-  const names = Object.keys(containers);
+  const weights = card.weights ?? {};
+  const names = Object.keys(isAir ? weights : containers);
+  const columnLabel = isAir ? 'Weight Bracket' : 'Container';
 
   return (
     <div
@@ -462,10 +595,13 @@ const PricingDetailModal = ({
                 <p className="text-sm font-bold mb-3" style={{ color: '#0A1628' }}>{name}</p>
                 <div className="space-y-3">
                   {(['export', 'import'] as ClearanceDirection[]).map(direction => {
-                    const pricing = containers[name][direction];
-                    const containerTypes = CONTAINER_TYPE_OPTIONS[direction];
-                    const rows = containerTypes.filter(
-                      t => (pricing.clearance[t] ?? 0) > 0 || (pricing.trucking[t] ?? 0) > 0
+                    const pricing = isAir ? weights[name][direction] : containers[name][direction];
+                    const rowKeys: string[] = isAir
+                      ? [...WEIGHT_BREAK_OPTIONS]
+                      : [...CONTAINER_TYPE_OPTIONS[direction]];
+                    const rows = rowKeys.filter(
+                      k => (pricing.clearance[k as keyof typeof pricing.clearance] ?? 0) > 0 ||
+                           (pricing.trucking[k as keyof typeof pricing.trucking] ?? 0) > 0
                     );
                     if (rows.length === 0) return null;
 
@@ -480,20 +616,20 @@ const PricingDetailModal = ({
                         <table className="w-full text-xs">
                           <thead>
                             <tr>
-                              <th className="text-left font-semibold text-slate-500 pb-1.5 pr-2">Container</th>
+                              <th className="text-left font-semibold text-slate-500 pb-1.5 pr-2">{columnLabel}</th>
                               <th className="text-right font-semibold text-slate-500 pb-1.5 pr-2">Clearance</th>
                               <th className="text-right font-semibold text-slate-500 pb-1.5">Trucking</th>
                             </tr>
                           </thead>
                           <tbody>
-                            {rows.map(type => (
-                              <tr key={type} style={{ borderTop: '1px solid #f1f5f9' }}>
-                                <td className="py-1.5 pr-2 font-semibold text-slate-700">{type}</td>
+                            {rows.map(key => (
+                              <tr key={key} style={{ borderTop: '1px solid #f1f5f9' }}>
+                                <td className="py-1.5 pr-2 font-semibold text-slate-700">{key}</td>
                                 <td className="py-1.5 pr-2 text-right font-mono text-slate-600">
-                                  {formatCurrency(pricing.clearance[type] ?? 0, card.currency)}
+                                  {formatCurrency(pricing.clearance[key as keyof typeof pricing.clearance] ?? 0, card.currency)}
                                 </td>
                                 <td className="py-1.5 text-right font-mono text-slate-600">
-                                  {formatCurrency(pricing.trucking[type] ?? 0, card.currency)}
+                                  {formatCurrency(pricing.trucking[key as keyof typeof pricing.trucking] ?? 0, card.currency)}
                                 </td>
                               </tr>
                             ))}
@@ -512,18 +648,17 @@ const PricingDetailModal = ({
   );
 };
 
-// ── Container pricing summary (table cell) ───────────────────────────
+// ── Pricing summary (table cell) ──────────────────────────────────────
 // Commodity is the parent, so a rate card can carry pricing for many
 // commodities at once — show a compact "N commodities" button that opens
 // the full read-only detail modal instead of relying on a cramped tooltip.
-const ContainerPricingSummary = ({
-  card,
+const PricingSummaryButton = ({
+  count,
   onView,
 }: {
-  card: RateCard;
+  count: number;
   onView: () => void;
 }) => {
-  const count = Object.keys(card.containers ?? {}).length;
   if (count === 0) return <span className="text-slate-300">—</span>;
 
   return (
@@ -546,6 +681,7 @@ const ContainerPricingSummary = ({
 const EMPTY_FORM: RateCardFormData = {
   origin: '', destination: '', mode: 'road', service: 'local_charge',
   containers: {},
+  weights: {},
   freight: 0, othc: 0, currency: 'USD', remark: '',
 };
 
@@ -560,7 +696,7 @@ const AdminPanel: React.FC = () => {
   const [formData,    setFormData]    = useState<RateCardFormData>(EMPTY_FORM);
 
   // Which commodity's Import/Export pricing grid is currently shown/edited,
-  // and which commodity is picked in the search box ready to be added.
+  // and which commodity is picked in the dropdown ready to be added.
   const [activeCommodity, setActiveCommodity] = useState('');
   const [commodityToAdd,  setCommodityToAdd]  = useState('');
 
@@ -574,27 +710,37 @@ const AdminPanel: React.FC = () => {
         ? parseFloat(value) || 0
         : value,
     }));
+    // Switching mode swaps which pricing grid (containers vs weights) is in
+    // play, so the commodity being edited/added no longer applies.
+    if (name === 'mode') {
+      setActiveCommodity('');
+      setCommodityToAdd('');
+    }
   };
 
-  // Adds the commodity picked in the search box as a newly-priced commodity
-  // on this rate card (parent), scaffolding an empty Import/Export grid for
-  // it, and makes it the active commodity being edited.
+  // Adds the commodity picked in the dropdown as a newly-priced commodity on
+  // this rate card (parent), scaffolding an empty Import/Export grid for it —
+  // containers (by container type) for Road, weights (by kilogram) for Air —
+  // and makes it the active commodity being edited.
   const handleAddCommodity = () => {
     if (!commodityToAdd) return;
     const name = commodityToAdd;
-    setFormData(prev => ({
-      ...prev,
-      containers: {
-        ...prev.containers,
-        [name]: prev.containers[name] ?? emptyDirectionPricing(),
-      },
-    }));
+    setFormData(prev =>
+      prev.mode === 'air'
+        ? { ...prev, weights: { ...prev.weights, [name]: prev.weights[name] ?? emptyWeightPricing() } }
+        : { ...prev, containers: { ...prev.containers, [name]: prev.containers[name] ?? emptyDirectionPricing() } }
+    );
     setActiveCommodity(name);
     setCommodityToAdd('');
   };
 
   const handleRemoveCommodity = (name: string) => {
     setFormData(prev => {
+      if (prev.mode === 'air') {
+        const next = { ...prev.weights };
+        delete next[name];
+        return { ...prev, weights: next };
+      }
       const next = { ...prev.containers };
       delete next[name];
       return { ...prev, containers: next };
@@ -623,6 +769,33 @@ const AdminPanel: React.FC = () => {
             [line]: {
               ...prev.containers[commodity][direction][line],
               [type]: value,
+            },
+          },
+        },
+      },
+    }));
+  };
+
+  // Air equivalent: updates a single weight-bracket price for the given
+  // commodity, scoped by clearance direction and cost line.
+  const handleWeightPriceChange = (
+    commodity: string,
+    direction: ClearanceDirection,
+    line: CostLine,
+    bracket: WeightBreak,
+    value: number,
+  ) => {
+    setFormData(prev => ({
+      ...prev,
+      weights: {
+        ...prev.weights,
+        [commodity]: {
+          ...prev.weights[commodity],
+          [direction]: {
+            ...prev.weights[commodity][direction],
+            [line]: {
+              ...prev.weights[commodity][direction][line],
+              [bracket]: value,
             },
           },
         },
@@ -659,14 +832,16 @@ const AdminPanel: React.FC = () => {
   const openEdit = (card: RateCard) => {
     setEditingCard(card);
     const containers = card.containers ?? {};
+    const weights = card.weights ?? {};
     setFormData({
       origin: card.origin, destination: card.destination,
       mode: card.mode, service: card.service,
       containers,
+      weights,
       freight: card.freight, othc: card.othc,
       currency: card.currency, remark: card.remark,
     });
-    setActiveCommodity(Object.keys(containers)[0] ?? '');
+    setActiveCommodity(Object.keys(card.mode === 'air' ? weights : containers)[0] ?? '');
     setCommodityToAdd('');
     setShowModal(true);
   };
@@ -759,9 +934,21 @@ const AdminPanel: React.FC = () => {
 
                     {/* Compact "N commodities" button; non-local_charge rows show N/A. */}
                     <td className="px-4 py-3 text-slate-700 text-xs">
-                      {card.service === 'local_charge'
-                        ? <ContainerPricingSummary card={card} onView={() => setViewingCard(card)} />
-                        : <span className="text-slate-300">—</span>}
+                      {card.service === 'local_charge' && card.mode === 'road' && (
+                        <PricingSummaryButton
+                          count={Object.keys(card.containers ?? {}).length}
+                          onView={() => setViewingCard(card)}
+                        />
+                      )}
+                      {card.service === 'local_charge' && card.mode === 'air' && (
+                        <PricingSummaryButton
+                          count={Object.keys(card.weights ?? {}).length}
+                          onView={() => setViewingCard(card)}
+                        />
+                      )}
+                      {!(card.service === 'local_charge' && (card.mode === 'road' || card.mode === 'air')) && (
+                        <span className="text-slate-300">—</span>
+                      )}
                     </td>
                     <td className="px-4 py-3 text-right text-slate-700 font-mono text-xs">
                       {card.service === 'freight' ? formatCurrency(card.freight, card.currency) : <span className="text-slate-300">—</span>}
@@ -808,7 +995,7 @@ const AdminPanel: React.FC = () => {
         )}
       </div>
 
-      {/* Edit / Create modal */}
+      {/* Modal */}
       {showModal && (
         <RateCardModal
           editingCard={editingCard}
@@ -819,6 +1006,7 @@ const AdminPanel: React.FC = () => {
           onChange={handleInputChange}
           onLocationChange={handleLocationChange}
           onContainerPriceChange={handleContainerPriceChange}
+          onWeightPriceChange={handleWeightPriceChange}
           onCommodityToAddChange={setCommodityToAdd}
           onAddCommodity={handleAddCommodity}
           onSelectCommodity={setActiveCommodity}

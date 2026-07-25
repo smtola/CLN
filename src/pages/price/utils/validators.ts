@@ -62,6 +62,21 @@ export const validateQuoteRequest = (
     });
   }
 
+  /* ===== Weight bracket validation (air freight) ===== */
+  if (data.mode === 'air' && !data.weightBreak) {
+    errors.push({
+      field: 'weightBreak',
+      message: 'Weight bracket is required to look up air freight pricing',
+    });
+  }
+
+  if (data.weightBreak && !data.clearance) {
+    errors.push({
+      field: 'clearance',
+      message: 'Clearance (import/export) is required to look up weight-bracket pricing',
+    });
+  }
+
   return errors;
 };
 
@@ -77,7 +92,7 @@ export const validateRateCard = (
     errors.push({ field: 'currency', message: 'Currency is required' });
   }
 
-  if (data.service === 'local_charge') {
+  if (data.service === 'local_charge' && data.mode === 'road') {
     const containers = data.containers ?? {};
     const commodityNames = Object.keys(containers);
 
@@ -99,6 +114,33 @@ export const validateRateCard = (
         errors.push({
           field: 'containers',
           message: 'Enter at least one clearance or trucking price for a container type',
+        });
+      }
+    }
+  }
+
+  if (data.service === 'local_charge' && data.mode === 'air') {
+    const weights = data.weights ?? {};
+    const commodityNames = Object.keys(weights);
+
+    if (commodityNames.length === 0) {
+      errors.push({
+        field: 'weights',
+        message: 'Add at least one commodity and set its pricing',
+      });
+    } else {
+      const hasAnyPrice = commodityNames.some(name =>
+        (['export', 'import'] as const).some(direction =>
+          (['clearance', 'trucking'] as const).some(line =>
+            Object.values(weights[name]?.[direction]?.[line] ?? {}).some(v => (v ?? 0) > 0)
+          )
+        )
+      );
+
+      if (!hasAnyPrice) {
+        errors.push({
+          field: 'weights',
+          message: 'Enter at least one clearance or trucking price for a weight bracket',
         });
       }
     }

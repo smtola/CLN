@@ -4,7 +4,7 @@ import type { Location } from '../types/common.types';
 import type { TransportMode } from '../types/quote.types';
 import { useQuotes } from '../hooks/useQuotes';
 import { validateQuoteRequest } from '../utils/validators';
-import { MODE_STYLES, SERVICE_STYLES, CLEARANCE_OPTIONS, CONTAINER_TYPE_OPTIONS } from '../utils/constants';
+import { MODE_STYLES, SERVICE_STYLES, CLEARANCE_OPTIONS, CONTAINER_TYPE_OPTIONS, WEIGHT_BREAK_OPTIONS } from '../utils/constants';
 import LocationSearch from './LocationSearch';
 import CommoditySearch from './CommoditySearch';
 import QuoteCard from './QuoteCard';
@@ -14,28 +14,7 @@ type Service = keyof typeof SERVICE_STYLES;
 type Clearance = 'import' | 'export';
 
 // Common air-freight packaging unit types.
-const PACKAGING_UNIT_OPTIONS: readonly string[] = [
-  'Carton',
-  'Pallet',
-  'Crate',
-  'Box',
-  'Drum',
-  'Bag',
-  'Skid',
-  'Roll',
-  'Bundle',
-  'Envelope',
-  'Case',
-  'Barrel',
-  'Sack',
-  'Tube',
-  'Pail',
-  'Bale',
-  'Basket',
-  'Bin',
-  'Reel',
-  'Tote',
-];
+
 
 // Per-mode cargo section shape. Sea and Road share the same fields
 // (clearance → container type, commodity, weight, quantity). Air swaps
@@ -44,10 +23,11 @@ const CARGO_FIELD_OPTIONS: Record<Mode, {
   showContainerType: boolean;
   showPackagingUnit: boolean;
   showQuantity: boolean;
+  showWeightBreak: boolean;
 }> = {
-  sea:  { showContainerType: true,  showPackagingUnit: false, showQuantity: true },
-  road: { showContainerType: true,  showPackagingUnit: false, showQuantity: true },
-  air:  { showContainerType: false, showPackagingUnit: true,  showQuantity: false },
+  sea:  { showContainerType: true,  showPackagingUnit: false, showQuantity: true,  showWeightBreak: false },
+  road: { showContainerType: true,  showPackagingUnit: false, showQuantity: true,  showWeightBreak: false },
+  air:  { showContainerType: false, showPackagingUnit: true,  showQuantity: false, showWeightBreak: true  },
 };
 
 // ── Field label ──────────────────────────────────────────────────────
@@ -182,6 +162,7 @@ const QuoteForm: React.FC = () => {
     containerSize:      '',
     containerQuantity:  1,
     containerMaxWeight: 0,
+    weightBreak:        '',
     soc:                false,
     equipmentType:      '',
     commodity:          '',
@@ -213,6 +194,7 @@ const QuoteForm: React.FC = () => {
     setFormData(prev => ({ ...prev, commodity: value }));
     if (errors.commodity) setErrors(prev => { const n = { ...prev }; delete n.commodity; return n; });
   };
+
   const handleLocationChange = (field: 'origin' | 'destination', location: Location) => {
     setFormData(prev => ({
       ...prev,
@@ -231,16 +213,18 @@ const QuoteForm: React.FC = () => {
       mode: next as TransportMode,
       equipmentType: '',
       containerSize: '',
+      weightBreak: '',
     }));
   };
 
   const handleClearanceChange = (next: Clearance) => {
     setClearance(next);
-    // Container type options depend on clearance (export has more options
-    // than import), so drop any selection that may no longer be valid.
-    // Also push clearance onto formData — rate lookup and pricing are keyed
-    // by clearance direction (export/import), so it must reach the backend.
-    setFormData(prev => ({ ...prev, clearance: next, containerSize: '' }));
+    // Container type / weight bracket options depend on clearance (export has
+    // more container options than import), so drop any selection that may no
+    // longer be valid. Also push clearance onto formData — rate lookup and
+    // pricing are keyed by clearance direction (export/import), so it must
+    // reach the backend.
+    setFormData(prev => ({ ...prev, clearance: next, containerSize: '', weightBreak: '' }));
   };
 
   const handleServiceChange = (next: Service) => {
@@ -268,11 +252,10 @@ const QuoteForm: React.FC = () => {
     if (!formData.origin)          errs.origin          = 'Origin is required.';
     if (!formData.destination)     errs.destination     = 'Destination is required.';
     if (!formData.vesselDeparture) errs.vesselDeparture  = 'Departure date is required.';
-    if (!formData.commodity)       errs.commodity        = 'Please select a commodity from the list.';
-  
+
     const vErrs = validateQuoteRequest(formData);
     if (vErrs.length > 0) errs.general = vErrs[0].message;
-  
+
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -292,7 +275,7 @@ const QuoteForm: React.FC = () => {
     setClearance('import');
     setFormData({
       origin: '', destination: '', clearance: 'import', containerSize: '', containerQuantity: 1,
-      containerMaxWeight: 0, soc: false, equipmentType: '', commodity: '',
+      containerMaxWeight: 0, weightBreak: '', soc: false, equipmentType: '', commodity: '',
       vesselDeparture: '', country: '', mode: 'sea',
     });
   };
@@ -345,7 +328,7 @@ const QuoteForm: React.FC = () => {
 
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-2xl md:text-5xl text-center font-bold tracking-tight text-slate-900">
+        <h1 className="text-3xl md:text-5xl font-bold tracking-tight text-slate-900">
           Request an Instant Shipping Quote
         </h1>
         <p className="text-slate-500 text-lg mt-3">
@@ -368,7 +351,7 @@ const QuoteForm: React.FC = () => {
         <Section title="Route Details">
           <div className="grid md:grid-cols-2 gap-4">
             <div>
-              <FieldLabel required>Origin Location</FieldLabel>
+              <FieldLabel required>Origin</FieldLabel>
               <LocationSearch
                 label=""
                 value={formData.origin}
@@ -408,7 +391,7 @@ const QuoteForm: React.FC = () => {
 
         {/* SECTION 2 — Transport Mode */}
         <div>
-        <FieldLabel required>Transport Mode</FieldLabel>
+          <h2 className="text-sm font-bold uppercase tracking-wider text-slate-500 mb-3 px-1">Transport Mode</h2>
           <div className="grid md:grid-cols-3 gap-4">
             {(Object.keys(MODE_STYLES) as Mode[]).map(key => (
               <ModeCard
@@ -423,7 +406,7 @@ const QuoteForm: React.FC = () => {
 
         {/* SECTION 3 — Service Level */}
         <div>
-        <FieldLabel required>Services</FieldLabel>
+          <h2 className="text-sm font-bold uppercase tracking-wider text-slate-500 mb-3 px-1">Services</h2>
           <div className="grid md:grid-cols-3 gap-4">
             {(Object.keys(SERVICE_STYLES) as Service[]).map(key => (
               <ServiceCard
@@ -475,17 +458,18 @@ const QuoteForm: React.FC = () => {
               </div>
             )}
 
-            {cargoConfig.showPackagingUnit && (
+            {cargoConfig.showWeightBreak && (
               <div>
-                <FieldLabel required>Packaging Unit</FieldLabel>
+                <FieldLabel required>Weight Bracket (Kg)</FieldLabel>
                 <OptionPill
-                  options={PACKAGING_UNIT_OPTIONS}
-                  value={formData.equipmentType}
-                  onChange={v => setFormData(p => ({ ...p, equipmentType: v }))}
+                  options={WEIGHT_BREAK_OPTIONS}
+                  value={formData.weightBreak ?? ''}
+                  onChange={v => setFormData(p => ({ ...p, weightBreak: v }))}
                   accent={activeStyle.primary}
                 />
               </div>
             )}
+
 
             <div>
               <FieldLabel required>Commodity</FieldLabel>
@@ -508,7 +492,6 @@ const QuoteForm: React.FC = () => {
                 placeholder="e.g. 18000"
                 min={0}
                 className={inputCls}
-                required
               />
             </div>
 
@@ -543,7 +526,7 @@ const QuoteForm: React.FC = () => {
         <button
           type="submit"
           disabled={loading}
-          className="w-full h-[72px] rounded-2xl text-xl font-semibold text-white transition-all duration-300 hover:scale-[1.01] hover:shadow-lg disabled:opacity-60 disabled:hover:scale-100 flex items-center justify-center gap-2"
+          className="w-full h-[50px] rounded-2xl text-xl font-semibold text-white transition-all duration-300 hover:scale-[1.01] hover:shadow-lg disabled:opacity-60 disabled:hover:scale-100 flex items-center justify-center gap-2"
           style={{ background: activeStyle.primary }}
         >
           {loading ? (
