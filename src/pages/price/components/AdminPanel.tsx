@@ -654,6 +654,7 @@ const PricingDetailModal = ({
                               <th className="text-left font-semibold text-slate-500 pb-1.5 pr-2">{columnLabel}</th>
                               <th className="text-right font-semibold text-slate-500 pb-1.5 pr-2">Clearance</th>
                               <th className="text-right font-semibold text-slate-500 pb-1.5">Trucking</th>
+                              <th className="text-right font-semibold text-slate-500 pb-1.5">Total</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -665,6 +666,13 @@ const PricingDetailModal = ({
                                 </td>
                                 <td className="py-1.5 text-right font-mono text-slate-600">
                                   {formatCurrency(pricing.trucking[key as keyof typeof pricing.trucking] ?? 0, card.currency)}
+                                </td>
+                                <td className="py-1.5 text-right font-mono text-slate-600">
+                                  {formatCurrency(
+                                    (pricing.clearance[key as keyof typeof pricing.clearance] ?? 0) +
+                                    (pricing.trucking[key as keyof typeof pricing.trucking] ?? 0),
+                                    card.currency
+                                  )}                                
                                 </td>
                               </tr>
                             ))}
