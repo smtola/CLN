@@ -4,7 +4,7 @@ import { getCategories, deleteCategory } from "../../services/categoryService";
 import type { Category } from "../../types/category";
 import type { DecodeToken } from "../../../types/auth";
 import { getUser } from "../../../authStorage";
-import { confirmDelete, showError, showSuccess } from "../../utils/swalHelper";
+import { confirmDelete, showError, showSuccess, getApiErrorMessage } from "../../utils/swalHelper";
 
 const CategoryList = () => {
   const [user, setUser] = useState<DecodeToken | null>(null);
@@ -33,6 +33,7 @@ const CategoryList = () => {
       }
     } catch (error) {
       console.error('Error fetching categories:', error);
+      showError("Failed to load categories", getApiErrorMessage(error, "Could not load categories. Please try again."));
       setCategories([]);
     } finally {
       setLoading(false);

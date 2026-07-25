@@ -70,7 +70,9 @@ class BaseApi {
     // Handle other errors
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      throw new Error(
+        errorData.message || errorData.error || errorData.msg || `HTTP error! status: ${response.status}`
+      );
     }
 
     // Parse and return response data

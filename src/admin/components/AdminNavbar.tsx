@@ -43,6 +43,7 @@ const AdminNavbar = () => {
     { to: "/admin/product", label: "Product" },
     { to: "/admin/service", label: "Service" },
     { to: "/admin/seo", label: "SEO" },
+    { to: "/admin/quote-history", label: "Quote History" },
     { to: "/admin/profile", label: "Profile" },
     { to: "/admin/user", label: "User" },
     { to: "/admin/trash", label: "Trash" },

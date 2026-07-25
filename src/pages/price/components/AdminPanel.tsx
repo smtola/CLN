@@ -115,7 +115,7 @@ const ContainerPricingGroup = ({
                       min={0}
                       step={0.01}
                       value={pricing[line][type] ?? ''}
-                      onChange={e => onPriceChange(direction, line, type, parseFloat(e.target.value) || 0)}
+                      onChange={e => onPriceChange(direction, line, type, parseFloat(e.target.value))}
                       placeholder="0.00"
                       className={inputCls}
                     />
@@ -195,7 +195,7 @@ const WeightPricingGroup = ({
                       min={0}
                       step={0.01}
                       value={pricing[line][bracket] ?? ''}
-                      onChange={e => onPriceChange(direction, line, bracket, parseFloat(e.target.value) || 0)}
+                      onChange={e => onPriceChange(direction, line, bracket, parseFloat(e.target.value))}
                       placeholder="0.00"
                       className={inputCls}
                     />
@@ -415,6 +415,41 @@ const RateCardModal: React.FC<ModalProps> = ({
             </div>
           ))}
         </div>
+
+        {/* ── Local charge, Sea: commodity is the parent of Import/Export container-type pricing ── */}
+        {formData.service === 'local_charge' && formData.mode === 'sea' && (
+          <div className="mt-4 space-y-4">
+            <CommodityPicker
+              addedNames={Object.keys(formData.containers)}
+              commodityToAdd={commodityToAdd}
+              activeCommodity={activeCommodity}
+              onCommodityToAddChange={onCommodityToAddChange}
+              onAddCommodity={onAddCommodity}
+              onSelectCommodity={onSelectCommodity}
+              onRemoveCommodity={onRemoveCommodity}
+              pricingLabel="Container Type"
+            />
+
+            {activeCommodity && formData.containers[activeCommodity] && (
+              <div className="space-y-4">
+                <p className="text-xs text-slate-500">
+                  Editing pricing for <span className="font-semibold text-slate-700">{activeCommodity}</span>
+                </p>
+                {(CLEARANCE_OPTIONS.map(o => o.value) as ClearanceDirection[]).map(direction => (
+                  <ContainerPricingGroup
+                    key={direction}
+                    direction={direction}
+                    pricing={formData.containers[activeCommodity][direction]}
+                    currency={formData.currency}
+                    onPriceChange={(dir, line, type, value) =>
+                      onContainerPriceChange(activeCommodity, dir, line, type, value)
+                    }
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* ── Local charge, Road: commodity is the parent of Import/Export container-type pricing ── */}
         {formData.service === 'local_charge' && formData.mode === 'road' && (
@@ -811,7 +846,7 @@ const AdminPanel: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const errs = validateRateCard(formData);
-    if (errs.length > 0) { showError(errs[0].message); return; }
+    if (errs.length > 0) { showError('Validation Error', errs[0].message); return; }
 
     const ok = editingCard
       ? await updateRateCard(editingCard._id, formData)

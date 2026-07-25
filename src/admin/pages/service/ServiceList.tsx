@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { getServices, deleteService } from "../../services/serviceService";
 import type { ServiceItem, ServiceResponse } from "../../types/service";
 import { deleteFiles } from "../../services/s3Service";
-import { confirmDelete, showError, showSuccess } from "../../utils/swalHelper";
+import { confirmDelete, showError, showSuccess, getApiErrorMessage } from "../../utils/swalHelper";
 
 interface Filters {
   search?: string;
@@ -33,6 +33,7 @@ const ServiceList = () => {
       }
     } catch (error) {
       console.error("Error fetching services:", error);
+      showError("Failed to load services", getApiErrorMessage(error, "Could not load services. Please try again."));
       setServices([]);
       setTotalPages(1);
     } finally {

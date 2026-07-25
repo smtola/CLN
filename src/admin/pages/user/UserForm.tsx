@@ -6,7 +6,7 @@ import {
   updateUser,
 } from "../../services/userService";
 import type { UserType, Profile } from "../../../types/auth";
-import { showError, showSuccess } from "../../utils/swalHelper";
+import { showError, showSuccess, getApiErrorMessage } from "../../utils/swalHelper";
 import { useNavigate } from "react-router-dom";
 
 type FieldConfig = {
@@ -160,6 +160,7 @@ const UserForm = () => {
         }
       } catch (err) {
         console.error('Error fetching user:', err);
+        showError("Failed to load user", getApiErrorMessage(err, "Could not load this user. Please try again."));
         setUser(defaultFormData);
       } finally {
         setLoading(false);
@@ -190,7 +191,7 @@ const UserForm = () => {
       }
     } catch (err) {
       console.error(err);
-      showError("Failed!");
+      showError("Failed!", getApiErrorMessage(err, "Failed to save user. Please try again."));
     } finally {
       setLoading(false);
     }

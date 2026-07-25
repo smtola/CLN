@@ -5,7 +5,7 @@ import type { Product, ProductResponse } from "../../types/product";
 // import type { DecodeToken } from "../../../types/auth";
 // import { getUser } from "../../../authStorage";
 import { deleteFiles } from "../../services/s3Service";
-import { confirmDelete, showError, showSuccess } from "../../utils/swalHelper";
+import { confirmDelete, showError, showSuccess, getApiErrorMessage } from "../../utils/swalHelper";
 
 interface Filters {
   category?: string;
@@ -47,6 +47,7 @@ const ProductList = () => {
       }
     } catch (error) {
       console.error("Error fetching products:", error);
+      showError("Failed to load products", getApiErrorMessage(error, "Could not load products. Please try again."));
       setProducts([]);
       setTotalPages(1);
     } finally {

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { deleteUser, getUsers } from "../../services/userService";
 import type { User } from "../../../types/auth";
-import { confirmDelete, showError, showSuccess } from "../../utils/swalHelper";
+import { confirmDelete, showError, showSuccess, getApiErrorMessage } from "../../utils/swalHelper";
 const UserList = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -20,6 +20,7 @@ const UserList = () => {
       }
     } catch (err) {
       console.error('Error fetching users:', err);
+      showError("Failed to load users", getApiErrorMessage(err, "Could not load users. Please try again."));
       setUsers([]);
     } finally {
       setLoading(false);

@@ -13,6 +13,7 @@ import UserList from "./pages/user/UserList";
 import UserForm from "./pages/user/UserForm";
 import CategoryForm from "./pages/category/CategoryForm";
 import TrashList from "./pages/trash/TrashList";
+import QuoteHistoryList from "./pages/quote-history/QuoteHistoryList";
 
 const AdminPanel = () => {
   return (
@@ -36,6 +37,7 @@ const AdminPanel = () => {
           <Route path="user" element={<UserList />} />
           <Route path="user/create" element={<UserForm />} />
           <Route path="user/edit/:id" element={<UserForm />} />
+          <Route path="quote-history" element={<QuoteHistoryList />} />
           <Route path="profile" element={<Profile />} />
           <Route path="trash" element={<TrashList />} />
           <Route path="*" element={<Navigate to="/admin" />} />

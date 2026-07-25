@@ -1,14 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { QuoteRequest, ServiceLevel } from '../types/quote.types';
 import type { Location } from '../types/common.types';
 import type { TransportMode } from '../types/quote.types';
 import { useQuotes } from '../hooks/useQuotes';
 import { validateQuoteRequest } from '../utils/validators';
-import { MODE_STYLES, SERVICE_STYLES, CLEARANCE_OPTIONS, CONTAINER_TYPE_OPTIONS, WEIGHT_BREAK_OPTIONS } from '../utils/constants';
+import { MODE_STYLES, SERVICE_STYLES, CLEARANCE_OPTIONS, CONTAINER_TYPE_OPTIONS, WEIGHT_BREAK_OPTIONS, CONTAINER_WEIGHT_LIMITS, AIR_WEIGHT_LIMITS } from '../utils/constants';
+import { showError } from '../../../utils/swalHelper';
 import LocationSearch from './LocationSearch';
 import CommoditySearch from './CommoditySearch';
 import QuoteCard from './QuoteCard';
-
 type Mode = keyof typeof MODE_STYLES; // 'sea' | 'air' | 'road'
 type Service = keyof typeof SERVICE_STYLES;
 type Clearance = 'import' | 'export';
@@ -172,7 +172,7 @@ const QuoteForm: React.FC = () => {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const { quoteResult, getQuote, resetQuote, loading } = useQuotes();
+  const { quoteResult, getQuote, resetQuote, loading, error } = useQuotes();
   // Commodity is the parent for Import/Export clearance & trucking pricing on
   // the backend, so the customer must pick from the same canonical list the
   // admin prices against — a free-text field would never match.
@@ -180,6 +180,19 @@ const QuoteForm: React.FC = () => {
   const activeStyle = MODE_STYLES[mode];
   const cargoConfig = CARGO_FIELD_OPTIONS[mode];
 
+  const weightLimits =
+  mode === 'air'
+    ? AIR_WEIGHT_LIMITS
+    : formData.containerSize
+      ? CONTAINER_WEIGHT_LIMITS[formData.containerSize as keyof typeof CONTAINER_WEIGHT_LIMITS]
+      : undefined;
+
+  useEffect(() => {
+    if (error) {
+      showError('Unable to get quote', error);
+    }
+  }, [error]);
+  
   // ── Handlers ──────────────────────────────────────────────────────
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target as HTMLInputElement;
@@ -206,14 +219,13 @@ const QuoteForm: React.FC = () => {
 
   const handleModeChange = (next: Mode) => {
     setMode(next);
-    // Reset the shared cargo fields so a stale value from another mode's
-    // option set (e.g. "40" from Sea) can't leak into Air/Road submissions.
     setFormData(prev => ({
       ...prev,
       mode: next as TransportMode,
       equipmentType: '',
       containerSize: '',
       weightBreak: '',
+      containerQuantity: next === 'air' ? 0 : prev.containerQuantity,
     }));
   };
 
@@ -252,10 +264,13 @@ const QuoteForm: React.FC = () => {
     if (!formData.origin)          errs.origin          = 'Origin is required.';
     if (!formData.destination)     errs.destination     = 'Destination is required.';
     if (!formData.vesselDeparture) errs.vesselDeparture  = 'Departure date is required.';
-
+  
     const vErrs = validateQuoteRequest(formData);
+    vErrs.forEach(err => {
+      if (!errs[err.field]) errs[err.field] = err.message;
+    });
     if (vErrs.length > 0) errs.general = vErrs[0].message;
-
+  
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -452,7 +467,10 @@ const QuoteForm: React.FC = () => {
                 <OptionPill
                   options={CONTAINER_TYPE_OPTIONS[clearance]}
                   value={formData.containerSize}
-                  onChange={v => setFormData(p => ({ ...p, containerSize: v }))}
+                  onChange={v => {
+                    setFormData(p => ({ ...p, containerSize: v }));
+                    if (errors.containerMaxWeight) setErrors(prev => { const n = { ...prev }; delete n.containerMaxWeight; return n; });
+                  }}
                   accent={activeStyle.primary}
                 />
               </div>
@@ -483,17 +501,25 @@ const QuoteForm: React.FC = () => {
             </div>
 
             <div>
-              <FieldLabel required>Gross Weight (kg)</FieldLabel>
-              <input
-                type="number"
-                name="containerMaxWeight"
-                value={formData.containerMaxWeight || ''}
-                onChange={handleInputChange}
-                placeholder="e.g. 18000"
-                min={0}
-                className={inputCls}
-              />
-            </div>
+                <FieldLabel required>Gross Weight (kg)</FieldLabel>
+                <input
+                  type="number"
+                  name="containerMaxWeight"
+                  value={formData.containerMaxWeight || ''}
+                  onChange={handleInputChange}
+                  placeholder={weightLimits ? `${weightLimits.min.toLocaleString()} – ${weightLimits.max.toLocaleString()}` : 'e.g. 18000'}
+                  min={weightLimits?.min ?? 0}
+                  max={weightLimits?.max}
+                  className={inputCls}
+                />
+                {weightLimits && (
+                  <p className="mt-1.5 text-xs text-slate-400">
+                    Allowed range for {mode === 'air' ? 'Air freight' : formData.containerSize}:{' '}
+                    {weightLimits.min.toLocaleString()}kg – {weightLimits.max.toLocaleString()}kg
+                  </p>
+                )}
+                <FieldError msg={errors.containerMaxWeight} />
+              </div>
 
             {cargoConfig.showQuantity && (
               <div>

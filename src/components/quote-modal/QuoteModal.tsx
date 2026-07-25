@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import Swal from "sweetalert2";
 import { getAccessToken } from "../../authStorage";
 import { useNavigate } from "react-router-dom";
+import { getApiErrorMessage, showError, showSuccess, showWarning } from "../../utils/swalHelper";
 
 interface QuoteFormData {
   company_name: string;
@@ -84,14 +85,26 @@ const QuoteModal: React.FC = () => {
           body: JSON.stringify(form),
         });
 
-        if (response.ok) {
-          Swal.fire({
-            icon: "success",
-            title: "Request Submitted!",
-            text: "Your quote request has been sent successfully.",
-            confirmButtonColor: "#3085d6",
-          });
-  
+        let responseData: { success?: boolean; message?: string; emailSent?: boolean; error?: string } | undefined;
+        try {
+          responseData = await response.json();
+        } catch {
+          // no JSON body, fall through to status-based handling
+        }
+
+        if (response.ok && responseData?.success !== false) {
+          if (responseData?.emailSent === false) {
+            showWarning(
+              "Request Submitted",
+              responseData.message || "Your quote request was saved, but the confirmation email could not be sent."
+            );
+          } else {
+            showSuccess(
+              "Request Submitted!",
+              responseData?.message || "Your quote request has been sent successfully. Check your email for a confirmation receipt."
+            );
+          }
+
           setIsOpen(false);
           setForm({
             company_name: "",
@@ -107,46 +120,16 @@ const QuoteModal: React.FC = () => {
             container_size: "",
           });
         } else {
-          let errorMessage = "Something went wrong while sending request.";
-          try {
-            const errorData = await response.json();
-            if (response.status === 422) {
-              // Handle validation errors
-              if (errorData.errors && Array.isArray(errorData.errors)) {
-                errorMessage = errorData.errors.map((err: { msg?: string; message?: string }) => err.msg || err.message || "").filter(Boolean).join(", ");
-              } else if (errorData.message) {
-                errorMessage = errorData.message;
-              } else if (typeof errorData === "object") {
-                errorMessage = Object.values(errorData).flat().join(", ");
-              }
-            } else if (errorData.message) {
-              errorMessage = errorData.message;
-            }
-          } catch {
-            // If parsing fails, use default message
-          }
-          Swal.fire({
-            icon: "error",
-            title: response.status === 422 ? "Validation Error" : "Submission Failed",
-            text: errorMessage,
-            confirmButtonColor: "#d33",
-          });
+          showError(
+            response.status === 422 ? "Validation Error" : "Submission Failed",
+            getApiErrorMessage({ response: { data: responseData, status: response.status } })
+          );
         }
-      } catch {
-        Swal.fire({
-          icon: "error",
-          title: "Network Error",
-          text: "Unable to connect to server.",
-          confirmButtonColor: "#d33",
-        });
+      } catch (err) {
+        showError("Network Error", getApiErrorMessage(err, "Unable to connect to server."));
       }
     } else {
-      Swal.fire({
-        icon: "warning",
-        title: "Missing Fields",
-        text: "Please fill out all required fields before submitting.",
-        confirmButtonColor: "#f1c40f",
-      });
+      showWarning("Missing Fields", "Please fill out all required fields before submitting.");
     }
   };
 

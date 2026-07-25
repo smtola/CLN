@@ -65,9 +65,17 @@ export default function LoginPage() {
         } else {
           navigate("/");
         }
+      } else {
+        // Login failed (wrong credentials, unverified email, etc.) — surface it as a toast, not just inline text
+        const message = res.msg || "Invalid email or password. Please try again.";
+        setError(message);
+        Swal.fire({
+          icon: "error",
+          title: "Login Failed",
+          text: message,
+          confirmButtonColor: "#d33",
+        });
       }
-      console.log(res)
-      setError(res.msg!)
     } catch (err: unknown) {
       Swal.fire(
         "Error",

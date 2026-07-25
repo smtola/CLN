@@ -1,5 +1,6 @@
 import type { QuoteRequest } from '../types/quote.types';
-import type { RateCardFormData } from '../types/rateCard.types';
+import type { RateCardFormData, ContainerType } from '../types/rateCard.types';
+import { CONTAINER_WEIGHT_LIMITS, AIR_WEIGHT_LIMITS } from './constants';
 
 export interface ValidationError {
   field: string;
@@ -30,7 +31,7 @@ export const validateQuoteRequest = (
   }
 
   /* ===== Container validation (optional, sea freight) ===== */
-  if (data.containerQuantity !== undefined) {
+  if (data.mode !== 'air' && data.containerQuantity !== undefined) {
     if (data.containerQuantity <= 0) {
       errors.push({
         field: 'containerQuantity',
@@ -48,11 +49,15 @@ export const validateQuoteRequest = (
     }
   }
 
-  if (data.containerQuantity && !data.containerSize) {
+  if (data.mode !== 'air' && data.containerQuantity && !data.containerSize) {
     errors.push({
       field: 'containerSize',
       message: 'Container size is required when container quantity is provided',
     });
+  }
+
+  if (data.mode === 'air' && !data.weightBreak) {
+    errors.push({ field: 'weightBreak', message: 'Weight bracket is required to look up air freight pricing' });
   }
 
   if (data.containerSize && !data.clearance) {
@@ -75,6 +80,30 @@ export const validateQuoteRequest = (
       field: 'clearance',
       message: 'Clearance (import/export) is required to look up weight-bracket pricing',
     });
+  }
+
+  /* ===== Gross weight range validation (container type / air) =====
+     Road & Sea: gross weight must fall inside the min/max band for the
+     selected container type (20'GP, 40'GP, 40'RF, 45'RF).
+     Air: gross weight must fall inside the fixed 100kg–5,000kg band. */
+  if (data.containerMaxWeight !== undefined && data.containerMaxWeight > 0) {
+    if (data.mode === 'air') {
+      const { min, max } = AIR_WEIGHT_LIMITS;
+      if (data.containerMaxWeight < min || data.containerMaxWeight > max) {
+        errors.push({
+          field: 'containerMaxWeight',
+          message: `Gross weight for Air freight must be between ${min.toLocaleString()}kg and ${max.toLocaleString()}kg`,
+        });
+      }
+    } else if (data.containerSize) {
+      const limits = CONTAINER_WEIGHT_LIMITS[data.containerSize as ContainerType];
+      if (limits && (data.containerMaxWeight < limits.min || data.containerMaxWeight > limits.max)) {
+        errors.push({
+          field: 'containerMaxWeight',
+          message: `Gross weight for ${data.containerSize} must be between ${limits.min.toLocaleString()}kg and ${limits.max.toLocaleString()}kg`,
+        });
+      }
+    }
   }
 
   return errors;

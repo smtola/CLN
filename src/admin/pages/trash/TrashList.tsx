@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { emptyTrash, getUsers, recoveredUser } from "../../services/userService";
 import type { User } from "../../../types/auth";
-import { confirmDelete, showError, showSuccess } from "../../utils/swalHelper";
+import { confirmDelete, showError, showSuccess, getApiErrorMessage } from "../../utils/swalHelper";
 
 const TrashList = () => {
   const [trashes, setTrashes] = useState<User[]>([]);
@@ -14,6 +14,7 @@ const TrashList = () => {
       setTrashes(Array.isArray(res) ? res : []);
     } catch (err) {
       console.error("Error fetching users:", err);
+      showError("Failed to load trash", getApiErrorMessage(err, "Could not load trashed accounts. Please try again."));
       setTrashes([]);
     } finally {
       setLoading(false);
@@ -37,7 +38,7 @@ const TrashList = () => {
       }
     } catch (err) {
       console.error(err);
-      showError("Something went wrong!");
+      showError("Something went wrong!", getApiErrorMessage(err, "Failed to recover this account. Please try again."));
     } finally {
       fetchUsers();
       setLoading(false);

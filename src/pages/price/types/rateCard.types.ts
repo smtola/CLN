@@ -29,7 +29,7 @@ export type CommodityContainerPricing = Record<string, ContainerPricing>;
 
 // ── Air freight: priced by weight bracket instead of container type ───
 // Same weight-bracket options apply to both Import and Export.
-export type WeightBreak = '-1,000Kgs' | '+1,000Kgs' | '+3,000Kgs' | '-5,000Kgs';
+export type WeightBreak = '-1,000Kgs' | '+1,000Kgs' | '+2,000Kgs' | '+3,000Kgs';
 
 // Price per weight bracket, for a given cost line (clearance or trucking).
 export type WeightPriceMap = Partial<Record<WeightBreak, number>>;

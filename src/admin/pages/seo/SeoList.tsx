@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getSEO, deleteSEO } from "../../services/seoService";
 import type { SeoMeta } from "../../../types/seo";
-import { confirmDelete, showError, showSuccess } from "../../utils/swalHelper";
+import { confirmDelete, showError, showSuccess, getApiErrorMessage } from "../../utils/swalHelper";
 
 const ImageCell = ({ src, alt }: { src: string; alt: string }) => {
   const [hasError, setHasError] = useState(false);
@@ -39,6 +39,7 @@ const SEOList = () => {
       }
     } catch (err) {
       console.error('Error fetching SEO entries:', err);
+      showError("Failed to load SEO entries", getApiErrorMessage(err, "Could not load SEO entries. Please try again."));
       setSeos([]);
     } finally {
       setLoading(false);

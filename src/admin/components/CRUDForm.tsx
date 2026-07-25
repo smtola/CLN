@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import type { ChangeEvent, DragEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { uploadFile, type UploadProgress, deleteFiles } from "../services/s3Service";
-import { showError, showSuccess, showLoading, closeAlert } from "../utils/swalHelper";
+import { showError, showSuccess, showLoading, closeAlert, getApiErrorMessage } from "../utils/swalHelper";
 
 export interface FieldConfig<T> {
   name: keyof T;
@@ -548,14 +548,8 @@ function CRUDForm<T>({
     } catch (error) {
       console.error("Error submitting form:", error);
       closeAlert();
-      let errorMessage = "Failed to submit form. Please try again.";
-      
-      if (error instanceof Error) {
-        errorMessage = error.message;
-      } else if (error && typeof error === 'object' && 'message' in error) {
-        errorMessage = String(error.message);
-      }
-      
+      const errorMessage = getApiErrorMessage(error, "Failed to submit form. Please try again.");
+
       await showError("Error", errorMessage);
     } finally {
       setIsSubmitting(false);

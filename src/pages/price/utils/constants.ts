@@ -55,9 +55,18 @@ export const CONTAINER_TYPE_OPTIONS: Record<ClearanceDirection, readonly Contain
 export const WEIGHT_BREAK_OPTIONS: readonly WeightBreak[] = [
   '-1,000Kgs',
   '+1,000Kgs',
+  '+2,000Kgs',
   '+3,000Kgs',
-  '-5,000Kgs',
 ];
+
+export const CONTAINER_WEIGHT_LIMITS: Record<ContainerType, { min: number; max: number }> = {
+  "20'GP": { min: 20000, max: 25000 },
+  "40'GP": { min: 22000, max: 27000 },
+  "40'RF": { min: 22000, max: 27000 },
+  "45'RF": { min: 22000, max: 27000 },
+};
+
+export const AIR_WEIGHT_LIMITS = { min: 100, max: 5000 };
 
 export const SHIPMENT_TYPES: { value: ShipmentType; label: string; icon: string }[] = [
   { value: 'document', label: 'Document', icon: '📄' },
