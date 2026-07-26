@@ -112,7 +112,7 @@ const Navbar: React.FC = () => {
               <li>
                 <a href="https://www.facebook.com/clncambodia/" aria-label="Facebook"
                   className="block w-[28px] h-[28px] md:w-[34px] md:h-[34px] bg-white rounded-full flex items-center justify-center hover:scale-110 transition-transform">
-                  <svg className="w-[16px] md:w-[18px]" viewBox="0 0 41 45" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <svg className="w-[22px] md:w-[22px]" viewBox="0 0 41 45" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M12.3749 22.25V28.75H17.2499V40.125H23.7499V28.75H28.6249L30.2499 22.25H23.7499V19C23.7499 18.569 23.9211 18.1557 24.2258 17.851C24.5306 17.5462 24.9439 17.375 25.3749 17.375H30.2499V10.875H25.3749C23.22 10.875 21.1534 11.731 19.6296 13.2548C18.1059 14.7785 17.2499 16.8451 17.2499 19V22.25H12.3749Z"
                       stroke="#4F9748" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
@@ -121,7 +121,7 @@ const Navbar: React.FC = () => {
               <li>
                 <a href="https://t.me/+85561300618" aria-label="Telegram"
                   className="block w-[28px] h-[28px] md:w-[34px] md:h-[34px] bg-white rounded-full flex items-center justify-center hover:scale-110 transition-transform">
-                  <svg className="w-[16px] md:w-[18px]" viewBox="0 0 41 41" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <svg className="w-[22px] md:w-[22px]" viewBox="0 0 41 41" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <g clipPath="url(#clip0_21_272)">
                       <path d="M24 17.3335L18.6667 22.6668L26.6667 30.6668L32 9.3335L8 18.6668L13.3333 21.3335L16 29.3335L20 24.0002"
                         stroke="#4F9748" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
