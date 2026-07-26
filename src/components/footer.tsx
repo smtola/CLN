@@ -183,7 +183,7 @@ const Footer: React.FC = () => {
         <div className="border-t border-white/20 px-5 py-4">
           <div className="xl:max-w-screen-xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
             <p className="text-[14px] text-white/60 text-center">
-              © {new Date().getFullYear()} CLN (Cambodia) Co., Ltd. All rights reserved. Development by CLN TEAM.
+              © {new Date().getFullYear()} CLN (Cambodia) Co., Ltd. All rights reserved. Development by <a href="https://www.facebook.com/som.tola.824693/" className="text-bold">Som Tola.</a>
             </p>
             <p className="text-[14px] text-white/40">
               Your Trusted Logistics Partner in Cambodia
