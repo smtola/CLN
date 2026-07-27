@@ -31,7 +31,7 @@ export const CommoditySearch: React.FC<CommoditySearchProps> = ({
   const [loading,         setLoading]         = useState(false);
   const [hasSelected,     setHasSelected]     = useState(false);
   const hasSelectedRef = useRef(false);
-  const debouncedTerm  = useDebounce(searchTerm, 500);
+  const debouncedTerm  = useDebounce(searchTerm, 100);
 
   useEffect(() => { hasSelectedRef.current = hasSelected; }, [hasSelected]);
 
@@ -78,7 +78,7 @@ export const CommoditySearch: React.FC<CommoditySearchProps> = ({
     hasSelectedRef.current = true;
   };
 
-  const handleBlur  = () => setTimeout(() => setShowSuggestions(false), 200);
+  const handleBlur  = () => setTimeout(() => setShowSuggestions(false), 50);
   const handleFocus = () => { if (suggestions.length > 0 && !hasSelected) setShowSuggestions(true); };
 
   return (
@@ -120,9 +120,9 @@ export const CommoditySearch: React.FC<CommoditySearchProps> = ({
               style={{ borderColor: '#f1f5f9' }}
             >
               <p className="text-sm">
-                <span className="font-mono text-xs px-1.5 py-0.5 rounded mr-2" style={{ background: '#f1f5f9', color: '#475569' }}>
+                {/* <span className="font-mono text-xs px-1.5 py-0.5 rounded mr-2" style={{ background: '#f1f5f9', color: '#475569' }}>
                   HS {item.code}
-                </span>
+                </span> */}
                 <span className="font-semibold text-blue-700">{item.name}</span>
               </p>
               {item.description && (

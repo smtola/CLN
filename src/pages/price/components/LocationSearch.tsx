@@ -28,7 +28,7 @@ const LocationSearch: React.FC<LocationSearchProps> = ({
   const [loading,         setLoading]         = useState(false);
   const [hasSelected,     setHasSelected]     = useState(false);
   const hasSelectedRef = useRef(false);
-  const debouncedTerm  = useDebounce(searchTerm, 500);
+  const debouncedTerm  = useDebounce(searchTerm, 100);
 
   useEffect(() => { hasSelectedRef.current = hasSelected; }, [hasSelected]);
 
@@ -74,7 +74,7 @@ const LocationSearch: React.FC<LocationSearchProps> = ({
     hasSelectedRef.current = true;
   };
 
-  const handleBlur  = () => setTimeout(() => setShowSuggestions(false), 200);
+  const handleBlur  = () => setTimeout(() => setShowSuggestions(false), 100);
   const handleFocus = () => { if (suggestions.length > 0 && !hasSelected) setShowSuggestions(true); };
 
   return (
