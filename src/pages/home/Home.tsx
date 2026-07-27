@@ -7,7 +7,7 @@ import { organizationSchema } from '../../components/schemaExamples';
 import MembershipShow from '../../components/membership.tsx';
 
 const banner = "/assets/image/bg_head.jpg";
-const banner_2 = "/assets/image/banner_2.jpg";
+const banner_2 = "/assets/image/banner.jpg";
 const carton = "/assets/image/carton.png";
 const truck = "/assets/image/mockup_truck.png";
 const poster_1 = "/assets/image/poster_1.png";
