@@ -66,7 +66,7 @@ const ContactUsForm: React.FC = () => {
     ) {
       try {
         const response = await fetch(
-          "https://clnrestapi.vercel.app/api/v1/docs/web/contact-us",
+          "https://api.clncambodia.com/api/v1/docs/web/contact-us",
           {
             method: "POST",
             headers: {

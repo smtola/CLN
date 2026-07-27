@@ -1,4 +1,4 @@
-const BASE_URL = 'https://clnrestapi.vercel.app/api/v1/docs';
+const BASE_URL = 'https://api.clncambodia.com/api/v1/docs';
 
 interface RequestConfig {
   url: string;

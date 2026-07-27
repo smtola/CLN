@@ -76,7 +76,7 @@ const QuoteModal: React.FC = () => {
       form.container_size
     ) {
       try {
-        const response = await fetch("https://clnrestapi.vercel.app/api/v1/docs/web/request-quote", {
+        const response = await fetch("https://api.clncambodia.com/api/v1/docs/web/request-quote", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
