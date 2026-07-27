@@ -18,9 +18,19 @@ class QuoteService {
     return apiService.get<Quote>(`${this.basePath}/${id}`);
   }
 
-  async getQuoteHistory(page: number = 1, limit: number = 20): Promise<QuoteHistoryResponse> {
+  async getQuoteHistory(
+    page: number = 1,
+    limit: number = 20,
+    filters?: { search?: string; dateFrom?: string; dateTo?: string }
+  ): Promise<QuoteHistoryResponse> {
     return apiService.get<QuoteHistoryResponse>(`${this.basePath}s/history`, {
-      params: { page, limit },
+      params: {
+        page,
+        limit,
+        search: filters?.search || undefined,
+        date_from: filters?.dateFrom || undefined,
+        date_to: filters?.dateTo || undefined,
+      },
     });
   }
 

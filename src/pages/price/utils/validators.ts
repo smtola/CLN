@@ -1,5 +1,5 @@
 import type { QuoteRequest } from '../types/quote.types';
-import type { RateCardFormData, ContainerType } from '../types/rateCard.types';
+import type { RateCard, RateCardFormData, ContainerType } from '../types/rateCard.types';
 import { CONTAINER_WEIGHT_LIMITS, AIR_WEIGHT_LIMITS } from './constants';
 
 export interface ValidationError {
@@ -124,6 +124,16 @@ export const validateRateCard = (
     errors.push({ field: 'currency', message: 'Currency is required' });
   }
 
+  /* ===== Validity window (optional) =====
+     Both bounds are optional — a card with neither set is always valid.
+     If both are set, 'valid from' must not be after 'valid to'. */
+  if (data.valid_from && data.valid_to && data.valid_from > data.valid_to) {
+    errors.push({
+      field: 'valid_to',
+      message: "'Valid from' date must be on or before 'Valid to' date",
+    });
+  }
+
   if (data.service === 'local_charge' && (data.mode === 'road' || data.mode === 'sea')) {
     const containers = data.containers ?? {};
     const commodityNames = Object.keys(containers);
@@ -189,6 +199,35 @@ export const validateRateCard = (
 
   return errors;
 };
+
+/* ===========================
+   RATE CARD — DUPLICATE LANE/MODE/WINDOW DETECTION
+   Mirrors the backend's overlap check (find_conflicting_rate_card in
+   price.py) so the admin sees the conflict immediately, before submit.
+   The backend still re-checks and is the source of truth.
+=========================== */
+export const windowsOverlap = (
+  aFrom?: string, aTo?: string, bFrom?: string, bTo?: string
+): boolean => {
+  if (aTo && bFrom && aTo < bFrom) return false;
+  if (bTo && aFrom && bTo < aFrom) return false;
+  return true;
+};
+
+export const findConflictingRateCard = (
+  rateCards: RateCard[],
+  candidate: Pick<RateCardFormData, 'origin' | 'destination' | 'mode' | 'service' | 'valid_from' | 'valid_to'>,
+  excludeId?: string
+): RateCard | undefined =>
+  rateCards.find(card =>
+    card._id !== excludeId &&
+    card.active !== false &&
+    card.origin === candidate.origin &&
+    card.destination === candidate.destination &&
+    card.mode === candidate.mode &&
+    card.service === candidate.service &&
+    windowsOverlap(candidate.valid_from, candidate.valid_to, card.valid_from, card.valid_to)
+  );
 
 /* ===========================
    UTILITIES

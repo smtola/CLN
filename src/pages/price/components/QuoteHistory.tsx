@@ -136,6 +136,12 @@ const DetailModal = ({
                   <span className="text-slate-500">Distance</span>
                   <span className="font-semibold font-mono" style={{ color: BRAND.ink }}>{formatDistance(quote.distance_km)}</span>
                 </div>
+                {quote.departure_date && (
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Departure</span>
+                    <span className="font-semibold font-mono" style={{ color: BRAND.ink }}>{quote.departure_date}</span>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -239,18 +245,117 @@ const Pagination = ({
   );
 };
 
+// ── Search & date-range filter bar ─────────────────────────────────────
+const FilterBar = ({
+  search, dateFrom, dateTo,
+  onSearchChange, onDateFromChange, onDateToChange,
+  onApply, onClear, loading, hasActiveFilters,
+}: {
+  search: string;
+  dateFrom: string;
+  dateTo: string;
+  onSearchChange: (v: string) => void;
+  onDateFromChange: (v: string) => void;
+  onDateToChange: (v: string) => void;
+  onApply: () => void;
+  onClear: () => void;
+  loading: boolean;
+  hasActiveFilters: boolean;
+}) => (
+  <div className="bg-white rounded-xl border shadow-sm p-4 mb-4" style={{ borderColor: '#e2e8f0' }}>
+    <div className="flex flex-col sm:flex-row sm:items-end gap-3">
+      <div className="flex-1 min-w-[180px]">
+        <label className="block text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: '#64748b' }}>
+          Search
+        </label>
+        <input
+          type="text"
+          value={search}
+          onChange={e => onSearchChange(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Enter') onApply(); }}
+          placeholder="Ref, origin or destination…"
+          className="w-full px-3 py-2 rounded-lg border text-sm bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all"
+          style={{ borderColor: '#e2e8f0' }}
+        />
+      </div>
+      <div>
+        <label className="block text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: '#64748b' }}>
+          Date From
+        </label>
+        <input
+          type="date"
+          value={dateFrom}
+          max={dateTo || undefined}
+          onChange={e => onDateFromChange(e.target.value)}
+          className="px-3 py-2 rounded-lg border text-sm bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all"
+          style={{ borderColor: '#e2e8f0' }}
+        />
+      </div>
+      <div>
+        <label className="block text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: '#64748b' }}>
+          Date To
+        </label>
+        <input
+          type="date"
+          value={dateTo}
+          min={dateFrom || undefined}
+          onChange={e => onDateToChange(e.target.value)}
+          className="px-3 py-2 rounded-lg border text-sm bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all"
+          style={{ borderColor: '#e2e8f0' }}
+        />
+      </div>
+      <div className="flex gap-2">
+        <button
+          onClick={onApply}
+          disabled={loading}
+          className="px-4 py-2 text-sm font-semibold text-white rounded-lg transition-colors disabled:opacity-50"
+          style={{ background: '#1B4F8A' }}
+        >
+          Filter
+        </button>
+        {hasActiveFilters && (
+          <button
+            onClick={onClear}
+            disabled={loading}
+            className="px-4 py-2 text-sm font-medium rounded-lg border transition-colors hover:bg-slate-100 disabled:opacity-50"
+            style={{ borderColor: '#e2e8f0', color: '#475569' }}
+          >
+            Clear
+          </button>
+        )}
+      </div>
+    </div>
+  </div>
+);
+
 // ── Main ──────────────────────────────────────────────────────────────
 const QuoteHistory: React.FC = () => {
-  const { loading, error, quotes, pagination, fetchQuotes, goToPage } = useQuoteHistory();
+  const { loading, error, quotes, pagination, filters, fetchQuotes, goToPage, applyFilters } = useQuoteHistory();
   // FIX: pure React state modal — no dependency on DaisyUI <dialog> JS
   const [selectedQuote, setSelectedQuote] = useState<Quote | null>(null);
   const [viewingRequesterId, setViewingRequesterId] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState<DecodeToken | undefined>();
 
+  // Draft filter inputs — only applied (sent to the API) on "Filter" / Enter,
+  // so typing a search term doesn't fire a request per keystroke.
+  const [searchDraft, setSearchDraft] = useState('');
+  const [dateFromDraft, setDateFromDraft] = useState('');
+  const [dateToDraft, setDateToDraft] = useState('');
+
   useEffect(() => { fetchQuotes(); }, []);
   useEffect(() => { getUser().then(setCurrentUser).catch(() => {}); }, []);
 
   const isAdmin = currentUser?.role === 'ADMIN';
+  const hasActiveFilters = Boolean(filters.search || filters.dateFrom || filters.dateTo);
+
+  const handleApplyFilters = () => {
+    applyFilters({ search: searchDraft.trim(), dateFrom: dateFromDraft, dateTo: dateToDraft });
+  };
+
+  const handleClearFilters = () => {
+    setSearchDraft(''); setDateFromDraft(''); setDateToDraft('');
+    applyFilters({ search: '', dateFrom: '', dateTo: '' });
+  };
 
   return (
     <div className="max-w-5xl mx-auto">
@@ -275,6 +380,19 @@ const QuoteHistory: React.FC = () => {
         </button>
       </div>
 
+      <FilterBar
+        search={searchDraft}
+        dateFrom={dateFromDraft}
+        dateTo={dateToDraft}
+        onSearchChange={setSearchDraft}
+        onDateFromChange={setDateFromDraft}
+        onDateToChange={setDateToDraft}
+        onApply={handleApplyFilters}
+        onClear={handleClearFilters}
+        loading={loading}
+        hasActiveFilters={hasActiveFilters}
+      />
+
       {error && (
         <div className="mb-4 flex gap-2 p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-600">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-4 h-4 flex-shrink-0 mt-0.5">
@@ -295,7 +413,9 @@ const QuoteHistory: React.FC = () => {
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-10 h-10 mx-auto mb-3">
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
-            <p className="text-sm">No quotes yet. Get your first quote!</p>
+            <p className="text-sm">
+              {hasActiveFilters ? 'No quotes match your search/filters.' : 'No quotes yet. Get your first quote!'}
+            </p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -303,7 +423,7 @@ const QuoteHistory: React.FC = () => {
               <thead>
                 <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
                   {[
-                   'Ref', 'Date', 'Route', 'Distance', 'Weight', 'Mode',
+                   'Ref', 'Date', 'Route', 'Departure', 'Distance', 'Weight', 'Mode',
                     ...(isAdmin ? ['Requested By'] : []),
                     '',
                   ].map(h => (
@@ -329,6 +449,9 @@ const QuoteHistory: React.FC = () => {
                     <td className="px-4 py-3">
                       <p className="font-semibold text-slate-800">{quote.origin}</p>
                       <p className="text-xs text-slate-400 mt-0.5">→ {quote.destination}</p>
+                    </td>
+                    <td className="px-4 py-3 text-slate-600 whitespace-nowrap">
+                      {quote.departure_date || <span className="text-slate-300">—</span>}
                     </td>
                     <td className="px-4 py-3 text-slate-600 whitespace-nowrap">{formatDistance(quote.distance_km)}</td>
                     <td className="px-4 py-3 text-slate-600 whitespace-nowrap">{formatWeight(quote.chargeable_weight)}</td>

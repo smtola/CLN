@@ -71,6 +71,12 @@ export interface RateCard {
   created_at?: string;
   updated_at?: string;
   remark:string;
+  // Optional pricing validity window ("YYYY-MM-DD"). When a customer's
+  // requested departure date falls outside this window, the card is
+  // skipped during quoting. Leave either/both blank for a card that's
+  // always valid (matches prior behavior).
+  valid_from?: string;
+  valid_to?: string;
 }
 
 export interface RateCardFormData {
@@ -84,6 +90,8 @@ export interface RateCardFormData {
   othc: number;
   currency: string;
   remark: string;
+  valid_from: string;
+  valid_to: string;
 }
 
 export interface RateCardFilters {

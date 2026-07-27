@@ -2,7 +2,8 @@ export interface QuoteRequest {
   // ===== Route Details =====
   origin: string;               // Global port or city
   destination: string;          // Global port or city
-  departure_date?: string;      // Optional vessel departure date
+  // Requested departure date ("YYYY-MM-DD"). Sent as-is to the backend,
+  // which uses it to pick a rate card whose validity window covers it.
   vesselDeparture?: string;
   country:string;
   // Cargo details
@@ -61,6 +62,7 @@ export interface QuoteResponse {
   clearance?: 'import' | 'export';
   container_type?: string;
   weight_break?: string;
+  departure_date?: string;
 }
 
 export interface Quote {
@@ -117,6 +119,7 @@ export interface Quote {
     $date: string
   };
   converted: boolean;
+  departure_date?: string;
   // Only present when the caller is an ADMIN — backend strips it for
   // everyone else.
   requested_by?: {

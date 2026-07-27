@@ -26,6 +26,7 @@ interface QuoteResultTicketProps {
   mode: Mode;
   clearance: 'import' | 'export';
   cargoLabel?: string; // e.g. "2 × 40'GP" or "+2,000Kgs"
+  departureDate?: string; // "YYYY-MM-DD" — the date the rate card was matched against
   onReset: () => void;
 }
 
@@ -200,11 +201,21 @@ const QuoteResultTicket: React.FC<QuoteResultTicketProps> = ({
   mode,
   clearance,
   cargoLabel,
+  departureDate,
   onReset,
 }) => {
   const style = MODE_STYLES[mode];
   const accent = style?.primary ?? '#5B4CF4';
   const icon = style?.icon ?? '📦';
+
+  // Prefer the date the backend actually matched the rate card against
+  // (quoteResult.departure_date) — falls back to whatever the form sent.
+  const resolvedDepartureDate = quoteResult.departure_date || departureDate;
+  const formattedDepartureDate = resolvedDepartureDate
+    ? new Date(`${resolvedDepartureDate}T00:00:00`).toLocaleDateString(undefined, {
+        year: 'numeric', month: 'short', day: 'numeric',
+      })
+    : undefined;
 
   const manifestNo = quoteResult.quote_id
     ? quoteResult.quote_id.slice(-6).toUpperCase()
@@ -243,6 +254,9 @@ const QuoteResultTicket: React.FC<QuoteResultTicketProps> = ({
 
       {/* Stat chips */}
       <div className="mt-5 flex flex-wrap gap-2">
+        {formattedDepartureDate ? (
+          <Chip label="Departure" value={formattedDepartureDate} />
+        ) : null}
         {mode === 'road' && quoteResult.distance_km ? (
           <Chip label="Distance" value={`${quoteResult.distance_km.toLocaleString()} km`} />
         ) : null}

@@ -190,7 +190,16 @@ const QuoteForm: React.FC = () => {
 
   useEffect(() => {
     if (error) {
-      showError('Unable to get quote', error);
+      // The backend returns a terse "No available rates" when it can't find
+      // a matching rate card. That's technically correct but not actionable
+      // — surface the actual fields worth double-checking instead.
+      const isNoRatesError = /no available rates/i.test(error);
+      showError(
+        isNoRatesError ? 'No Rates Available' : 'Unable to get quote',
+        isNoRatesError
+          ? 'No available rates were found for this request. Please double-check the Departure Date, Mode, Commodity, Services, Clearance, Container Type, or Weight Bracket (Kg)*, then try again.'
+          : error
+      );
     }
   }, [error]);
   
@@ -332,6 +341,7 @@ const QuoteForm: React.FC = () => {
           mode={mode}
           clearance={clearance}
           cargoLabel={cargoLabel}
+          departureDate={formData.vesselDeparture}
           onReset={handleReset}
         />
       </div>

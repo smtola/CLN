@@ -12,7 +12,7 @@ import type {
   WeightPricing,
   WeightDirectionPricing,
 } from '../types/rateCard.types';
-import { validateRateCard } from '../utils/validators';
+import { validateRateCard, findConflictingRateCard } from '../utils/validators';
 import {
   CURRENCIES,
   TRANSPORT_MODES,
@@ -414,6 +414,32 @@ const RateCardModal: React.FC<ModalProps> = ({
               </select>
             </div>
           ))}
+
+          {/* Validity window — leave both blank for a card that's always
+              valid. When a customer requests a quote with a departure
+              date, only cards whose window covers that date are used. */}
+          <div>
+            <FieldLabel>Valid From</FieldLabel>
+            <input
+              type="date"
+              name="valid_from"
+              value={formData.valid_from}
+              onChange={onChange}
+              max={formData.valid_to || undefined}
+              className={inputCls}
+            />
+          </div>
+          <div>
+            <FieldLabel>Valid To</FieldLabel>
+            <input
+              type="date"
+              name="valid_to"
+              value={formData.valid_to}
+              onChange={onChange}
+              min={formData.valid_from || undefined}
+              className={inputCls}
+            />
+          </div>
         </div>
 
         {/* ── Local charge, Sea: commodity is the parent of Import/Export container-type pricing ── */}
@@ -726,6 +752,7 @@ const EMPTY_FORM: RateCardFormData = {
   containers: {},
   weights: {},
   freight: 0, othc: 0, currency: 'USD', remark: '',
+  valid_from: '', valid_to: '',
 };
 
 const AdminPanel: React.FC = () => {
@@ -737,6 +764,35 @@ const AdminPanel: React.FC = () => {
   const [showModal,   setShowModal]   = useState(false);
   const [viewingCard, setViewingCard] = useState<RateCard | null>(null);
   const [formData,    setFormData]    = useState<RateCardFormData>(EMPTY_FORM);
+
+  // Search + validity date-range filter for the rate card table. Rate cards
+  // are fetched in full (no server pagination), so filtering happens client-side.
+  const [search,   setSearch]   = useState('');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo,   setDateTo]   = useState('');
+
+  const filteredRateCards = React.useMemo(() => {
+    const term = search.trim().toLowerCase();
+    return rateCards.filter(card => {
+      if (term) {
+        const haystack = [card.origin, card.destination, card.mode, card.service, card.remark]
+          .filter(Boolean)
+          .join(' ')
+          .toLowerCase();
+        if (!haystack.includes(term)) return false;
+      }
+      // A card with no validity window is "always valid" and always matches
+      // a date filter. Otherwise, the card's [valid_from, valid_to] window
+      // must overlap the selected [dateFrom, dateTo] range.
+      if (dateFrom && card.valid_to && card.valid_to < dateFrom) return false;
+      if (dateTo && card.valid_from && card.valid_from > dateTo) return false;
+      return true;
+    });
+  }, [rateCards, search, dateFrom, dateTo]);
+
+  const hasActiveRateCardFilters = Boolean(search || dateFrom || dateTo);
+
+  const clearRateCardFilters = () => { setSearch(''); setDateFrom(''); setDateTo(''); };
 
   // Which commodity's Import/Export pricing grid is currently shown/edited,
   // and which commodity is picked in the dropdown ready to be added.
@@ -856,6 +912,21 @@ const AdminPanel: React.FC = () => {
     const errs = validateRateCard(formData);
     if (errs.length > 0) { showError('Validation Error', errs[0].message); return; }
 
+    // Same-lane/mode/service cards with overlapping validity windows are
+    // ambiguous at quote time — catch it here before hitting the API (which
+    // enforces this too, as the source of truth).
+    const conflict = findConflictingRateCard(rateCards, formData, editingCard?._id);
+    if (conflict) {
+      const window = conflict.valid_from || conflict.valid_to
+        ? `${conflict.valid_from || '…'} → ${conflict.valid_to || '…'}`
+        : 'always valid';
+      showError(
+        'Overlapping Rate Card',
+        `A rate card for ${formData.origin} → ${formData.destination} (${formData.mode}/${formData.service}) already covers ${window}. Adjust the validity dates so they don't overlap, or edit that card instead.`
+      );
+      return;
+    }
+
     const ok = editingCard
       ? await updateRateCard(editingCard._id, formData)
       : await createRateCard(formData);
@@ -883,6 +954,7 @@ const AdminPanel: React.FC = () => {
       weights,
       freight: card.freight, othc: card.othc,
       currency: card.currency, remark: card.remark,
+      valid_from: card.valid_from ?? '', valid_to: card.valid_to ?? '',
     });
     setActiveCommodity(Object.keys(card.mode === 'air' ? weights : containers)[0] ?? '');
     setCommodityToAdd('');
@@ -935,24 +1007,80 @@ const AdminPanel: React.FC = () => {
         </div>
       )}
 
+      {/* Search + validity date-range filter */}
+      <div className="bg-white rounded-xl border shadow-sm p-4" style={{ borderColor: '#e2e8f0' }}>
+        <div className="flex flex-col sm:flex-row sm:items-end gap-3">
+          <div className="flex-1 min-w-[180px]">
+            <FieldLabel>Search</FieldLabel>
+            <input
+              type="text"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Origin, destination, mode, service or remark…"
+              className={inputCls}
+            />
+          </div>
+          <div>
+            <FieldLabel>Validity From</FieldLabel>
+            <input
+              type="date"
+              value={dateFrom}
+              max={dateTo || undefined}
+              onChange={e => setDateFrom(e.target.value)}
+              className={inputCls}
+            />
+          </div>
+          <div>
+            <FieldLabel>Validity To</FieldLabel>
+            <input
+              type="date"
+              value={dateTo}
+              min={dateFrom || undefined}
+              onChange={e => setDateTo(e.target.value)}
+              className={inputCls}
+            />
+          </div>
+          {hasActiveRateCardFilters && (
+            <button
+              onClick={clearRateCardFilters}
+              className="px-4 py-2.5 text-sm font-medium rounded-lg border transition-colors hover:bg-slate-100"
+              style={{ borderColor: '#e2e8f0', color: '#475569' }}
+            >
+              Clear
+            </button>
+          )}
+        </div>
+      </div>
+
       {/* Table card */}
       <div className="bg-white rounded-xl border overflow-hidden shadow-sm" style={{ borderColor: '#e2e8f0' }}>
-        {rateCards.length === 0 ? (
+        {filteredRateCards.length === 0 ? (
           <div className="text-center py-16 text-slate-400">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-10 h-10 mx-auto mb-3">
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
             </svg>
-            <p className="text-sm">No rate cards yet.</p>
-            <button onClick={openCreate} className="mt-3 text-sm font-medium" style={{ color: '#1B4F8A' }}>
-              Add your first rate card →
-            </button>
+            {hasActiveRateCardFilters ? (
+              <>
+                <p className="text-sm">No rate cards match your search/filters.</p>
+                <button onClick={clearRateCardFilters} className="mt-3 text-sm font-medium" style={{ color: '#1B4F8A' }}>
+                  Clear filters →
+                </button>
+              </>
+            ) : (
+              <>
+                <p className="text-sm">No rate cards yet.</p>
+                <button onClick={openCreate} className="mt-3 text-sm font-medium" style={{ color: '#1B4F8A' }}>
+                  Add your first rate card →
+                </button>
+              </>
+            )}
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full text-sm">
               <thead>
                 <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
-                  {['Origin', 'Destination', 'Mode', 'Service', 'Commodity Pricing (Import/Export)', 'Freight', 'OTHC', 'Remark', 'Currency', 'Actions'].map(h => (
+                  {['Origin', 'Destination', 'Mode', 'Service', 'Commodity Pricing (Import/Export)', 'Freight', 'OTHC', 'Validity', 'Remark', 'Currency', 'Actions'].map(h => (
                     <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider" style={{ color: '#64748b' }}>
                       {h}
                     </th>
@@ -960,7 +1088,7 @@ const AdminPanel: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {rateCards.map((card, i) => (
+                {filteredRateCards.map((card, i) => (
                   <tr
                     key={card._id}
                     style={{ borderBottom: '1px solid #f1f5f9', background: i % 2 === 1 ? '#fafafa' : 'white' }}
@@ -1000,6 +1128,11 @@ const AdminPanel: React.FC = () => {
                       {card.service === 'freight' ? formatCurrency(card.othc, card.currency) : <span className="text-slate-300">—</span>}
                     </td>
 
+                    <td className="px-4 py-3 text-xs text-slate-600 whitespace-nowrap">
+                      {card.valid_from || card.valid_to
+                        ? `${card.valid_from || '…'} → ${card.valid_to || '…'}`
+                        : <span className="text-slate-400">Always</span>}
+                    </td>
                     <td className="px-4 py-3 text-slate-500 text-xs max-w-[160px] truncate">{card.remark || '—'}</td>
                     <td className="px-4 py-3 text-xs font-semibold text-slate-600">{card.currency}</td>
                     <td className="px-4 py-3">
@@ -1031,7 +1164,7 @@ const AdminPanel: React.FC = () => {
           </div>
         )}
 
-        {loading && rateCards.length > 0 && (
+        {loading && filteredRateCards.length > 0 && (
           <div className="flex justify-center py-4 border-t" style={{ borderColor: '#e2e8f0' }}>
             <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
           </div>

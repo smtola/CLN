@@ -53,6 +53,12 @@ export const useQuotes = () => {
   };
 };
 
+export type QuoteHistoryFilters = {
+  search?: string;
+  dateFrom?: string;
+  dateTo?: string;
+};
+
 export const useQuoteHistory = (initialPage: number = 1, initialLimit: number = 20) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -63,15 +69,17 @@ export const useQuoteHistory = (initialPage: number = 1, initialLimit: number = 
     total: 0,
     pages: 0,
   });
-  
-  const fetchQuotes = useCallback(async (page?: number, limit?: number) => {
+  const [filters, setFilters] = useState<QuoteHistoryFilters>({});
+
+  const fetchQuotes = useCallback(async (page?: number, limit?: number, nextFilters?: QuoteHistoryFilters) => {
     setLoading(true);
     setError(null);
     const currentPage = page || pagination.page;
     const currentLimit = limit || pagination.limit;
+    const currentFilters = nextFilters !== undefined ? nextFilters : filters;
 
     try {
-      const result: QuoteHistoryResponse = await quoteService.getQuoteHistory(currentPage, currentLimit);
+      const result: QuoteHistoryResponse = await quoteService.getQuoteHistory(currentPage, currentLimit, currentFilters);
       setQuotes(result.quotes);
       setPagination({
         page: result.page,
@@ -79,6 +87,7 @@ export const useQuoteHistory = (initialPage: number = 1, initialLimit: number = 
         total: result.total,
         pages: result.pages,
       });
+      if (nextFilters !== undefined) setFilters(nextFilters);
     }  catch (err: unknown) {
       let errorMessage = 'Failed to get quote';
     
@@ -94,7 +103,7 @@ export const useQuoteHistory = (initialPage: number = 1, initialLimit: number = 
     } finally {
       setLoading(false);
     }
-  }, [pagination.page, pagination.limit]);
+  }, [pagination.page, pagination.limit, filters]);
 
   const goToPage = useCallback((page: number) => {
     fetchQuotes(page, pagination.limit);
@@ -104,13 +113,20 @@ export const useQuoteHistory = (initialPage: number = 1, initialLimit: number = 
     fetchQuotes(pagination.page, pagination.limit);
   }, [fetchQuotes, pagination.page, pagination.limit]);
 
+  // Applies new search/date-range filters and resets back to page 1.
+  const applyFilters = useCallback((nextFilters: QuoteHistoryFilters) => {
+    fetchQuotes(1, pagination.limit, nextFilters);
+  }, [fetchQuotes, pagination.limit]);
+
   return {
     loading,
     error,
     quotes,
     pagination,
+    filters,
     fetchQuotes,
     goToPage,
     refresh,
+    applyFilters,
   };
 };
