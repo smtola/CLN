@@ -1095,16 +1095,16 @@ const AdminPanel: React.FC = () => {
                     className="hover:bg-slate-50 transition-colors"
                   >
                     <td className="px-4 py-3">
-                      <span className="px-2 py-0.5 bg-slate-100 text-slate-700 rounded text-xs font-medium">{card.origin}</span>
+                      <span className="px-2 py-0.5 bg-slate-100 text-slate-700 rounded text-xs font-medium text-nowrap">{card.origin}</span>
                     </td>
                     <td className="px-4 py-3">
-                      <span className="px-2 py-0.5 bg-slate-100 text-slate-700 rounded text-xs font-medium">{card.destination}</span>
+                      <span className="px-2 py-0.5 bg-slate-100 text-slate-700 rounded text-xs font-medium text-nowrap">{card.destination}</span>
                     </td>
-                    <td className="px-4 py-3 capitalize text-slate-600 text-xs">{card.mode}</td>
-                    <td className="px-4 py-3"><ServiceBadge service={card.service} /></td>
+                    <td className="px-4 py-3 capitalize text-slate-600 text-xs text-nowrap">{card.mode}</td>
+                    <td className="px-4 py-3 text-nowrap"><ServiceBadge service={card.service} /></td>
 
                     {/* Compact "N commodities" button; non-local_charge rows show N/A. */}
-                    <td className="px-4 py-3 text-slate-700 text-xs">
+                    <td className="px-4 py-3 text-slate-700 text-xs text-nowrap">
                       {card.service === 'local_charge' && (card.mode === 'road' || card.mode === 'sea') && (
                         <PricingSummaryButton
                           count={Object.keys(card.containers ?? {}).length}
@@ -1121,20 +1121,20 @@ const AdminPanel: React.FC = () => {
                         <span className="text-slate-300">—</span>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-right text-slate-700 font-mono text-xs">
+                    <td className="px-4 py-3 text-right text-slate-700 font-mono text-xs text-nowrap">
                       {card.service === 'freight' ? formatCurrency(card.freight, card.currency) : <span className="text-slate-300">—</span>}
                     </td>
-                    <td className="px-4 py-3 text-right text-slate-700 font-mono text-xs">
+                    <td className="px-4 py-3 text-right text-slate-700 font-mono text-xs text-nowrap">
                       {card.service === 'freight' ? formatCurrency(card.othc, card.currency) : <span className="text-slate-300">—</span>}
                     </td>
 
-                    <td className="px-4 py-3 text-xs text-slate-600 whitespace-nowrap">
+                    <td className="px-4 py-3 text-xs text-slate-600 whitespace-nowrap text-nowrap">
                       {card.valid_from || card.valid_to
                         ? `${card.valid_from || '…'} → ${card.valid_to || '…'}`
                         : <span className="text-slate-400">Always</span>}
                     </td>
-                    <td className="px-4 py-3 text-slate-500 text-xs max-w-[160px] truncate">{card.remark || '—'}</td>
-                    <td className="px-4 py-3 text-xs font-semibold text-slate-600">{card.currency}</td>
+                    <td className="px-4 py-3 text-slate-500 text-xs max-w-[160px] truncate text-nowrap">{card.remark || '—'}</td>
+                    <td className="px-4 py-3 text-xs font-semibold text-slate-600 text-nowrap">{card.currency}</td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-1.5">
                         <button

@@ -440,22 +440,22 @@ const QuoteHistory: React.FC = () => {
                     style={{ borderBottom: '1px solid #f1f5f9', background: i % 2 === 1 ? '#fafafa' : 'white' }}
                     className="hover:bg-slate-50 transition-colors"
                   >
-                    <td className="px-4 py-3 text-slate-500 text-xs whitespace-nowrap">
+                    <td className="px-4 py-3 text-slate-500 text-xs whitespace-nowrap text-nowrap">
                       {quote.quote_ref}
                     </td>
-                    <td className="px-4 py-3 text-slate-500 text-xs whitespace-nowrap">
+                    <td className="px-4 py-3 text-slate-500 text-xs whitespace-nowrap text-nowrap">
                       {formatDate(quote.created_at.$date)}
                     </td>
                     <td className="px-4 py-3">
-                      <p className="font-semibold text-slate-800">{quote.origin}</p>
-                      <p className="text-xs text-slate-400 mt-0.5">→ {quote.destination}</p>
+                      <p className="font-semibold text-slate-800 text-nowrap">{quote.origin}</p>
+                      <p className="text-xs text-slate-400 mt-0.5 text-nowrap">→ {quote.destination}</p>
                     </td>
-                    <td className="px-4 py-3 text-slate-600 whitespace-nowrap">
+                    <td className="px-4 py-3 text-slate-600 whitespace-nowrap text-nowrap">
                       {quote.departure_date || <span className="text-slate-300">—</span>}
                     </td>
-                    <td className="px-4 py-3 text-slate-600 whitespace-nowrap">{formatDistance(quote.distance_km)}</td>
-                    <td className="px-4 py-3 text-slate-600 whitespace-nowrap">{formatWeight(quote.chargeable_weight)}</td>
-                    <td className="px-4 py-3"><ModeBadge mode={quote.mode} /></td>
+                    <td className="px-4 py-3 text-slate-600 whitespace-nowrap text-nowrap">{formatDistance(quote.distance_km)}</td>
+                    <td className="px-4 py-3 text-slate-600 whitespace-nowrap text-nowrap">{formatWeight(quote.chargeable_weight)}</td>
+                    <td className="px-4 py-3 text-nowrap"><ModeBadge mode={quote.mode} /></td>
 
                     {/* Admin-only: who requested this quote + a link to their profile */}
                     {isAdmin && (
@@ -463,10 +463,10 @@ const QuoteHistory: React.FC = () => {
                         {quote.requested_by ? (
                           <div className="flex items-center gap-2">
                             <div>
-                              <p className="font-semibold text-slate-800 text-xs">
+                              <p className="font-semibold text-slate-800 text-xs text-nowrap">
                                 {quote.requested_by.username ?? '—'}
                               </p>
-                              <p className="text-xs text-slate-400">{quote.requested_by.email ?? ''}</p>
+                              <p className="text-xs text-slate-400 text-nowrap">{quote.requested_by.email ?? ''}</p>
                             </div>
                             <button
                               onClick={() => setViewingRequesterId(quote.requested_by!.user_id)}
