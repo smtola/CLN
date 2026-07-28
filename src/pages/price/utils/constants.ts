@@ -84,6 +84,16 @@ export const SHIPMENT_TYPES: { value: ShipmentType; label: string; icon: string 
   { value: 'freight', label: 'Freight', icon: '🚚' },
 ];
 
+// Used by the Port Manager (admin) to classify a location record — mirrors
+// the free-text `type` field returned by /finder_port/search (e.g. shown
+// capitalized in LocationSearch's suggestion dropdown).
+export const PORT_TYPES: { value: import('../types/port.types').PortType; label: string }[] = [
+  { value: 'seaport', label: 'Seaport' },
+  { value: 'airport', label: 'Airport' },
+  { value: 'inland',  label: 'Inland / ICD' },
+  { value: 'border',  label: 'Border / Land Port' },
+];
+
 export const FORM_STEPS = [
   { step: 1, label: 'Route Details', icon: '📍' },
   { step: 2, label: 'Cargo Details', icon: '🚚' }

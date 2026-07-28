@@ -257,9 +257,9 @@ const QuoteResultTicket: React.FC<QuoteResultTicketProps> = ({
         {formattedDepartureDate ? (
           <Chip label="Departure" value={formattedDepartureDate} />
         ) : null}
-        {mode === 'road' && quoteResult.distance_km ? (
+        {/* {mode === 'road' && quoteResult.distance_km ? (
           <Chip label="Distance" value={`${quoteResult.distance_km.toLocaleString()} km`} />
-        ) : null}
+        ) : null} */}
         {quoteResult.chargeable_weight ? (
           <Chip label="Chargeable" value={formatWeight(quoteResult.chargeable_weight)} />
         ) : null}

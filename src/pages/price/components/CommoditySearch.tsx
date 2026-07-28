@@ -31,16 +31,37 @@ export const CommoditySearch: React.FC<CommoditySearchProps> = ({
   const [loading,         setLoading]         = useState(false);
   const [hasSelected,     setHasSelected]     = useState(false);
   const hasSelectedRef = useRef(false);
-  const debouncedTerm  = useDebounce(searchTerm, 100);
+  const debouncedTerm  = useDebounce(searchTerm, 500);
 
   useEffect(() => { hasSelectedRef.current = hasSelected; }, [hasSelected]);
+
+  // The backend returns matches in whatever order the DB gives them back
+  // (roughly insertion order), not by relevance — so searching "rice" can
+  // surface "Broken Rice" or "Rice Bran" above plain "Rice". Rank client-side:
+  // exact match > name starts with query > query as a whole word in the name
+  // > query anywhere in the name > match only in the description.
+  const rankCommodity = (item: Commodity, query: string): number => {
+    const name = item.name.trim().toLowerCase();
+    const q = query.trim().toLowerCase();
+
+    if (name === q) return 0;
+    if (name.startsWith(q)) return 1;
+    if (new RegExp(`\\b${q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`).test(name)) return 2;
+    if (name.includes(q)) return 3;
+    if (item.description?.toLowerCase().includes(q)) return 4;
+    return 5;
+  };
+
+  const sortByRelevance = (items: Commodity[], query: string): Commodity[] =>
+    [...items].sort((a, b) => rankCommodity(a, query) - rankCommodity(b, query));
 
   const searchCommodities = useCallback(async (query: string) => {
     setLoading(true);
     try {
       const results: Commodity[] = await quoteService.searchCommodities(query);
-      setSuggestions(results);
-      if (results.length > 0 && !hasSelectedRef.current) setShowSuggestions(true);
+      const ranked = sortByRelevance(results, query);
+      setSuggestions(ranked);
+      if (ranked.length > 0 && !hasSelectedRef.current) setShowSuggestions(true);
     } catch {
       setSuggestions([]);
       setShowSuggestions(false);
@@ -78,7 +99,7 @@ export const CommoditySearch: React.FC<CommoditySearchProps> = ({
     hasSelectedRef.current = true;
   };
 
-  const handleBlur  = () => setTimeout(() => setShowSuggestions(false), 50);
+  const handleBlur  = () => setTimeout(() => setShowSuggestions(false), 200);
   const handleFocus = () => { if (suggestions.length > 0 && !hasSelected) setShowSuggestions(true); };
 
   return (

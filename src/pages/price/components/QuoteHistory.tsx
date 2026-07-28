@@ -3,7 +3,7 @@ import { useQuoteHistory } from '../hooks/useQuotes';
 import type { Quote, ServiceLevel } from '../types/quote.types';
 import type { DecodeToken } from '../../../types/auth';
 import { getUser } from '../../../authStorage';
-import { formatDate, formatDistance, formatWeight, capitalizeFirst } from '../utils/formatters';
+import { formatDate, formatWeight, capitalizeFirst } from '../utils/formatters';
 import { MODE_COLORS } from '../utils/constants';
 import QuoteCard from './QuoteCard';
 import RequesterProfileModal from './RequesterProfileModal';
@@ -132,10 +132,10 @@ const DetailModal = ({
                   <span className="text-slate-500">To</span>
                   <span className="font-semibold" style={{ color: BRAND.ink }}>{quote.destination}</span>
                 </div>
-                <div className="flex justify-between">
+                {/* <div className="flex justify-between">
                   <span className="text-slate-500">Distance</span>
                   <span className="font-semibold font-mono" style={{ color: BRAND.ink }}>{formatDistance(quote.distance_km)}</span>
-                </div>
+                </div> */}
                 {quote.departure_date && (
                   <div className="flex justify-between">
                     <span className="text-slate-500">Departure</span>
@@ -423,7 +423,7 @@ const QuoteHistory: React.FC = () => {
               <thead>
                 <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
                   {[
-                   'Ref', 'Date', 'Route', 'Departure', 'Distance', 'Weight', 'Mode',
+                   'Ref', 'Date', 'Route', 'Departure', 'Weight', 'Mode',
                     ...(isAdmin ? ['Requested By'] : []),
                     '',
                   ].map(h => (
@@ -453,7 +453,7 @@ const QuoteHistory: React.FC = () => {
                     <td className="px-4 py-3 text-slate-600 whitespace-nowrap text-nowrap">
                       {quote.departure_date || <span className="text-slate-300">—</span>}
                     </td>
-                    <td className="px-4 py-3 text-slate-600 whitespace-nowrap text-nowrap">{formatDistance(quote.distance_km)}</td>
+                    {/* <td className="px-4 py-3 text-slate-600 whitespace-nowrap text-nowrap">{formatDistance(quote.distance_km)}</td> */}
                     <td className="px-4 py-3 text-slate-600 whitespace-nowrap text-nowrap">{formatWeight(quote.chargeable_weight)}</td>
                     <td className="px-4 py-3 text-nowrap"><ModeBadge mode={quote.mode} /></td>
 

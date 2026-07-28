@@ -6,8 +6,9 @@ import { getUser } from '../../authStorage';
 import type { DecodeToken } from '../../types/auth';
 import Logo from "/logo.png";
 import { NavLink } from 'react-router-dom';
+import PortManager from './components/PortManager';
 
-type TabType = 'quote' | 'history' | 'ADMIN';
+type TabType = 'quote' | 'history' | 'ADMIN' | 'PORTS';
 
 interface PriceAppProps {
   defaultTab?: TabType;
@@ -26,6 +27,7 @@ const tabs: { key: TabType; label: string; adminOnly?: boolean }[] = [
   { key: 'quote',   label: 'Get Quote' },
   { key: 'history', label: 'My History' },
   { key: 'ADMIN',   label: 'Rate Manager', adminOnly: true },
+  { key: 'PORTS',   label: 'Port Manager', adminOnly: true },
 ];
 
 const PriceApp: React.FC<PriceAppProps> = ({
@@ -119,6 +121,7 @@ const PriceApp: React.FC<PriceAppProps> = ({
         {activeTab === 'quote'   && <QuoteForm />}
         {activeTab === 'history' && <QuoteHistory />}
         {activeTab === 'ADMIN'   && <AdminPanel />}
+        {activeTab === 'PORTS'   && <PortManager />}
       </main>
 
       {/* ── Footer ── */}
