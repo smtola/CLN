@@ -15,6 +15,7 @@ import CategoryForm from "./pages/category/CategoryForm";
 import TrashList from "./pages/trash/TrashList";
 import QuoteHistoryList from "./pages/quote-history/QuoteHistoryList";
 
+
 const AdminPanel = () => {
   return (
     <div className="relative">

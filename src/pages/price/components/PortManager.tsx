@@ -3,6 +3,7 @@ import { usePorts } from '../hooks/usePorts';
 import type { Port, PortFormData, PortType } from '../types/port.types';
 import { PORT_TYPES, DEFAULT_PAGINATION } from '../utils/constants';
 import { showSuccess, showError, confirmDelete } from '../../../admin/utils/swalHelper';
+import { importFromGoogleMapsUrl, isGoogleMapsUrl, type ParsedMapLocation } from '../utils/googleMapsImport';
 
 const PAGE_SIZE = DEFAULT_PAGINATION.limit;
 
@@ -112,10 +113,9 @@ const LargeMapModal = ({
 };
 
 const PORT_TYPE_COLORS: Record<PortType, string> = {
-  seaport: 'bg-blue-50 text-blue-700',
-  airport: 'bg-purple-50 text-purple-700',
-  inland: 'bg-amber-50 text-amber-700',
-  border: 'bg-emerald-50 text-emerald-700',
+  sea: 'bg-blue-50 text-blue-700',
+  air: 'bg-purple-50 text-purple-700',
+  road: 'bg-amber-50 text-amber-700'
 };
 
 const portTypeLabel = (type: PortType): string =>
@@ -132,9 +132,86 @@ const EMPTY_FORM: PortFormData = {
   code: '',
   city: '',
   country: '',
-  type: 'seaport',
+  type: 'sea',
   lat: 0,
   lon: 0,
+};
+
+// ── "Paste a Google Maps link" auto-fill ────────────────────────────────
+// Drop in a Google Maps URL (a full share link, a shortened maps.app.goo.gl
+// link, or just a pin's address-bar URL) and this fills in Name, Code,
+// Type, City, Country, Latitude and Longitude below — the admin just
+// reviews/adjusts what came back before saving. See googleMapsImport.ts
+// for how each field is derived.
+const GoogleMapsImportField = ({
+  onImport,
+}: {
+  onImport: (data: ParsedMapLocation) => void;
+}) => {
+  const [url, setUrl] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [filledCount, setFilledCount] = useState<number | null>(null);
+
+  const handleFetch = async () => {
+    const trimmed = url.trim();
+    if (!trimmed) return;
+    setLoading(true);
+    setError(null);
+    setFilledCount(null);
+    try {
+      const parsed = await importFromGoogleMapsUrl(trimmed);
+      onImport(parsed);
+      const count = Object.values(parsed).filter(v => v !== undefined && v !== '').length;
+      setFilledCount(count);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not read that link.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleFetch();
+    }
+  };
+
+  return (
+    <div className="sm:col-span-2 rounded-xl border p-3" style={{ borderColor: '#e2e8f0', background: '#f8fafc' }}>
+      <FieldLabel>Import from Google Maps</FieldLabel>
+      <div className="flex flex-col sm:flex-row gap-2">
+        <input
+          type="url"
+          value={url}
+          onChange={e => { setUrl(e.target.value); setError(null); setFilledCount(null); }}
+          onKeyDown={handleKeyDown}
+          placeholder="Paste a Google Maps link, e.g. https://maps.app.goo.gl/CLoDRVVcwHWPHUfQ6"
+          className={inputCls + ' flex-1'}
+        />
+        <button
+          type="button"
+          onClick={handleFetch}
+          disabled={loading || !url.trim() || !isGoogleMapsUrl(url.trim())}
+          className="px-4 py-2.5 text-sm font-semibold rounded-lg text-white transition-colors disabled:opacity-50 whitespace-nowrap"
+          style={{ background: '#1B4F8A' }}
+        >
+          {loading ? 'Fetching…' : 'Auto-fill'}
+        </button>
+      </div>
+      {error && <p className="text-xs text-red-600 mt-2">{error}</p>}
+      {!error && filledCount !== null && (
+        <p className="text-xs mt-2" style={{ color: '#0F9D58' }}>
+          Filled {filledCount} field{filledCount === 1 ? '' : 's'} below from that link — double-check them before saving.
+        </p>
+      )}
+      <p className="text-xs text-slate-400 mt-2">
+        Works with full google.com/maps links and shortened maps.app.goo.gl links. City, country and type are
+        a best guess from the pin's coordinates — always review before saving.
+      </p>
+    </div>
+  );
 };
 
 // ── Form modal ───────────────────────────────────────────────────────
@@ -146,9 +223,10 @@ interface ModalProps {
   onSubmit: (e: React.FormEvent) => void;
   onClose: () => void;
   onExpandMap: () => void;
+  onImport: (data: ParsedMapLocation) => void;
 }
 
-const PortFormModal: React.FC<ModalProps> = ({ editingPort, formData, loading, onChange, onSubmit, onClose, onExpandMap }) => (
+const PortFormModal: React.FC<ModalProps> = ({ editingPort, formData, loading, onChange, onSubmit, onClose, onExpandMap, onImport }) => (
   <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(10,22,40,0.5)' }}>
     <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
       <div className="flex items-center justify-between px-6 py-4 border-b" style={{ borderColor: '#e2e8f0' }}>
@@ -160,6 +238,8 @@ const PortFormModal: React.FC<ModalProps> = ({ editingPort, formData, loading, o
 
       <form onSubmit={onSubmit} className="p-6 space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <GoogleMapsImportField onImport={onImport} />
+
           <div className="sm:col-span-2">
             <FieldLabel>Port / Location Name *</FieldLabel>
             <input
@@ -372,6 +452,22 @@ const PortManager: React.FC = () => {
     setShowModal(true);
   };
 
+  // Merge whatever fields importFromGoogleMapsUrl() could confidently derive
+  // into the open form — undefined fields (e.g. no IATA/UN-LOCODE found) are
+  // left as-is so we never clobber something the admin already typed.
+  const handleImport = (data: ParsedMapLocation) => {
+    setFormData(prev => ({
+      ...prev,
+      ...(data.name !== undefined && { name: data.name }),
+      ...(data.code !== undefined && { code: data.code }),
+      ...(data.type !== undefined && { type: data.type }),
+      ...(data.city !== undefined && { city: data.city }),
+      ...(data.country !== undefined && { country: data.country }),
+      lat: data.lat,
+      lon: data.lon,
+    }));
+  };
+
   const openEdit = (port: Port) => {
     setEditingPort(port);
     setFormData({
@@ -418,7 +514,7 @@ const PortManager: React.FC = () => {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-b-4">
       {/* Page header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
@@ -600,6 +696,7 @@ const PortManager: React.FC = () => {
           onSubmit={handleSubmit}
           onClose={() => setShowModal(false)}
           onExpandMap={() => setViewingMap({ lat: formData.lat, lon: formData.lon, name: formData.name })}
+          onImport={handleImport}
         />
       )}
 

@@ -88,10 +88,9 @@ export const SHIPMENT_TYPES: { value: ShipmentType; label: string; icon: string 
 // the free-text `type` field returned by /finder_port/search (e.g. shown
 // capitalized in LocationSearch's suggestion dropdown).
 export const PORT_TYPES: { value: import('../types/port.types').PortType; label: string }[] = [
-  { value: 'seaport', label: 'Seaport' },
-  { value: 'airport', label: 'Airport' },
-  { value: 'inland',  label: 'Inland / ICD' },
-  { value: 'border',  label: 'Border / Land Port' },
+  { value: 'sea', label: 'Seaport' },
+  { value: 'air', label: 'Airport' },
+  { value: 'road',  label: 'Inland / ICD' },
 ];
 
 export const FORM_STEPS = [

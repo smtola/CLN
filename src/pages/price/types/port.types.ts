@@ -6,7 +6,7 @@
 // the seaports, airports, inland depots, and border crossings that show
 // up as suggestions there.
 
-export type PortType = 'seaport' | 'airport' | 'inland' | 'border';
+export type PortType = 'sea' | 'air' | 'road';
 
 export interface Port {
   _id: string;
