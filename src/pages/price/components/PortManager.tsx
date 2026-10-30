@@ -514,7 +514,7 @@ const PortManager: React.FC = () => {
   }
 
   return (
-    <div className="space-b-4">
+    <div className="p-3 md:p-6">
       {/* Page header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>

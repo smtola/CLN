@@ -1,14 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import QuoteForm from './components/QuoteForm';
-import AdminPanel from './components/AdminPanel';
 import QuoteHistory from './components/QuoteHistory';
 import { getUser } from '../../authStorage';
 import type { DecodeToken } from '../../types/auth';
 import Logo from "/logo.png";
 import { NavLink } from 'react-router-dom';
-import PortManager from './components/PortManager';
 
-type TabType = 'quote' | 'history' | 'ADMIN' | 'PORTS';
+type TabType = 'quote' | 'history';
 
 interface PriceAppProps {
   defaultTab?: TabType;
@@ -25,9 +23,7 @@ const ShipIcon = () => (
 
 const tabs: { key: TabType; label: string; adminOnly?: boolean }[] = [
   { key: 'quote',   label: 'Get Quote' },
-  { key: 'history', label: 'My History' },
-  { key: 'ADMIN',   label: 'Rate Manager', adminOnly: true },
-  { key: 'PORTS',   label: 'Port Manager', adminOnly: true },
+  { key: 'history', label: 'My History' }
 ];
 
 const PriceApp: React.FC<PriceAppProps> = ({
@@ -120,8 +116,6 @@ const PriceApp: React.FC<PriceAppProps> = ({
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 md:px-8 py-8">
         {activeTab === 'quote'   && <QuoteForm />}
         {activeTab === 'history' && <QuoteHistory />}
-        {activeTab === 'ADMIN'   && <AdminPanel />}
-        {activeTab === 'PORTS'   && <PortManager />}
       </main>
 
       {/* ── Footer ── */}

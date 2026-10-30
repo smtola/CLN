@@ -1,401 +1,310 @@
 import React, { useState } from "react";
-import Swal from "sweetalert2";
-import { getAccessToken } from "../../authStorage";
+import { Turnstile } from "@marsidev/react-turnstile";
 
-interface QuoteFormData {
-  company_name: string;
-  full_name: string;
+// ── Config ──────────────────────────────────────────────────────────
+const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY as string; // put in .env
+const CONTACT_API_URL = "/api/contact"; // adjust to your actual endpoint
+const MIN_SUBMIT_TIME_MS = 2500; // submissions faster than this are treated as bots
+
+// ── Types ───────────────────────────────────────────────────────────
+interface FormData {
+  name: string;
   email: string;
-  address: string;
-  tel: string;
-  job: string;
-  origin_destination: string;
-  product_name: string;
-  weight_dimensions: string;
-  service: string;
-  container_size: string;
-  note: string;
+  phone: string;
+  subject: string;
+  message: string;
 }
 
+interface FormErrors {
+  name?: string;
+  email?: string;
+  phone?: string;
+  message?: string;
+}
+
+const initialFormData: FormData = {
+  name: "",
+  email: "",
+  phone: "",
+  subject: "",
+  message: "",
+};
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// crude link-spam heuristic: many contact-form bots stuff the message
+// with multiple URLs
+const LINK_SPAM_REGEX = /(https?:\/\/|www\.)/gi;
+const MAX_LINKS_ALLOWED = 1;
+
 const ContactUsForm: React.FC = () => {
-  const [form, setForm] = useState<QuoteFormData>({
-    company_name: "",
-    full_name: "",
-    email: "",
-    address: "",
-    tel: "",
-    job: "",
-    origin_destination: "",
-    product_name: "",
-    weight_dimensions: "",
-    service: "",
-    container_size: "",
-    note: "",
-  });
+  const [formData, setFormData] = useState<FormData>(initialFormData);
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [honeypot, setHoneypot] = useState(""); // bots fill this, humans never see it
+  const [formLoadedAt] = useState(() => Date.now()); // time-trap baseline
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [captchaError, setCaptchaError] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState<"idle" | "success" | "error">("idle");
+  const [submitMessage, setSubmitMessage] = useState("");
 
-  const token = getAccessToken();
-
-  const isAirFreight = form.service === "Air Freight";
-
-  const containerOptions = isAirFreight ? false : true;
-  // Handle form input
   const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >,
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (errors[name as keyof FormErrors]) {
+      setErrors((prev) => ({ ...prev, [name]: undefined }));
+    }
   };
 
-  // Handle submit
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (
-      form.company_name &&
-      form.full_name &&
-      form.email &&
-      form.address &&
-      form.tel &&
-      form.job &&
-      form.origin_destination &&
-      form.product_name &&
-      form.weight_dimensions &&
-      form.service &&
-      form.container_size
-    ) {
-      try {
-        const response = await fetch(
-          "https://api.clncambodia.com/api/v1/docs/web/contact-us",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify(form),
-          },
-        );
+  const validate = (): boolean => {
+    const next: FormErrors = {};
 
-        if (response.ok) {
-          Swal.fire({
-            icon: "success",
-            title: "Request Submitted!",
-            text: "Your information request has been sent successfully.",
-            confirmButtonColor: "#3085d6",
-          });
+    if (!formData.name.trim()) {
+      next.name = "Please enter your name.";
+    } else if (formData.name.trim().length < 2) {
+      next.name = "Name looks too short.";
+    }
 
-          setForm({
-            company_name: "",
-            full_name: "",
-            email: "",
-            address: "",
-            tel: "",
-            job: "",
-            origin_destination: "",
-            product_name: "",
-            weight_dimensions: "",
-            service: "",
-            container_size: "",
-            note: "",
-          });
-        } else {
-          let errorMessage = "Something went wrong while sending request.";
-          try {
-            const errorData = await response.json();
-            if (response.status === 422) {
-              // Handle validation errors
-              if (errorData.errors && Array.isArray(errorData.errors)) {
-                errorMessage = errorData.errors
-                  .map(
-                    (err: { msg?: string; message?: string }) =>
-                      err.msg || err.message || "",
-                  )
-                  .filter(Boolean)
-                  .join(", ");
-              } else if (errorData.message) {
-                errorMessage = errorData.message;
-              } else if (typeof errorData === "object") {
-                errorMessage = Object.values(errorData).flat().join(", ");
-              }
-            } else if (errorData.message) {
-              errorMessage = errorData.message;
-            }
-          } catch {
-            // If parsing fails, use default message
-          }
-          Swal.fire({
-            icon: "error",
-            title:
-              response.status === 422
-                ? "Validation Error"
-                : "Submission Failed",
-            text: errorMessage,
-            confirmButtonColor: "#d33",
-          });
-        }
-      } catch {
-        Swal.fire({
-          icon: "error",
-          title: "Network Error",
-          text: "Unable to connect to server.",
-          confirmButtonColor: "#d33",
-        });
-      }
+    if (!formData.email.trim()) {
+      next.email = "Please enter your email.";
+    } else if (!EMAIL_REGEX.test(formData.email.trim())) {
+      next.email = "Please enter a valid email address.";
+    }
+
+    if (formData.phone && !/^[+\d][\d\s().-]{6,}$/.test(formData.phone.trim())) {
+      next.phone = "Please enter a valid phone number.";
+    }
+
+    if (!formData.message.trim()) {
+      next.message = "Please enter a message.";
+    } else if (formData.message.trim().length < 10) {
+      next.message = "Message is too short — please add a few more details.";
     } else {
-      Swal.fire({
-        icon: "warning",
-        title: "Missing Fields",
-        text: "Please fill out all required fields before submitting.",
-        confirmButtonColor: "#f1c40f",
+      const linkCount = (formData.message.match(LINK_SPAM_REGEX) || []).length;
+      if (linkCount > MAX_LINKS_ALLOWED) {
+        next.message = "Please remove links from your message.";
+      }
+    }
+
+    setErrors(next);
+    return Object.keys(next).length === 0;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitStatus("idle");
+    setSubmitMessage("");
+
+    // ── Bot trap 1: honeypot ──
+    // A real user never sees or fills this field. If it has a value,
+    // silently pretend success so bots don't learn to look for a real error.
+    if (honeypot) {
+      setSubmitStatus("success");
+      setSubmitMessage("Thank you! Your message has been sent.");
+      return;
+    }
+
+    // ── Bot trap 2: submitted too fast ──
+    if (Date.now() - formLoadedAt < MIN_SUBMIT_TIME_MS) {
+      setSubmitStatus("error");
+      setSubmitMessage("Please try again in a moment.");
+      return;
+    }
+
+    if (!validate()) return;
+
+    // ── Bot trap 3: Turnstile challenge must be solved ──
+    if (!captchaToken) {
+      setCaptchaError(true);
+      setSubmitStatus("error");
+      setSubmitMessage("Please complete the verification below.");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const res = await fetch(CONTACT_API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: formData.name.trim(),
+          email: formData.email.trim(),
+          phone: formData.phone.trim(),
+          subject: formData.subject.trim(),
+          message: formData.message.trim(),
+          captchaToken, // your backend MUST verify this with Cloudflare before sending mail
+        }),
       });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.message || "Something went wrong. Please try again.");
+      }
+
+      setSubmitStatus("success");
+      setSubmitMessage("Thank you! Your message has been sent — we'll be in touch soon.");
+      setFormData(initialFormData);
+      setCaptchaToken(null);
+    } catch (err) {
+      setSubmitStatus("error");
+      setSubmitMessage(
+        err instanceof Error ? err.message : "Something went wrong. Please try again."
+      );
+    } finally {
+      setSubmitting(false);
     }
   };
 
   return (
-    <div className="w-full flex justify-center items-center py-7 bg-black/40 backdrop-blur-[10px] rounded-[10px]">
-      <div className="bg-white shadow-lg rounded-lg w-[90%] md:w-[600px] p-3 md:p-8">
-        <h2 className="text-2xl font-bold text-[#4F9748] mb-6 text-center">
-          Contact Us
-        </h2>
-
-        <form onSubmit={handleSubmit}>
-          <div className="flex gap-3">
-            <div className="w-full mb-3">
-              <div className="flex items-center gap-2">
-                <label className="block mb-1 text-black">Company Name</label>
-                <span className="text-red-500">*</span>
-              </div>
-              <input
-                type="text"
-                name="company_name"
-                value={form.company_name}
-                onChange={handleChange}
-                className="w-full border rounded p-2 bg-gray-200"
-                required
-                placeholder="Enter Company Name"
-              />
-            </div>
-
-            <div className="w-full mb-3">
-              <div className="flex items-center gap-2">
-                <label className="block mb-1 text-black">Full Name</label>
-                <span className="text-red-500">*</span>
-              </div>
-              <input
-                type="text"
-                name="full_name"
-                value={form.full_name}
-                onChange={handleChange}
-                className="w-full border rounded p-2 bg-gray-200"
-                required
-                placeholder="Enter Full Name"
-              />
-            </div>
-          </div>
-
-          <div className="flex gap-3">
-            <div className="w-full mb-3">
-              <div className="flex items-center gap-2">
-                <label className="block mb-1 text-black">Email</label>
-                <span className="text-red-500">*</span>
-              </div>
-              <input
-                type="email"
-                name="email"
-                value={form.email}
-                onChange={handleChange}
-                className="w-full border rounded p-2 bg-gray-200"
-                required
-                placeholder="Enter Email"
-              />
-                <p className="text-[12px] text-gray-500 mt-1">
-                  We'll reply to your request using this email address.
-                </p>
-            </div>
-
-            <div className="w-full mb-3">
-              <div className="flex items-center gap-2">
-                <label className="block mb-1 text-black">Phone Number</label>
-                <span className="text-red-500">*</span>
-              </div>
-              <input
-                type="text"
-                name="tel"
-                value={form.tel}
-                onChange={handleChange}
-                className="w-full border rounded p-2 bg-gray-200"
-                required
-                placeholder="Enter Telephone"
-              />
-            </div>
-          </div>
-
-          <div className="flex gap-3">
-            <div className="w-full mb-3">
-              <div className="flex items-center gap-2">
-                <label className="block mb-1 text-black">Job Title</label>
-                <span className="text-red-500">*</span>
-              </div>
-              <input
-                type="text"
-                name="job"
-                value={form.job}
-                onChange={handleChange}
-                className="w-full border rounded p-2 bg-gray-200"
-                required
-                placeholder="Enter Job Title"
-              />
-            </div>
-
-            <div className="w-full mb-3">
-              <div className="flex items-center gap-2">
-                <label className="block mb-1 text-black">
-                  Origin - Destination
-                </label>
-                <span className="text-red-500">*</span>
-              </div>
-              <input
-                type="text"
-                name="origin_destination"
-                value={form.origin_destination}
-                onChange={handleChange}
-                className="w-full border rounded p-2 bg-gray-200"
-                required
-                placeholder="Enter Origin - Destination"
-              />
-            </div>
-          </div>
-
-          <div className="flex gap-3">
-            <div className="w-full mb-3">
-              <div className="flex items-center gap-2">
-                <label className="block mb-1 text-black">Product Name</label>
-                <span className="text-red-500">*</span>
-              </div>
-              <input
-                type="text"
-                name="product_name"
-                value={form.product_name}
-                onChange={handleChange}
-                className="w-full border rounded p-2 bg-gray-200"
-                required
-                placeholder="Enter Product Name"
-              />
-            </div>
-
-            <div className="w-full mb-3">
-              <div className="flex items-center gap-2">
-                <label className="block mb-1 text-black">Dimensions</label>
-                <span className="text-red-500">*</span>
-              </div>
-              <input
-                type="text"
-                name="weight_dimensions"
-                value={form.weight_dimensions}
-                onChange={handleChange}
-                className="w-full border rounded p-2 bg-gray-200"
-                required
-                placeholder="Enter Dimensions"
-              />
-            </div>
-          </div>
-          <div className="flex gap-3">
-            <div className="w-full mb-3">
-              <div className="flex items-center gap-2">
-                <label className="block mb-1 text-black">Services</label>
-                <span className="text-red-500">*</span>
-              </div>
-              <select
-                name="service"
-                value={form.service}
-                onChange={handleChange}
-                className="w-full border rounded p-2 bg-gray-200"
-                required
-              >
-                <option value="">Select Services</option>
-                <option value="Customss Clearance">Customss Clearance</option>
-                <option value="Cross Border (Land Transport)">
-                  Cross Border (Land Transport)
-                </option>
-                <option value="Sea Freight">Sea Freight</option>
-                <option value="Air Freight">Air Freight</option>
-              </select>
-            </div>
-
-            <div className="w-full mb-3">
-              <div className="flex items-center gap-2">
-                <label className="block mb-1 text-black">
-                  {containerOptions ? "Container Size" : "Weight"}
-                </label>
-                <span className="text-red-500">*</span>
-              </div>
-              {containerOptions ? (
-                <select
-                  name="container_size"
-                  value={form.container_size}
-                  onChange={handleChange}
-                  className="w-full border rounded p-2 bg-gray-200"
-                  required
-                >
-                  <option value="">Select Size</option>
-                  <option value="20'GP">20'GP</option>
-                  <option value="40'GP">40'GP</option>
-                  <option value="20'RF">20'RF</option>
-                  <option value="40'RF">40'RF</option>
-                  <option value="45'RF">45'RF</option>
-                </select>
-              ) : (
-                <input
-                  type="text"
-                  name="container_size"
-                  value={form.container_size}
-                  onChange={handleChange}
-                  className="w-full border rounded p-2 bg-gray-200"
-                  required
-                  placeholder="Enter Weight"
-                />
-              )}
-            </div>
-          </div>
-
-          <div className="w-full mb-3">
-            <div className="flex items-center gap-2">
-              <label className="block mb-1 text-black">Address</label>
-              <span className="text-red-500">*</span>
-            </div>
-            <textarea
-              name="address"
-              value={form.address}
-              onChange={handleChange}
-              className="w-full border rounded p-2 bg-gray-200"
-              rows={3}
-              placeholder="Enter Address"
-            />
-          </div>
-
-          <div className="w-full mb-3">
-            <div className="flex items-center gap-2">
-              <label className="block mb-1 text-black">Note</label>
-            </div>
-            <textarea
-              name="note"
-              value={form.note}
-              onChange={handleChange}
-              className="w-full border rounded p-2 bg-gray-200"
-              rows={3}
-              placeholder="Any additional notes (optional)"
-            />
-          </div>
-          <button
-            type="submit"
-            className="w-full bg-[#EE3A23] text-white py-2 rounded hover:bg-red-600"
-          >
-            Submit
-          </button>
-        </form>
+    <form
+      onSubmit={handleSubmit}
+      noValidate
+      className="bg-white rounded-2xl shadow-[0_12px_40px_-12px_rgba(9,30,66,0.25)] p-6 md:p-10 space-y-5"
+    >
+      <div>
+        <h2 className="text-2xl md:text-3xl font-bold text-slate-800">Get in touch</h2>
+        <p className="text-slate-500 text-sm mt-1">
+          Fill out the form below and our team will get back to you shortly.
+        </p>
       </div>
-    </div>
+
+      {/* ── Honeypot field — hidden from real users, catches bots ── */}
+      <div style={{ position: "absolute", left: "-9999px", top: "-9999px" }} aria-hidden="true">
+        <label htmlFor="website">Website</label>
+        <input
+          type="text"
+          id="website"
+          name="website"
+          tabIndex={-1}
+          autoComplete="off"
+          value={honeypot}
+          onChange={(e) => setHoneypot(e.target.value)}
+        />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label htmlFor="name" className="block text-sm font-medium text-slate-700 mb-1">
+            Full Name <span className="text-[#EE3A23]">*</span>
+          </label>
+          <input
+            type="text"
+            id="name"
+            name="name"
+            value={formData.name}
+            onChange={handleChange}
+            className={`w-full px-4 py-2.5 rounded-xl border text-sm text-slate-800 outline-none transition-colors
+              ${errors.name ? "border-red-400 focus:border-red-500" : "border-slate-200 focus:border-[#4F9848]"}`}
+            placeholder="Your name"
+          />
+          {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name}</p>}
+        </div>
+
+        <div>
+          <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-1">
+            Email <span className="text-[#EE3A23]">*</span>
+          </label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
+            className={`w-full px-4 py-2.5 rounded-xl border text-sm text-slate-800 outline-none transition-colors
+              ${errors.email ? "border-red-400 focus:border-red-500" : "border-slate-200 focus:border-[#4F9848]"}`}
+            placeholder="you@example.com"
+          />
+          {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email}</p>}
+        </div>
+
+        <div>
+          <label htmlFor="phone" className="block text-sm font-medium text-slate-700 mb-1">
+            Phone
+          </label>
+          <input
+            type="tel"
+            id="phone"
+            name="phone"
+            value={formData.phone}
+            onChange={handleChange}
+            className={`w-full px-4 py-2.5 rounded-xl border text-sm text-slate-800 outline-none transition-colors
+              ${errors.phone ? "border-red-400 focus:border-red-500" : "border-slate-200 focus:border-[#4F9848]"}`}
+            placeholder="+855 ..."
+          />
+          {errors.phone && <p className="text-xs text-red-500 mt-1">{errors.phone}</p>}
+        </div>
+
+        <div>
+          <label htmlFor="subject" className="block text-sm font-medium text-slate-700 mb-1">
+            Subject
+          </label>
+          <input
+            type="text"
+            id="subject"
+            name="subject"
+            value={formData.subject}
+            onChange={handleChange}
+            className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-800 outline-none focus:border-[#4F9848] transition-colors"
+            placeholder="How can we help?"
+          />
+        </div>
+      </div>
+
+      <div>
+        <label htmlFor="message" className="block text-sm font-medium text-slate-700 mb-1">
+          Message <span className="text-[#EE3A23]">*</span>
+        </label>
+        <textarea
+          id="message"
+          name="message"
+          rows={5}
+          value={formData.message}
+          onChange={handleChange}
+          className={`w-full px-4 py-2.5 rounded-xl border text-sm text-slate-800 outline-none transition-colors resize-none
+            ${errors.message ? "border-red-400 focus:border-red-500" : "border-slate-200 focus:border-[#4F9848]"}`}
+          placeholder="Tell us about your shipment or question..."
+        />
+        {errors.message && <p className="text-xs text-red-500 mt-1">{errors.message}</p>}
+      </div>
+
+      {/* ── Turnstile challenge ── */}
+      <div>
+        <Turnstile
+          siteKey={TURNSTILE_SITE_KEY}
+          onSuccess={(token) => {
+            setCaptchaToken(token);
+            setCaptchaError(false);
+          }}
+          onExpire={() => setCaptchaToken(null)}
+          onError={() => setCaptchaToken(null)}
+        />
+        {captchaError && (
+          <p className="text-xs text-red-500 mt-1">Please complete the verification.</p>
+        )}
+      </div>
+
+      {submitStatus !== "idle" && (
+        <div
+          className={`text-sm px-4 py-2.5 rounded-xl ${
+            submitStatus === "success"
+              ? "bg-green-50 text-green-700 border border-green-200"
+              : "bg-red-50 text-red-600 border border-red-200"
+          }`}
+        >
+          {submitMessage}
+        </div>
+      )}
+
+      <button
+        type="submit"
+        disabled={submitting}
+        className="w-full md:w-auto px-8 py-3 rounded-xl bg-[#4F9848] hover:bg-[#437d3d] text-white text-sm font-semibold uppercase tracking-wide transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+      >
+        {submitting ? "Sending..." : "Send Message"}
+      </button>
+    </form>
   );
 };
 

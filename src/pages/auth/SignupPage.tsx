@@ -4,8 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import type { ExtractedDocumentFields, SignupPayload } from "../../types/auth";
 import { getPublicIp } from "../../utils/getIp";
 import { extractDocument, signup, uploadDocument } from "../../authService";
-import { showError, showSuccess } from "../../admin/utils/swalHelper";
+import { showError, showSuccess } from "../../utils/swalHelper";
 import { useNavigate } from "react-router-dom";
+import PasswordStrengthInput from "../../components/PasswordStrengthInput"; // adjust path to match your project
 
 const ALLOWED_DOCUMENT_TYPES = ["application/pdf", "image/png", "image/jpeg", "image/webp"];
 const MAX_DOCUMENT_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
@@ -52,22 +53,22 @@ const countries = [
 
 // department
 const departments = [
-  {name: "Sales and Marketing" },
-  {name: "Procurement" },
-  {name: "Logistics & Operations" },
-  {name: "Documentation" },
-  {name: "Customer Service" },
-  {name: "Finance" },
-  {name: "IT & eCommerce" },
-  {name: "HR & Legal" },
-  {name: "Sustainability" },
+  { name: "Sales and Marketing" },
+  { name: "Procurement" },
+  { name: "Logistics & Operations" },
+  { name: "Documentation" },
+  { name: "Customer Service" },
+  { name: "Finance" },
+  { name: "IT & eCommerce" },
+  { name: "HR & Legal" },
+  { name: "Sustainability" },
 ];
 
 // trade
 const trades = [
-  {name: "Export" },
-  {name: "Import" },
-  {name: "Export & Import" },
+  { name: "Export" },
+  { name: "Import" },
+  { name: "Export & Import" },
 ];
 
 const defaultFormData = {
@@ -107,6 +108,23 @@ const defaultFormData = {
   },
 };
 
+/* ---------------- Shared premium styling tokens ---------------- */
+const inputCls =
+  "input input-bordered w-full mt-2 rounded-xl border-slate-200 bg-slate-50 px-4 py-3 text-[15px] text-slate-900 " +
+  "placeholder:text-slate-400 outline-none transition-colors focus:ring-2 focus:ring-[#4f9748]/30 focus:border-[#4f9748] " +
+  "disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed";
+const selectCls =
+  "select select-bordered w-full mt-2 rounded-xl border-slate-200 bg-slate-50 px-4text-[15px] text-slate-900 " +
+  "outline-none transition-colors focus:ring-2 focus:ring-[#4f9748]/30 focus:border-[#4f9748]";
+const labelCls = "text-sm font-medium text-slate-700";
+const errorCls = "text-red-600 font-light text-[11px] mt-1";
+const sectionTitleCls = "text-slate-500 text-[13px] font-semibold uppercase tracking-wide";
+const primaryBtnCls =
+  "px-5 py-2.5 text-[15px] rounded-xl bg-[#4f9748] text-white font-semibold shadow-sm hover:bg-[#437d3d] " +
+  "active:scale-[0.99] transition-all disabled:bg-slate-300 disabled:cursor-not-allowed disabled:active:scale-100";
+const secondaryBtnCls =
+  "px-5 py-2.5 text-[15px] rounded-xl text-[#ee3a23] font-medium hover:bg-red-50 transition-colors";
+
 export default function SignupPage() {
   /* ---------------- ACTIVE STEP ---------------- */
   const [activeTab, setActiveTab] = useState<number>(() => {
@@ -120,8 +138,6 @@ export default function SignupPage() {
   });
   const [loading, setLoading] = useState<boolean>(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   /* ---------------- DOCUMENT UPLOAD (Step 2) ---------------- */
   const [documentFile, setDocumentFile] = useState<File | null>(null);
@@ -146,9 +162,7 @@ export default function SignupPage() {
     if (savedSteps) setCompletedSteps(JSON.parse(savedSteps));
   }, []);
 
-  const userInformation = savedData
-    ? JSON.parse(savedData)
-    : null;
+  const userInformation = savedData ? JSON.parse(savedData) : null;
   /* ---------------- FORM DATA ---------------- */
   const [formData, setFormData] = useState(defaultFormData);
 
@@ -182,17 +196,17 @@ export default function SignupPage() {
         newErrors.phoneNumber = "Phone Number is required.";
       } else if (!/^\+?[1-9]\d{6,14}$/.test(formData.uai.phoneNumber)) {
         newErrors.phoneNumber = "Phone Number is invalid. Must be a valid international number with country code.";
-      }      
-      
+      }
+
       if (!formData.uai.businessEmail) newErrors.businessEmail = "Business Email is required.";
-        else if (!emailPattern.test(formData.uai.businessEmail))
-          newErrors.businessEmail = "Email must start with 'example@123.com' and be valid.";
-  
-        if (!formData.uai.userId) {
-          newErrors.userId = "User ID is required.";
-        } else if (!/^\d{9}$/.test(formData.uai.userId)) {
-          newErrors.userId = "User ID must be exactly 9 digits.";
-        }
+      else if (!emailPattern.test(formData.uai.businessEmail))
+        newErrors.businessEmail = "Email must start with 'example@123.com' and be valid.";
+
+      if (!formData.uai.userId) {
+        newErrors.userId = "User ID is required.";
+      } else if (!/^\d{9}$/.test(formData.uai.userId)) {
+        newErrors.userId = "User ID must be exactly 9 digits.";
+      }
 
       // Password rules
       const pwdError = validatePassword(formData.uai.pwd);
@@ -204,25 +218,24 @@ export default function SignupPage() {
 
     if (step === 2) {
       const VAT_TIN_PATTERNS: Record<string, RegExp> = {
-        Cambodia: /^[A-Z]\d{3}-\d{9}$/,       // Cambodia TIN, e.g. K001-901204066
-        "United States": /^\d{2}-\d{7}$/,     // Example EIN
-        India: /^[A-Z]{5}\d{4}[A-Z]$/,        // India PAN
+        Cambodia: /^[A-Z]\d{3}-\d{9}$/, // Cambodia TIN, e.g. K001-901204066
+        "United States": /^\d{2}-\d{7}$/, // Example EIN
+        India: /^[A-Z]{5}\d{4}[A-Z]$/, // India PAN
         "United Kingdom": /^[A-Z]{2}\d{6}[A-D]$/, // UK NINO
       };
-      
+
       const isValidTINorVAT = (country: string, number: string) => {
         const pattern = VAT_TIN_PATTERNS[country];
         if (!pattern) return true; // if no rule for country, skip validation
         return pattern.test(number);
       };
 
-      
       if (!formData.ci.companyName) newErrors.companyName = "Company Name is required.";
       if (!formData.ci.companyRegisterNumber) {
         newErrors.companyRegisterNumber = "Company Registration Number is required.";
       } else if (!isValidTINorVAT(formData.ci.country, formData.ci.companyRegisterNumber)) {
         newErrors.companyRegisterNumber = "Invalid VAT/TIN number.";
-      }      
+      }
       if (!formData.ci.tradeName) newErrors.tradeName = "Trade Name is required.";
       if (!formData.ci.SPT) newErrors.SPT = "Shipping Party Type is required.";
       if (!formData.ci.CBT) newErrors.CBT = "Company Business Type is required.";
@@ -251,9 +264,7 @@ export default function SignupPage() {
 
   /* ---------------- ACTIONS ---------------- */
   const markCompleted = (step: number) => {
-    setCompletedSteps((prev) =>
-      prev.includes(step) ? prev : [...prev, step]
-    );
+    setCompletedSteps((prev) => (prev.includes(step) ? prev : [...prev, step]));
   };
 
   const handleNext = () => {
@@ -267,7 +278,6 @@ export default function SignupPage() {
   const handlePrevious = () => {
     setActiveTab((prev) => Math.max(prev - 1, 1));
   };
-  
 
   const handleTabClick = (tab: number) => {
     // Cannot jump forward without validation
@@ -414,7 +424,7 @@ export default function SignupPage() {
         is_ocr_verified: formData.document.isVerified,
       },
       local_ip: ip,
-      role: "USER"
+      role: "USER",
     };
 
     const res = await signup(payload);
@@ -426,23 +436,22 @@ export default function SignupPage() {
       showError("Error", res?.msg || "Signup failed");
       return;
     }
-    
+
     showSuccess(res.msg || "Signup successful");
 
     localStorage.removeItem("user_information");
     localStorage.removeItem("activeTab");
     localStorage.removeItem("completedSteps");
-  
+
     // ✅ Redirect to verify-email page
     navigate("/auth/verify-email", {
       state: { businessEmail: formData.uai.businessEmail },
     });
-    
+
     setFormData(defaultFormData);
     setActiveTab(1);
     setCompletedSteps([]);
   };
-  
 
   /* ---------------- CONTENT ---------------- */
   const renderContent = () => {
@@ -450,67 +459,56 @@ export default function SignupPage() {
       case 1:
         return (
           <>
-            <h2 className="text-center text-[24px] font-semibold text-[#4f9748] mb-4">
-              User & Account Information
+            <h2 className="text-center text-[24px] font-bold text-[#4f9748] mb-6 tracking-tight">
+              User &amp; Account Information
             </h2>
 
-            <form className="flex flex-col sm:flex-row sm:justify-center sm:gap-2 space-y-2 sm:space-y-0">
-              <div className="sm:w-[48%] border-r-0  sm:border-b-0 sm:border-r-2 sm:pe-2 space-y-2">
-                <h1 className="text-gray-500 text-[16px] font-semibold capitalize">User Information</h1>
-                <div className="space-y-2">
+            <form className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6">
+              <div className="sm:border-r sm:border-slate-200 sm:pe-8 space-y-4">
+                <h1 className={sectionTitleCls}>User Information</h1>
+                <div className="space-y-1">
                   <div className="flex flex-row gap-1">
-                    <label htmlFor="firstName">First Name</label>
+                    <label htmlFor="firstName" className={labelCls}>First Name</label>
                     <span className="text-red-600">*</span>
                   </div>
                   <input
-                    className="input input-bordered w-full mt-2 rounded"
+                    className={inputCls}
                     placeholder="Enter First Name"
                     value={formData.uai.firstName}
                     onChange={(e) =>
-                      setFormData({ ...formData,     
-                        uai: {
-                        ...formData.uai,
-                        firstName: e.target.value,
-                      }, })
+                      setFormData({ ...formData, uai: { ...formData.uai, firstName: e.target.value } })
                     }
                   />
-                  {errors.firstName && <p className="text-red-600 font-light text-[11px]">{errors.firstName}</p>}
+                  {errors.firstName && <p className={errorCls}>{errors.firstName}</p>}
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-1">
                   <div className="flex flex-row gap-1">
-                    <label htmlFor="lastName">Last Name</label>
+                    <label htmlFor="lastName" className={labelCls}>Last Name</label>
                     <span className="text-red-600">*</span>
                   </div>
                   <input
-                    className="input input-bordered w-full mt-2 rounded"
+                    className={inputCls}
                     placeholder="Enter Last Name"
                     value={formData.uai.lastName}
                     onChange={(e) =>
-                      setFormData({ ...formData,     
-                        uai: {
-                        ...formData.uai,
-                        lastName: e.target.value,
-                      }})
+                      setFormData({ ...formData, uai: { ...formData.uai, lastName: e.target.value } })
                     }
                   />
-                  {errors.lastName && <p className="text-red-600 font-light text-[11px]">{errors.lastName}</p>}
+                  {errors.lastName && <p className={errorCls}>{errors.lastName}</p>}
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-1">
                   <div className="flex flex-row gap-1">
-                    <label htmlFor="jobTitle">Job Title</label>
+                    <label htmlFor="jobTitle" className={labelCls}>Job Title</label>
                     <span className="text-red-600">*</span>
                   </div>
                   <select
                     defaultValue={formData.uai.jobTitle}
                     onChange={(e) =>
-                      setFormData({ ...formData, uai: {
-                        ...formData.uai,
-                        jobTitle: e.target.value,
-                      } })
+                      setFormData({ ...formData, uai: { ...formData.uai, jobTitle: e.target.value } })
                     }
-                    className="select select-bordered w-full mt-2 rounded text-[16px]"
+                    className={selectCls}
                   >
                     <option defaultValue="" disabled selected>
                       Job Title
@@ -521,277 +519,86 @@ export default function SignupPage() {
                     <option defaultValue="Non-Managerial">Non-Managerial</option>
                   </select>
 
-                  {errors.jobTitle && <p className="text-red-600 font-light text-[11px]">{errors.jobTitle}</p>}
+                  {errors.jobTitle && <p className={errorCls}>{errors.jobTitle}</p>}
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-1">
                   <div className="flex flex-row gap-1">
-                    <label htmlFor="lastName">Phone Number</label>
+                    <label htmlFor="lastName" className={labelCls}>Phone Number</label>
                     <span className="text-red-600">*</span>
                   </div>
                   <input
-                    className="input input-bordered w-full mt-2 rounded"
+                    className={inputCls}
                     placeholder="Enter Phone Number"
                     value={formData.uai.phoneNumber}
                     onChange={(e) =>
-                      setFormData({ ...formData, uai: {
-                        ...formData.uai,
-                        phoneNumber: e.target.value,
-                      } })
+                      setFormData({ ...formData, uai: { ...formData.uai, phoneNumber: e.target.value } })
                     }
                   />
-                  {errors.phoneNumber && <p className="text-red-600 font-light text-[11px]">{errors.phoneNumber}</p>}
+                  {errors.phoneNumber && <p className={errorCls}>{errors.phoneNumber}</p>}
                 </div>
-
               </div>
 
-              <div className="sm:w-[48%] space-y-2">
-                <h1 className="text-gray-500 text-[16px] font-semibold capitalize">Account Information</h1>
-                <div className="space-y-2">
+              <div className="space-y-4">
+                <h1 className={sectionTitleCls}>Account Information</h1>
+                <div className="space-y-1">
                   <div className="flex flex-row gap-1">
-                    <label htmlFor="businessEmail">Business Email</label>
+                    <label htmlFor="businessEmail" className={labelCls}>Business Email</label>
                     <span className="text-red-600">*</span>
                   </div>
                   <input
-                    className="input input-bordered w-full mt-2 rounded"
+                    className={inputCls}
                     placeholder="Enter Business Email"
                     value={formData.uai.businessEmail}
                     onChange={(e) =>
-                      setFormData({ ...formData, uai: {
-                        ...formData.uai,
-                        businessEmail: e.target.value,
-                      } })
+                      setFormData({ ...formData, uai: { ...formData.uai, businessEmail: e.target.value } })
                     }
                   />
-                  {errors.businessEmail && <p className="text-red-600 font-light text-[11px]">{errors.businessEmail}</p>}
+                  {errors.businessEmail && <p className={errorCls}>{errors.businessEmail}</p>}
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-1">
                   <div className="flex flex-row gap-1">
-                    <label htmlFor="userId">User ID</label>
+                    <label htmlFor="userId" className={labelCls}>User ID</label>
                     <span className="text-red-600">*</span>
                   </div>
                   <input
-                    className="input input-bordered w-full mt-2 rounded"
+                    className={inputCls}
                     placeholder="Enter User ID"
                     value={formData.uai.userId}
                     onChange={(e) =>
-                      setFormData({ ...formData, uai: {
-                        ...formData.uai,
-                        userId: e.target.value,
-                      } })
+                      setFormData({ ...formData, uai: { ...formData.uai, userId: e.target.value } })
                     }
                   />
-                  {errors.userId && <p className="text-red-600 font-light text-[11px]">{errors.userId}</p>}
+                  {errors.userId && <p className={errorCls}>{errors.userId}</p>}
                 </div>
 
-                <div>
+                <PasswordStrengthInput
+                  id="pwd"
+                  label="Password"
+                  required
+                  value={formData.uai.pwd}
+                  onChange={(v) => setFormData({ ...formData, uai: { ...formData.uai, pwd: v } })}
+                  disallowedValues={[formData.uai.firstName, formData.uai.userId, formData.uai.businessEmail]}
+                  error={errors.pwd}
+                />
+
+                <div className="space-y-1">
                   <div className="flex flex-row gap-1">
-                    <label htmlFor="pwd">Password</label>
+                    <label htmlFor="cpwd" className={labelCls}>Confirm Password</label>
                     <span className="text-red-600">*</span>
                   </div>
-                  <div className="relative">
-                    <input
-                      className="input input-bordered w-full mt-2 rounded"
-                      placeholder="Enter Password"
-                      value={formData.uai.pwd}
-                      type={showPassword ? "text" : "password"}
-                      onChange={(e) =>
-                        setFormData({ ...formData, uai: {
-                          ...formData.uai,
-                          pwd: e.target.value,
-                        } })
-                      }
-                    />
-
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-4 top-1/2 -translate-y-[30%] text-gray-500"
-                    >
-                      {showPassword ? (
-                        // 👁️ Eye Off
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="icon icon-tabler icons-tabler-outline icon-tabler-eye-off"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10.585 10.587a2 2 0 0 0 2.829 2.828" /><path d="M16.681 16.673a8.717 8.717 0 0 1 -4.681 1.327c-3.6 0 -6.6 -2 -9 -6c1.272 -2.12 2.712 -3.678 4.32 -4.674m2.86 -1.146a9.055 9.055 0 0 1 1.82 -.18c3.6 0 6.6 2 9 6c-.666 1.11 -1.379 2.067 -2.138 2.87" /><path d="M3 3l18 18" /></svg>
-                      ) : (
-                        // 👁️ Eye
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="icon icon-tabler icons-tabler-outline icon-tabler-eye"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" /><path d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6" /></svg>
-                      )}
-                    </button>
-                  </div>
-
-                  {errors.pwd && 
-                    <div>
-                      <p className="text-red-600 font-light text-[11px]">{errors.pwd}</p>
-                      <ul className="font-light text-[11px]">
-                        <li >
-                          {formData.uai.pwd.length >= 8 && formData.uai.pwd.length <= 32 ? (
-                            <div className="flex items-center gap-2">
-                              <span className="text-green-600">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" className="icon icon-tabler icons-tabler-filled icon-tabler-circle-check"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M17 3.34a10 10 0 1 1 -14.995 8.984l-.005 -.324l.005 -.324a10 10 0 0 1 14.995 -8.336zm-1.293 5.953a1 1 0 0 0 -1.32 -.083l-.094 .083l-3.293 3.292l-1.293 -1.292l-.094 -.083a1 1 0 0 0 -1.403 1.403l.083 .094l2 2l.094 .083a1 1 0 0 0 1.226 0l.094 -.083l4 -4l.083 -.094a1 1 0 0 0 -.083 -1.32z" /></svg>
-                              </span>
-                              <span className="text-green-600">
-                                Password must be 8-32 characters.
-                              </span>
-                            </div>
-                          ) : (
-                            <div className="flex items-center gap-2">
-                              <span className="text-red-600">
-                              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="icon icon-tabler icons-tabler-outline icon-tabler-info-circle"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0" /><path d="M12 9h.01" /><path d="M11 12h1v4h1" /></svg>
-                              </span>
-                              <span className="text-red-600">
-                                Password must be 8-32 characters.
-                              </span>
-                            </div>
-                          )}
-                        </li>
-                        <li className="flex items-center gap-2">
-                          {/[A-Z]/.test(formData.uai.pwd) ? (
-                              <div className="flex items-center gap-2">
-                              <span className="text-green-600">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" className="icon icon-tabler icons-tabler-filled icon-tabler-circle-check"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M17 3.34a10 10 0 1 1 -14.995 8.984l-.005 -.324l.005 -.324a10 10 0 0 1 14.995 -8.336zm-1.293 5.953a1 1 0 0 0 -1.32 -.083l-.094 .083l-3.293 3.292l-1.293 -1.292l-.094 -.083a1 1 0 0 0 -1.403 1.403l.083 .094l2 2l.094 .083a1 1 0 0 0 1.226 0l.094 -.083l4 -4l.083 -.094a1 1 0 0 0 -.083 -1.32z" /></svg>
-                              </span>
-                              <span className="text-green-600">
-                              One uppercase character.
-                              </span>
-                            </div>
-                          ) : (
-                            <div className="flex items-center gap-2">
-                              <span className="text-red-600">
-                              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="icon icon-tabler icons-tabler-outline icon-tabler-info-circle"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0" /><path d="M12 9h.01" /><path d="M11 12h1v4h1" /></svg>
-                              </span>
-                              <span className="text-red-600">
-                              One uppercase character.
-                              </span>
-                            </div>
-                          )}
-                        </li>
-                        <li className="flex items-center gap-2">
-                          {/[a-z]/.test(formData.uai.pwd) ? (
-                              <div className="flex items-center gap-2">
-                              <span className="text-green-600">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" className="icon icon-tabler icons-tabler-filled icon-tabler-circle-check"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M17 3.34a10 10 0 1 1 -14.995 8.984l-.005 -.324l.005 -.324a10 10 0 0 1 14.995 -8.336zm-1.293 5.953a1 1 0 0 0 -1.32 -.083l-.094 .083l-3.293 3.292l-1.293 -1.292l-.094 -.083a1 1 0 0 0 -1.403 1.403l.083 .094l2 2l.094 .083a1 1 0 0 0 1.226 0l.094 -.083l4 -4l.083 -.094a1 1 0 0 0 -.083 -1.32z" /></svg>
-                              </span>
-                              <span className="text-green-600">
-                              One lowercase character.
-                              </span>
-                            </div>
-                          ) : (
-                            <div className="flex items-center gap-2">
-                              <span className="text-red-600">
-                              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="icon icon-tabler icons-tabler-outline icon-tabler-info-circle"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0" /><path d="M12 9h.01" /><path d="M11 12h1v4h1" /></svg>
-                              </span>
-                              <span className="text-red-600">
-                              One lowercase character.
-                              </span>
-                            </div>
-                          )}
-                        </li>
-                        <li className="flex items-center gap-2">
-                          {/[!@#$%^&*(),.?":{}|<>]/.test(formData.uai.pwd) ? (
-                              <div className="flex items-center gap-2">
-                              <span className="text-green-600">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" className="icon icon-tabler icons-tabler-filled icon-tabler-circle-check"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M17 3.34a10 10 0 1 1 -14.995 8.984l-.005 -.324l.005 -.324a10 10 0 0 1 14.995 -8.336zm-1.293 5.953a1 1 0 0 0 -1.32 -.083l-.094 .083l-3.293 3.292l-1.293 -1.292l-.094 -.083a1 1 0 0 0 -1.403 1.403l.083 .094l2 2l.094 .083a1 1 0 0 0 1.226 0l.094 -.083l4 -4l.083 -.094a1 1 0 0 0 -.083 -1.32z" /></svg>
-                              </span>
-                              <span className="text-green-600">
-                              One special character.
-                              </span>
-                            </div>
-                          ) : (
-                            <div className="flex items-center gap-2">
-                              <span className="text-red-600">
-                              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="icon icon-tabler icons-tabler-outline icon-tabler-info-circle"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0" /><path d="M12 9h.01" /><path d="M11 12h1v4h1" /></svg>
-                              </span>
-                              <span className="text-red-600">
-                              One special character.
-                              </span>
-                            </div>
-                          )}
-                        </li>
-                        <li className="flex items-center gap-2">
-                          {/[0-9]/.test(formData.uai.pwd) ? (
-                            <div className="flex items-center gap-2">
-                            <span className="text-green-600">
-                              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" className="icon icon-tabler icons-tabler-filled icon-tabler-circle-check"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M17 3.34a10 10 0 1 1 -14.995 8.984l-.005 -.324l.005 -.324a10 10 0 0 1 14.995 -8.336zm-1.293 5.953a1 1 0 0 0 -1.32 -.083l-.094 .083l-3.293 3.292l-1.293 -1.292l-.094 -.083a1 1 0 0 0 -1.403 1.403l.083 .094l2 2l.094 .083a1 1 0 0 0 1.226 0l.094 -.083l4 -4l.083 -.094a1 1 0 0 0 -.083 -1.32z" /></svg>
-                            </span>
-                            <span className="text-green-600">
-                            Number (0-9)
-                            </span>
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-2">
-                            <span className="text-red-600">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="icon icon-tabler icons-tabler-outline icon-tabler-info-circle"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0" /><path d="M12 9h.01" /><path d="M11 12h1v4h1" /></svg>
-                            </span>
-                            <span className="text-red-600">
-                            Number (0-9)
-                            </span>
-                          </div>
-                          )}
-                        </li>
-                        <li className="flex items-center gap-2">
-                          {!(formData.uai.pwd.toLowerCase().includes(formData.uai.firstName.toLowerCase()) ||
-                            formData.uai.pwd.toLowerCase().includes(formData.uai.userId.toLowerCase()) ||
-                            formData.uai.pwd.toLowerCase().includes(formData.uai.businessEmail.toLowerCase()))
-                            ? (
-                              <div className="flex items-center gap-2">
-                              <span className="text-green-600">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" className="icon icon-tabler icons-tabler-filled icon-tabler-circle-check"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M17 3.34a10 10 0 1 1 -14.995 8.984l-.005 -.324l.005 -.324a10 10 0 0 1 14.995 -8.336zm-1.293 5.953a1 1 0 0 0 -1.32 -.083l-.094 .083l-3.293 3.292l-1.293 -1.292l-.094 -.083a1 1 0 0 0 -1.403 1.403l.083 .094l2 2l.094 .083a1 1 0 0 0 1.226 0l.094 -.083l4 -4l.083 -.094a1 1 0 0 0 -.083 -1.32z" /></svg>
-                              </span>
-                              <span className="text-green-600">
-                              Must not contain user name or user ID, or email address.
-                              </span>
-                            </div>
-                          ) : (
-                            <div className="flex items-center gap-2">
-                              <span className="text-red-600">
-                              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="icon icon-tabler icons-tabler-outline icon-tabler-info-circle"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0" /><path d="M12 9h.01" /><path d="M11 12h1v4h1" /></svg>
-                              </span>
-                              <span className="text-red-600">
-                              Must not contain user name or user ID, or email address.
-                              </span>
-                            </div>
-                            )}
-                        </li>
-                      </ul>
-                    </div>
-                  }
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex flex-row gap-1">
-                    <label htmlFor="cpwd">Confirm Password</label>
-                    <span className="text-red-600">*</span>
-                  </div>
-                <div className="relative">
                   <input
-                      type={showConfirmPassword ? "text" : "password"}
-                      className="input input-bordered w-full rounded"
-                      placeholder="Enter Confirm Password"
-                      value={formData.uai.cpwd}
-                      onChange={(e) =>
-                        setFormData({ ...formData, uai: {
-                          ...formData.uai,
-                          cpwd: e.target.value,
-                        } })
-                      }
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-4 top-1/2 -translate-y-[30%] text-gray-500"
-                    >
-                      {showConfirmPassword ? (
-                        // 👁️ Eye Off
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="icon icon-tabler icons-tabler-outline icon-tabler-eye-off"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10.585 10.587a2 2 0 0 0 2.829 2.828" /><path d="M16.681 16.673a8.717 8.717 0 0 1 -4.681 1.327c-3.6 0 -6.6 -2 -9 -6c1.272 -2.12 2.712 -3.678 4.32 -4.674m2.86 -1.146a9.055 9.055 0 0 1 1.82 -.18c3.6 0 6.6 2 9 6c-.666 1.11 -1.379 2.067 -2.138 2.87" /><path d="M3 3l18 18" /></svg>
-                      ) : (
-                        // 👁️ Eye
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="icon icon-tabler icons-tabler-outline icon-tabler-eye"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" /><path d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6" /></svg>
-                      )}
-                    </button>
+                    type="password"
+                    className={inputCls}
+                    placeholder="Enter Confirm Password"
+                    value={formData.uai.cpwd}
+                    onChange={(e) =>
+                      setFormData({ ...formData, uai: { ...formData.uai, cpwd: e.target.value } })
+                    }
+                  />
+                  {errors.cpwd && <p className={errorCls}>{errors.cpwd}</p>}
                 </div>
-                  {errors.cpwd && <p className="text-red-600 font-light text-[11px]">{errors.cpwd}</p>}
-                </div>
-
               </div>
             </form>
           </>
@@ -800,291 +607,18 @@ export default function SignupPage() {
       case 2:
         return (
           <>
-            <h2 className="text-center text-[24px] font-semibold text-[#4f9748] mb-4">
+            <h2 className="text-center text-[24px] font-bold text-[#4f9748] mb-6 tracking-tight">
               Company Information
             </h2>
 
-            <form className="flex flex-col sm:flex-row sm:flex-wrap sm:justify-center sm:gap-2 space-y-2 sm:space-y-0">
-              <div className="sm:w-[48%] border-r-0 sm:border-b-0 sm:border-r-2 sm:pe-2 space-y-2">
-                <div className="space-y-2">
-                  <div className="flex flex-row gap-1">
-                    <label htmlFor="companyName">Company Name</label>
-                    <span className="text-red-600">*</span>
-                  </div>
-                  <input
-                      className="input input-bordered w-full mt-2 rounded disabled:bg-gray-100 disabled:cursor-not-allowed"
-                      placeholder="Enter Company Name"
-                      value={formData.ci.companyName}
-                      // disabled={formData.document.isVerified}
-                      disabled
-                      onChange={(e) =>
-                        setFormData({ ...formData, ci: {
-                          ...formData.ci,
-                          companyName: e.target.value,
-                        }})
-                      }
-                    />
-                  {errors.companyName && <p className="text-red-600 font-light text-[11px]">{errors.companyName}</p>}
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex flex-row gap-1">
-                    <label htmlFor="companyRegisterNumber">Company Register Number</label>
-                    <span className="text-red-600">*</span>
-                  </div>
-                  <input
-                      className="input input-bordered w-full mt-2 rounded disabled:bg-gray-100 disabled:cursor-not-allowed"
-                      placeholder="Enter Company Register Number"
-                      value={formData.ci.companyRegisterNumber}
-                      // disabled={formData.document.isVerified}
-                      disabled
-                      onChange={(e) =>
-                        setFormData({ ...formData, ci: {
-                          ...formData.ci,
-                          companyRegisterNumber: e.target.value,
-                        } })
-                      }
-                    />
-                  {errors.companyRegisterNumber && <p className="text-red-600 font-light text-[11px]">{errors.companyRegisterNumber}</p>}
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex flex-row gap-1">
-                    <label htmlFor="localLang">Local Language</label>
-                    <span className="text-gray-600">(Optional)</span>
-                  </div>
-                  <input
-                    className="input input-bordered w-full mt-2 rounded"
-                    placeholder="Enter Local Language"
-                    value={formData.ci.localLang}
-                    onChange={(e) =>
-                      setFormData({ ...formData, ci: {
-                        ...formData.ci,
-                        localLang: e.target.value,
-                      } })
-                    }
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex flex-row gap-1">
-                    <label htmlFor="tradeName">Trade Name</label>
-                    <span className="text-red-600">*</span>
-                  </div>
-                  <input
-                    className="input input-bordered w-full mt-2 rounded"
-                    placeholder="Enter Trade Name"
-                    value={formData.ci.tradeName}
-                    onChange={(e) =>
-                      setFormData({ ...formData, ci: {
-                        ...formData.ci,
-                        tradeName: e.target.value,
-                      } })
-                    }
-                  />
-                  {errors.tradeName && <p className="text-red-600 font-light text-[11px]">{errors.tradeName}</p>}
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex flex-row gap-1">
-                    <label htmlFor="SPT">Shipping Party Type</label>
-                    <span className="text-red-600">*</span>
-                  </div>
-                  <select
-                    value={formData.ci.SPT}
-                    onChange={(e) =>
-                      setFormData({ ...formData, ci: {
-                        ...formData.ci,
-                        SPT: e.target.value,
-                      } })
-                    }
-                    className="select select-bordered w-full mt-2 rounded text-[16px]"
-                  >
-                    <option value="" disabled selected>
-                      Shipping Party Type
-                    </option>
-                    <option value="Shipper">
-                      <span>Shipper</span>
-                    </option>
-                    <option value="Consignee">Consignee</option>
-                    <option value="Freight Forwarder">Freight Forwarder</option>
-                    <option value="Customs/Agent">Customs/Agent</option>
-                  </select>
-
-                  {errors.SPT && <p className="text-red-600 font-light text-[11px]">{errors.SPT}</p>}
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex flex-row gap-1">
-                    <label htmlFor="CBT">Company Business Type</label>
-                    <span className="text-red-600">*</span>
-                  </div>
-                  <select
-                    value={formData.ci.CBT}
-                    onChange={(e) =>
-                      setFormData({ ...formData, ci: {
-                        ...formData.ci,
-                        CBT: e.target.value,
-                      } })
-                    }
-                    className="select select-bordered w-full mt-2 rounded text-[16px]"
-                  >
-                    <option value="" disabled selected>
-                      Company Business Type
-                    </option>
-                    <option value="BCO">BCO</option>
-                    <option value="NVOCC/OTI">NVOCC/OTI</option>
-                    <option value="Logistics Service Providers">Logistics Service Providers</option>
-                    <option value="Freight Management/Procurement">Freight Management/Procurement</option>
-                  </select>
-
-                  {errors.CBT && <p className="text-red-600 font-light text-[11px]">{errors.CBT}</p>}
-                </div>
-              </div>
-
-              <div className="sm:w-[48%] space-y-2">
-                <div className="space-y-2">
-                  <div className="flex flex-row gap-1">
-                    <label htmlFor="address">Address</label>
-                    <span className="text-red-600">*</span>
-                  </div>
-                  <input
-                    className="input input-bordered w-full mt-2 rounded"
-                    placeholder="Enter Address"
-                    value={formData.ci.address}
-                    onChange={(e) =>
-                      setFormData({ ...formData, ci: {
-                        ...formData.ci,
-                        address: e.target.value,
-                      } })
-                    }
-                  />
-                  {errors.address && <p className="text-red-600 font-light text-[11px]">{errors.address}</p>}
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex flex-row gap-1">
-                    <label htmlFor="city">City</label>
-                    <span className="text-red-600">*</span>
-                  </div>
-                  <input
-                    className="input input-bordered w-full mt-2 rounded"
-                    placeholder="Enter City"
-                    value={formData.ci.city}
-                    onChange={(e) =>
-                      setFormData({ ...formData, ci: {
-                        ...formData.ci,
-                        city: e.target.value,
-                      } })
-                    }
-                  />
-                  {errors.city && <p className="text-red-600 font-light text-[11px]">{errors.city}</p>}
-                </div>
-                
-                <div className="space-y-2">
-                  <div className="flex flex-row gap-1">
-                    <label htmlFor="country">Country</label>
-                    <span className="text-red-600">*</span>
-                  </div>
-                  <select
-                    value={formData.ci.country}
-                    onChange={(e) =>
-                      setFormData({ ...formData, ci: {
-                        ...formData.ci,
-                        country: e.target.value,
-                      } })
-                    }
-                    className="select select-bordered w-full mt-2 rounded text-[16px]"
-                  >
-                    <option value="" disabled selected>
-                      Country
-                    </option>
-                    {countries.map((ct) => 
-                      <option key={ct.code} value={ct.name}>{ct.name}</option>
-                    )}
-                  </select>
-
-                  {errors.country && <p className="text-red-600 font-light text-[11px]">{errors.country}</p>}
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex flex-row gap-1">
-                    <label htmlFor="zipCode">Zip Code</label>
-                    <span className="text-gray-600">(Optional)</span>
-                  </div>
-                  <input
-                    className="input input-bordered w-full mt-2 rounded"
-                    placeholder="Enter Zip Code"
-                    value={formData.ci.zipCode}
-                    onChange={(e) =>
-                      setFormData({ ...formData, ci: {
-                        ...formData.ci,
-                        zipCode: e.target.value,
-                      } })
-                    }
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex flex-row gap-1">
-                    <label htmlFor="department">Department</label>
-                    <span className="text-red-600">*</span>
-                  </div>
-                  <select
-                    value={formData.ci.department}
-                    onChange={(e) =>
-                      setFormData({ ...formData, ci: {
-                        ...formData.ci,
-                        department: e.target.value,
-                      } })
-                    }
-                    className="select select-bordered w-full mt-2 rounded text-[16px]"
-                  >
-                    <option value="" disabled selected>
-                      Department
-                    </option>
-                    {departments.map((dp,idx) => 
-                      <option key={idx} value={dp.name}>{dp.name}</option>
-                    )}
-                  </select>
-
-                  {errors.department && <p className="text-red-600 font-light text-[11px]">{errors.department}</p>}
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex flex-row gap-1">
-                    <label htmlFor="trade">Trade</label>
-                    <span className="text-red-600">*</span>
-                  </div>
-                  <select
-                    value={formData.ci.trade}
-                    onChange={(e) =>
-                      setFormData({ ...formData, ci: {
-                        ...formData.ci,
-                        trade: e.target.value,
-                      } })
-                    }
-                    className="select select-bordered w-full mt-2 rounded text-[16px]"
-                  >
-                    <option value="" disabled selected>
-                      Trade
-                    </option>
-                    {trades.map((td,idx) => 
-                      <option key={idx} value={td.name}>{td.name}</option>
-                    )}
-                  </select>
-
-                  {errors.trade && <p className="text-red-600 font-light text-[11px]">{errors.trade}</p>}
-                </div>
-              </div>
-
-              {/* ---------------- Business Document Upload + OCR ---------------- */}
-              <div className="w-full mt-2 space-y-2 border-t pt-3">
+            <form className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6">
+                            {/* ---------------- Business Document Upload + OCR ---------------- */}
+                            <div className="sm:col-span-2 mt-2 space-y-3 border-t border-slate-200 pt-5">
                 <div className="flex flex-row gap-1">
-                  <label htmlFor="document">Business Registration / TIN Document</label>
+                  <label htmlFor="document" className={labelCls}>Business Registration / TIN Document</label>
                   <span className="text-red-600">*</span>
                 </div>
-                <p className="text-gray-500 text-[12px]">
+                <p className="text-slate-500 text-[12px]">
                   Upload a clear photo or PDF of your company's registration certificate or TIN certificate.
                   We'll scan it to help pre-fill the fields above — please double-check them afterwards.
                 </p>
@@ -1095,7 +629,7 @@ export default function SignupPage() {
                     id="document"
                     type="file"
                     accept=".pdf,.png,.jpg,.jpeg,.webp,application/pdf,image/png,image/jpeg,image/webp"
-                    className="file-input file-input-bordered w-full sm:w-auto rounded"
+                    className="file-input file-input-bordered w-full sm:w-auto rounded-xl border-slate-200 bg-slate-50"
                     onChange={(e) => handleDocumentSelect(e.target.files ? e.target.files[0] : null)}
                     disabled={verifyingDocument}
                   />
@@ -1104,7 +638,7 @@ export default function SignupPage() {
                     type="button"
                     onClick={handleVerifyDocument}
                     disabled={!documentFile || verifyingDocument || formData.document.isVerified}
-                    className="px-3 py-2 text-[14px] rounded bg-[#4fb748] text-white hover:bg-[#4fb748]/80 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                    className={`${primaryBtnCls} whitespace-nowrap`}
                   >
                     {verifyingDocument
                       ? "Verifying..."
@@ -1118,7 +652,7 @@ export default function SignupPage() {
                       type="button"
                       onClick={handleRemoveDocument}
                       disabled={verifyingDocument}
-                      className="px-3 py-2 text-[14px] rounded text-[#ee3a23] hover:text-[#ee3a23]/80 transition-all duration-200 whitespace-nowrap"
+                      className={`${secondaryBtnCls} whitespace-nowrap`}
                     >
                       Remove
                     </button>
@@ -1126,17 +660,19 @@ export default function SignupPage() {
                 </div>
 
                 {documentFile && (
-                  <p className="text-gray-600 text-[12px]">
+                  <p className="text-slate-600 text-[12px]">
                     Selected: {documentFile.name} ({Math.round(documentFile.size / 1024)} KB)
                   </p>
                 )}
 
                 {formData.document.isVerified && (
-                  <div className="bg-green-100 border border-green-400 rounded p-2 text-[12px] text-gray-700 space-y-1">
+                  <div className="bg-[#4f9748]/5 border border-[#4f9748]/20 rounded-xl p-3 text-[12px] text-slate-700 space-y-1">
                     <p className="font-semibold text-[#4f9748]">Document verified — detected fields:</p>
                     <ul className="list-disc list-inside">
                       {formData.document.extracted?.tin && <li>TIN: {formData.document.extracted.tin}</li>}
-                      {formData.document.extracted?.companyName && <li>Company Name: {formData.document.extracted.companyName}</li>}
+                      {formData.document.extracted?.companyName && (
+                        <li>Company Name: {formData.document.extracted.companyName}</li>
+                      )}
                       {!formData.document.extracted?.tin && !formData.document.extracted?.companyName && (
                         <li>No fields could be auto-detected — please fill them in manually above.</li>
                       )}
@@ -1144,7 +680,248 @@ export default function SignupPage() {
                   </div>
                 )}
 
-                {errors.document && <p className="text-red-600 font-light text-[11px]">{errors.document}</p>}
+                {errors.document && <p className={errorCls}>{errors.document}</p>}
+              </div>
+
+              <div className="sm:border-r sm:border-slate-200 sm:pe-8 space-y-4">
+                <div className="space-y-1">
+                  <div className="flex flex-row gap-1">
+                    <label htmlFor="companyName" className={labelCls}>Company Name</label>
+                    <span className="text-red-600">*</span>
+                  </div>
+                  <input
+                    className={inputCls}
+                    placeholder="Enter Company Name"
+                    value={formData.ci.companyName}
+                    disabled
+                    onChange={(e) =>
+                      setFormData({ ...formData, ci: { ...formData.ci, companyName: e.target.value } })
+                    }
+                  />
+                  {errors.companyName && <p className={errorCls}>{errors.companyName}</p>}
+                </div>
+
+                <div className="space-y-1">
+                  <div className="flex flex-row gap-1">
+                    <label htmlFor="companyRegisterNumber" className={labelCls}>Company Register Number</label>
+                    <span className="text-red-600">*</span>
+                  </div>
+                  <input
+                    className={inputCls}
+                    placeholder="Enter Company Register Number"
+                    value={formData.ci.companyRegisterNumber}
+                    disabled
+                    onChange={(e) =>
+                      setFormData({ ...formData, ci: { ...formData.ci, companyRegisterNumber: e.target.value } })
+                    }
+                  />
+                  {errors.companyRegisterNumber && <p className={errorCls}>{errors.companyRegisterNumber}</p>}
+                </div>
+
+                <div className="space-y-1">
+                  <div className="flex flex-row gap-1">
+                    <label htmlFor="localLang" className={labelCls}>Local Language</label>
+                    <span className="text-slate-400 text-xs self-center">(Optional)</span>
+                  </div>
+                  <input
+                    className={inputCls}
+                    placeholder="Enter Local Language"
+                    value={formData.ci.localLang}
+                    onChange={(e) =>
+                      setFormData({ ...formData, ci: { ...formData.ci, localLang: e.target.value } })
+                    }
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <div className="flex flex-row gap-1">
+                    <label htmlFor="tradeName" className={labelCls}>Trade Name</label>
+                    <span className="text-red-600">*</span>
+                  </div>
+                  <input
+                    className={inputCls}
+                    placeholder="Enter Trade Name"
+                    value={formData.ci.tradeName}
+                    onChange={(e) =>
+                      setFormData({ ...formData, ci: { ...formData.ci, tradeName: e.target.value } })
+                    }
+                  />
+                  {errors.tradeName && <p className={errorCls}>{errors.tradeName}</p>}
+                </div>
+
+                <div className="space-y-1">
+                  <div className="flex flex-row gap-1">
+                    <label htmlFor="SPT" className={labelCls}>Shipping Party Type</label>
+                    <span className="text-red-600">*</span>
+                  </div>
+                  <select
+                    value={formData.ci.SPT}
+                    onChange={(e) =>
+                      setFormData({ ...formData, ci: { ...formData.ci, SPT: e.target.value } })
+                    }
+                    className={selectCls}
+                  >
+                    <option value="" disabled selected>
+                      Shipping Party Type
+                    </option>
+                    <option value="Shipper">
+                      <span>Shipper</span>
+                    </option>
+                    <option value="Consignee">Consignee</option>
+                    <option value="Freight Forwarder">Freight Forwarder</option>
+                    <option value="Customs/Agent">Customs/Agent</option>
+                  </select>
+
+                  {errors.SPT && <p className={errorCls}>{errors.SPT}</p>}
+                </div>
+
+                <div className="space-y-1">
+                  <div className="flex flex-row gap-1">
+                    <label htmlFor="CBT" className={labelCls}>Company Business Type</label>
+                    <span className="text-red-600">*</span>
+                  </div>
+                  <select
+                    value={formData.ci.CBT}
+                    onChange={(e) =>
+                      setFormData({ ...formData, ci: { ...formData.ci, CBT: e.target.value } })
+                    }
+                    className={selectCls}
+                  >
+                    <option value="" disabled selected>
+                      Company Business Type
+                    </option>
+                    <option value="BCO">BCO</option>
+                    <option value="NVOCC/OTI">NVOCC/OTI</option>
+                    <option value="Logistics Service Providers">Logistics Service Providers</option>
+                    <option value="Freight Management/Procurement">Freight Management/Procurement</option>
+                  </select>
+
+                  {errors.CBT && <p className={errorCls}>{errors.CBT}</p>}
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div className="space-y-1">
+                  <div className="flex flex-row gap-1">
+                    <label htmlFor="address" className={labelCls}>Address</label>
+                    <span className="text-red-600">*</span>
+                  </div>
+                  <input
+                    className={inputCls}
+                    placeholder="Enter Address"
+                    value={formData.ci.address}
+                    onChange={(e) =>
+                      setFormData({ ...formData, ci: { ...formData.ci, address: e.target.value } })
+                    }
+                  />
+                  {errors.address && <p className={errorCls}>{errors.address}</p>}
+                </div>
+
+                <div className="space-y-1">
+                  <div className="flex flex-row gap-1">
+                    <label htmlFor="city" className={labelCls}>City</label>
+                    <span className="text-red-600">*</span>
+                  </div>
+                  <input
+                    className={inputCls}
+                    placeholder="Enter City"
+                    value={formData.ci.city}
+                    onChange={(e) =>
+                      setFormData({ ...formData, ci: { ...formData.ci, city: e.target.value } })
+                    }
+                  />
+                  {errors.city && <p className={errorCls}>{errors.city}</p>}
+                </div>
+
+                <div className="space-y-1">
+                  <div className="flex flex-row gap-1">
+                    <label htmlFor="country" className={labelCls}>Country</label>
+                    <span className="text-red-600">*</span>
+                  </div>
+                  <select
+                    value={formData.ci.country}
+                    onChange={(e) =>
+                      setFormData({ ...formData, ci: { ...formData.ci, country: e.target.value } })
+                    }
+                    className={selectCls}
+                  >
+                    <option value="" disabled selected>
+                      Country
+                    </option>
+                    {countries.map((ct) => (
+                      <option key={ct.code} value={ct.name}>
+                        {ct.name}
+                      </option>
+                    ))}
+                  </select>
+
+                  {errors.country && <p className={errorCls}>{errors.country}</p>}
+                </div>
+
+                <div className="space-y-1">
+                  <div className="flex flex-row gap-1">
+                    <label htmlFor="zipCode" className={labelCls}>Zip Code</label>
+                    <span className="text-slate-400 text-xs self-center">(Optional)</span>
+                  </div>
+                  <input
+                    className={inputCls}
+                    placeholder="Enter Zip Code"
+                    value={formData.ci.zipCode}
+                    onChange={(e) =>
+                      setFormData({ ...formData, ci: { ...formData.ci, zipCode: e.target.value } })
+                    }
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <div className="flex flex-row gap-1">
+                    <label htmlFor="department" className={labelCls}>Department</label>
+                    <span className="text-red-600">*</span>
+                  </div>
+                  <select
+                    value={formData.ci.department}
+                    onChange={(e) =>
+                      setFormData({ ...formData, ci: { ...formData.ci, department: e.target.value } })
+                    }
+                    className={selectCls}
+                  >
+                    <option value="" disabled selected>
+                      Department
+                    </option>
+                    {departments.map((dp, idx) => (
+                      <option key={idx} value={dp.name}>
+                        {dp.name}
+                      </option>
+                    ))}
+                  </select>
+
+                  {errors.department && <p className={errorCls}>{errors.department}</p>}
+                </div>
+
+                <div className="space-y-1">
+                  <div className="flex flex-row gap-1">
+                    <label htmlFor="trade" className={labelCls}>Trade</label>
+                    <span className="text-red-600">*</span>
+                  </div>
+                  <select
+                    value={formData.ci.trade}
+                    onChange={(e) =>
+                      setFormData({ ...formData, ci: { ...formData.ci, trade: e.target.value } })
+                    }
+                    className={selectCls}
+                  >
+                    <option value="" disabled selected>
+                      Trade
+                    </option>
+                    {trades.map((td, idx) => (
+                      <option key={idx} value={td.name}>
+                        {td.name}
+                      </option>
+                    ))}
+                  </select>
+
+                  {errors.trade && <p className={errorCls}>{errors.trade}</p>}
+                </div>
               </div>
             </form>
           </>
@@ -1153,53 +930,46 @@ export default function SignupPage() {
       case 3:
         return (
           <>
-            <h2 className="text-center text-[24px] font-semibold text-[#4f9748] mb-4">
+            <h2 className="text-center text-[24px] font-bold text-[#4f9748] mb-6 tracking-tight">
               Additional Information
             </h2>
 
-            <form className="space-y-2 sm:space-y-0">
-              <div className="space-y-2">
-              <div className="space-y-2">
-                  <div className="flex flex-row gap-1">
-                    <label htmlFor="contact">Contact CLN (Cambodia) Co., Ltd.</label>
-                    <span className="text-red-600">*</span>
-                  </div>
-                  <select
-                    value={formData.ai.contact}
-                    onChange={(e) =>
-                      setFormData({ ...formData, ai: {
-                        ...formData.ai,
-                        contact: e.target.value,
-                      } })
-                    }
-                    className="select select-bordered w-full mt-2 rounded text-[16px]"
-                  >
-                    <option value="" disabled selected>
-                      Contact
-                    </option>
-                    <option value="Contact CLN (CAMBODIA) CO., LTD.">
-                      <span>Contact CLN (CAMBODIA) CO., LTD.</span>
-                    </option>
-                  </select>
-
-                  {errors.contact && <p className="text-red-600 font-light text-[11px]">{errors.contact}</p>}
+            <form className="space-y-4">
+              <div className="space-y-1">
+                <div className="flex flex-row gap-1">
+                  <label htmlFor="contact" className={labelCls}>Contact CLN (Cambodia) Co., Ltd.</label>
+                  <span className="text-red-600">*</span>
                 </div>
+                <select
+                  value={formData.ai.contact}
+                  onChange={(e) =>
+                    setFormData({ ...formData, ai: { ...formData.ai, contact: e.target.value } })
+                  }
+                  className={selectCls}
+                >
+                  <option value="" disabled selected>
+                    Contact
+                  </option>
+                  <option value="Contact CLN (CAMBODIA) CO., LTD.">
+                    <span>Contact CLN (CAMBODIA) CO., LTD.</span>
+                  </option>
+                </select>
 
-                <div className="space-y-2">
-                  <div className="flex flex-row gap-1">
-                    <label htmlFor="comment">Comment</label>
-                    <span className="text-gray-600">(Optional)</span>
-                  </div>
-                  <textarea
-                    className="input input-bordered w-full mt-2 rounded"
-                    value={formData.ai.comment}
-                    onChange={(e) =>
-                      setFormData({ ...formData, ai: {
-                        ...formData.ai,
-                        comment: e.target.value,
-                      } })
-                    }></textarea>
+                {errors.contact && <p className={errorCls}>{errors.contact}</p>}
+              </div>
+
+              <div className="space-y-1">
+                <div className="flex flex-row gap-1">
+                  <label htmlFor="comment" className={labelCls}>Comment</label>
+                  <span className="text-slate-400 text-xs self-center">(Optional)</span>
                 </div>
+                <textarea
+                  className={`${inputCls} min-h-[110px]`}
+                  value={formData.ai.comment}
+                  onChange={(e) =>
+                    setFormData({ ...formData, ai: { ...formData.ai, comment: e.target.value } })
+                  }
+                ></textarea>
               </div>
             </form>
           </>
@@ -1208,29 +978,29 @@ export default function SignupPage() {
       case 4:
         return (
           <>
-            <h2 className="text-center text-[24px] font-semibold text-[#4f9748] mb-4">
+            <h2 className="text-center text-[24px] font-bold text-[#4f9748] mb-6 tracking-tight">
               Review Registration
             </h2>
 
-            <div className="space-y-3 grid grid-cols-1 lg:grid-cols-2 gap-2 sm:space-y-0">
-              <div className="bg-base-400 p-3 rounded text-sm shadow-[rgba(9,_30,_66,_0.25)_0px_4px_8px_-2px,_rgba(9,_30,_66,_0.08)_0px_0px_0px_1px]">
+            <div className="space-y-3 grid grid-cols-1 lg:grid-cols-2 gap-3 sm:space-y-0">
+              <div className="bg-white p-4 rounded-2xl text-sm border border-slate-200 shadow-[0_1px_2px_rgba(9,30,66,0.06)]">
                 <div>
                   <div className="flex justify-between items-center">
-                    <h1 className="font-semibold text-[16px] mb-2 underline">User Information</h1>
-                    <button onClick={() => handleTabClick(1)} className="p-1 bg-blue-50 rounded">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3fa24f" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="icon icon-tabler icons-tabler-outline icon-tabler-edit"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" /><path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415" /><path d="M16 5l3 3" /></svg>
+                    <h1 className="font-semibold text-[15px] mb-2 text-slate-800">User Information</h1>
+                    <button onClick={() => handleTabClick(1)} className="p-1.5 bg-[#4f9748]/10 rounded-lg hover:bg-[#4f9748]/20 transition-colors">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4f9748" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" /><path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415" /><path d="M16 5l3 3" /></svg>
                     </button>
                   </div>
                   <table className="table table-xs sm:table-md">
                     <thead>
                       <tr>
-                        <th className="text-start">User Name</th>
-                        <th className="text-end">Job Title</th>
+                        <th className="text-start text-slate-400 font-medium">User Name</th>
+                        <th className="text-end text-slate-400 font-medium">Job Title</th>
                       </tr>
                     </thead>
                     <tbody>
                       <tr>
-                        <td>{userInformation.uai.firstName + ' ' + userInformation.uai.lastName}</td>
+                        <td>{userInformation.uai.firstName + " " + userInformation.uai.lastName}</td>
                         <td className="text-end">{userInformation.uai.jobTitle}</td>
                       </tr>
                     </tbody>
@@ -1238,7 +1008,7 @@ export default function SignupPage() {
                   <table className="table table-xs sm:table-md">
                     <thead>
                       <tr>
-                        <th className="text-start">Phone Number</th>
+                        <th className="text-start text-slate-400 font-medium">Phone Number</th>
                         <th className="text-start"></th>
                       </tr>
                     </thead>
@@ -1249,12 +1019,12 @@ export default function SignupPage() {
                       </tr>
                     </tbody>
                   </table>
-                  <h1 className="font-semibold text-[16px] my-2 underline">Account Information</h1>
+                  <h1 className="font-semibold text-[15px] my-2 text-slate-800">Account Information</h1>
                   <table className="table table-xs sm:table-md">
                     <thead>
                       <tr>
-                        <th className="text-start">Business</th>
-                        <th className="text-end">User ID</th>
+                        <th className="text-start text-slate-400 font-medium">Business</th>
+                        <th className="text-end text-slate-400 font-medium">User ID</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1267,26 +1037,26 @@ export default function SignupPage() {
                 </div>
               </div>
 
-              <div className="bg-base-400 p-3 rounded text-sm shadow-[rgba(9,_30,_66,_0.25)_0px_4px_8px_-2px,_rgba(9,_30,_66,_0.08)_0px_0px_0px_1px]">
+              <div className="bg-white p-4 rounded-2xl text-sm border border-slate-200 shadow-[0_1px_2px_rgba(9,30,66,0.06)]">
                 <div>
                   <div className="flex justify-between items-center">
-                    <h1 className="font-semibold text-[16px] mb-2 underline">Company Information</h1>
-                    <button onClick={() => handleTabClick(2)}  className="p-1 bg-blue-50 rounded">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3fa24f" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="icon icon-tabler icons-tabler-outline icon-tabler-edit"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" /><path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415" /><path d="M16 5l3 3" /></svg>
+                    <h1 className="font-semibold text-[15px] mb-2 text-slate-800">Company Information</h1>
+                    <button onClick={() => handleTabClick(2)} className="p-1.5 bg-[#4f9748]/10 rounded-lg hover:bg-[#4f9748]/20 transition-colors">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4f9748" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" /><path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415" /><path d="M16 5l3 3" /></svg>
                     </button>
                   </div>
 
                   <table className="table table-xs sm:table-md">
                     <thead>
                       <tr>
-                        <th className="text-start">Company Name</th>
-                        <th className="text-end">Local Language</th>
+                        <th className="text-start text-slate-400 font-medium">Company Name</th>
+                        <th className="text-end text-slate-400 font-medium">Local Language</th>
                       </tr>
                     </thead>
                     <tbody>
                       <tr>
                         <td>{userInformation.ci.companyName}</td>
-                        <td className="text-end">{userInformation.ci.localLange || 'N/A'}</td>
+                        <td className="text-end">{userInformation.ci.localLange || "N/A"}</td>
                       </tr>
                     </tbody>
                   </table>
@@ -1294,8 +1064,8 @@ export default function SignupPage() {
                   <table className="table table-xs sm:table-md">
                     <thead>
                       <tr>
-                        <th className="text-start">Trade Name</th>
-                        <th className="text-end">Shipping Party Type</th>
+                        <th className="text-start text-slate-400 font-medium">Trade Name</th>
+                        <th className="text-end text-slate-400 font-medium">Shipping Party Type</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1309,8 +1079,8 @@ export default function SignupPage() {
                   <table className="table table-xs sm:table-md">
                     <thead>
                       <tr>
-                        <th className="text-start">Company Business Type</th>
-                        <th className="text-end">Address</th>
+                        <th className="text-start text-slate-400 font-medium">Company Business Type</th>
+                        <th className="text-end text-slate-400 font-medium">Address</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1324,8 +1094,8 @@ export default function SignupPage() {
                   <table className="table table-xs sm:table-md">
                     <thead>
                       <tr>
-                        <th className="text-start">Address</th>
-                        <th className="text-end">City</th>
+                        <th className="text-start text-slate-400 font-medium">Address</th>
+                        <th className="text-end text-slate-400 font-medium">City</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1339,8 +1109,8 @@ export default function SignupPage() {
                   <table className="table table-xs sm:table-md">
                     <thead>
                       <tr>
-                        <th className="text-start">Country</th>
-                        <th className="text-end">Zip Code</th>
+                        <th className="text-start text-slate-400 font-medium">Country</th>
+                        <th className="text-end text-slate-400 font-medium">Zip Code</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1354,23 +1124,8 @@ export default function SignupPage() {
                   <table className="table table-xs sm:table-md">
                     <thead>
                       <tr>
-                        <th className="text-start">Country</th>
-                        <th className="text-end">Zip Code</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr>
-                        <td>{userInformation.ci.country}</td>
-                        <td className="text-end">{userInformation.ci.zipCode}</td>
-                      </tr>
-                    </tbody>
-                  </table>
-
-                  <table className="table table-xs sm:table-md">
-                    <thead>
-                      <tr>
-                        <th className="text-start">Department</th>
-                        <th className="text-end">Trade</th>
+                        <th className="text-start text-slate-400 font-medium">Department</th>
+                        <th className="text-end text-slate-400 font-medium">Trade</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1384,8 +1139,8 @@ export default function SignupPage() {
                   <table className="table table-xs sm:table-md">
                     <thead>
                       <tr>
-                        <th className="text-start">Business Document</th>
-                        <th className="text-end">Status</th>
+                        <th className="text-start text-slate-400 font-medium">Business Document</th>
+                        <th className="text-end text-slate-400 font-medium">Status</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1404,20 +1159,18 @@ export default function SignupPage() {
                 </div>
               </div>
 
-              <div className="lg:col-span-2 bg-base-400 p-3 rounded text-sm shadow-[rgba(9,_30,_66,_0.25)_0px_4px_8px_-2px,_rgba(9,_30,_66,_0.08)_0px_0px_0px_1px]">
+              <div className="lg:col-span-2 bg-white p-4 rounded-2xl text-sm border border-slate-200 shadow-[0_1px_2px_rgba(9,30,66,0.06)]">
                 <div>
                   <div className="flex justify-between items-center">
-                    <h1 className="font-semibold text-[16px] mb-2 underline">Addition Information</h1>
-                    <button 
-                    onClick={() => handleTabClick(3)} 
-                    className="p-1 bg-blue-50 rounded">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3fa24f" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="icon icon-tabler icons-tabler-outline icon-tabler-edit"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" /><path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415" /><path d="M16 5l3 3" /></svg>
+                    <h1 className="font-semibold text-[15px] mb-2 text-slate-800">Additional Information</h1>
+                    <button onClick={() => handleTabClick(3)} className="p-1.5 bg-[#4f9748]/10 rounded-lg hover:bg-[#4f9748]/20 transition-colors">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4f9748" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" /><path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415" /><path d="M16 5l3 3" /></svg>
                     </button>
                   </div>
                   <table className="table table-xs sm:table-md">
                     <thead>
                       <tr>
-                        <th className="text-start">Contact CLN (Cambodia) Co., Ltd.</th>
+                        <th className="text-start text-slate-400 font-medium">Contact CLN (Cambodia) Co., Ltd.</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1426,11 +1179,11 @@ export default function SignupPage() {
                       </tr>
                     </tbody>
                   </table>
-                  {userInformation.comment && 
+                  {userInformation.comment && (
                     <table className="table table-xs sm:table-md">
                       <thead>
                         <tr>
-                          <th className="text-start">Comment</th>
+                          <th className="text-start text-slate-400 font-medium">Comment</th>
                           <th className="text-start"></th>
                         </tr>
                       </thead>
@@ -1441,22 +1194,18 @@ export default function SignupPage() {
                         </tr>
                       </tbody>
                     </table>
-                    }
+                  )}
                 </div>
               </div>
             </div>
 
             <div className="w-full flex flex-row gap-2 justify-end overflow-hidden">
-                        <button onClick={handlePrevious} className="px-3 py-1 text-[16px] sm:text-[18px] rounded text-[#ee3a23] mt-2 hover:text-[#ee3a23]/80 transition-all duration-200 float-right">
-                          Previous
-                        </button>
-                        <button
-                      disabled={loading} // disable when loading
-                      onClick={handleSubmit}
-                      className="px-3 py-1 text-[16px] sm:text-[18px] rounded bg-[#4fb748] text-white mt-2 hover:bg-[#4fb748]/80 transition-all duration-200 float-right"
-                    >
-                      {loading ? "Submitting..." : "Submit"}
-                    </button>
+              <button onClick={handlePrevious} className={`${secondaryBtnCls} mt-4`}>
+                Previous
+              </button>
+              <button disabled={loading} onClick={handleSubmit} className={`${primaryBtnCls} mt-4`}>
+                {loading ? "Submitting..." : "Submit"}
+              </button>
             </div>
           </>
         );
@@ -1466,71 +1215,162 @@ export default function SignupPage() {
     }
   };
 
+  const stepDefs = [
+    { id: 1, name: "User & Account Info" },
+    { id: 2, name: "Company Info" },
+    { id: 3, name: "Additional Info" },
+    { id: 4, name: "Review Registration" },
+  ];
+
+  const heroHighlights = [
+    {
+      title: "Verified in minutes",
+      desc: "OCR-assisted document check pre-fills your company details.",
+      icon: (
+        <path d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+      ),
+    },
+    {
+      title: "Built for global trade",
+      desc: "Shippers, forwarders, and customs agents, all in one network.",
+      icon: (
+        <>
+          <path d="M2.25 12h19.5" />
+          <path d="M12 2.25a15.3 15.3 0 0 1 3.5 9.75 15.3 15.3 0 0 1-3.5 9.75 15.3 15.3 0 0 1-3.5-9.75A15.3 15.3 0 0 1 12 2.25Z" />
+        </>
+      ),
+    },
+    {
+      title: "Your data, protected",
+      desc: "Encrypted storage and two-factor sign-in on every account.",
+      icon: (
+        <path d="M12 2.75 4.5 6v6c0 5 3.2 8.4 7.5 9.25 4.3-.85 7.5-4.25 7.5-9.25V6L12 2.75Z" />
+      ),
+    },
+  ];
 
   /* ---------------- UI ---------------- */
   return (
-    <section className="flex flex-col lg:flex-row w-full mx-auto">
-      <div className="lg:w-1/2">
-        <img
-          src={Banner}
-          alt=""
-          className="h-[30vh] md:h-full w-full object-cover"
-        />
-      </div>
+    <section className="min-h-[90vh] flex items-center justify-center px-4 py-8">
+      <div className="overflow-hidden flex flex-col lg:flex-row w-full max-w-[720px] lg:max-w-[1450px] rounded-[28px] bg-white shadow-[0_1px_2px_rgba(9,30,66,0.08),0_24px_48px_-24px_rgba(9,30,66,0.25)] mx-auto">
+        {/* ---------------- HERO ---------------- */}
+        <div className="lg:w-1/2 relative min-h-[280px] lg:min-h-0 overflow-hidden">
+          <img src={Banner} alt="" className="absolute inset-0 h-full w-full object-cover" />
 
-      <div className="lg:w-1/2 p-3 ">
-        <h1 className="text-xl font-bold text-center text-gray-900 mb-4 uppercase">
-          Welcome to CLN (CAMBODIA) CO., LTD.
-        </h1>
+          {/* layered overlays for depth + legibility */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/35 to-black/10" />
+          <div className="absolute inset-0 bg-gradient-to-br from-[#173318]/60 via-transparent to-transparent" />
+          <div className="absolute -top-24 -right-24 h-72 w-72 rounded-full bg-[#4f9748]/30 blur-3xl" />
+          <div className="absolute -bottom-24 -left-16 h-72 w-72 rounded-full bg-emerald-400/20 blur-3xl" />
 
-        {/* STEPS */}
-        <ul className="steps w-full mb-6 ">
-          {[
-            { id: 1, name: "User & Account Info" },
-            { id: 2, name: "Company Info" },
-            { id: 3, name: "Additional Info" },
-            { id: 4, name: "Review Registration" },
-          ].map((step) => (
-            <li
-              key={step.id}
-              onClick={() => handleTabClick(step.id)}
-              // Show tick if completed, otherwise show step number
-              data-content={completedSteps.includes(step.id) ? "✓" : step.id}
-              className={`step ${
-                  activeTab && completedSteps.includes(step.id) 
-                  ? "step-primary !text-primary" // Completed step style
-                  : activeTab === step.id
-                  ? "step-primary"             // Active step style
-                  : ""                      // Future/uncompleted steps
-              }`}
-            >
-                {step.name}
-            </li>
-          ))}
-        </ul>
+          <div className="relative z-10 flex h-full flex-col justify-between p-6 sm:p-10 lg:p-12 text-white">
+            {/* wordmark */}
+            <div className="flex items-center gap-2.5">
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/15 backdrop-blur-sm border border-white/20 text-[13px] font-bold tracking-tight">
+                CLN
+              </span>
+              <span className="text-sm font-medium text-white/80">CLN (Cambodia) Co., Ltd.</span>
+            </div>
 
+            {/* headline */}
+            <div className="mt-8 lg:mt-0">
+              <h1 className="text-[28px] sm:text-[34px] font-bold tracking-tight leading-[1.15]">
+                Welcome to the CLN trade network
+              </h1>
+              <p className="mt-3 text-[15px] text-white/75 max-w-sm">
+                Create your business account to manage shipments, documents, and partners in one place.
+              </p>
+            </div>
 
-        {/* CONTENT */}
-        <div className="border rounded border-[#4f9748] px-4 pt-4 pb-6 bg-green-50">
-          {renderContent()}
+            {/* feature highlights */}
+            <ul className="mt-8 space-y-4 hidden sm:block">
+              {heroHighlights.map((item) => (
+                <li key={item.title} className="flex items-start gap-3">
+                  <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/10 border border-white/15">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      {item.icon}
+                    </svg>
+                  </span>
+                  <div>
+                    <p className="text-[14px] font-semibold text-white">{item.title}</p>
+                    <p className="text-[13px] text-white/65 leading-snug">{item.desc}</p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
 
-        {/* NEXT */}
-        {activeTab < 4 && (
-            <div className="w-full flex flex-row gap-2 justify-end overflow-hidden">
-                {activeTab > 2 && 
-                  <button onClick={handlePrevious} className="px-3 py-1 text-[16px] sm:text-[18px] rounded text-[#ee3a23] mt-2 hover:text-[#ee3a23]/80 transition-all duration-200 float-right">
-                    Previous
-                  </button>
-                }
-                <button
-                    onClick={handleNext}
-                    className="px-3 py-1 text-[16px] sm:text-[18px] rounded bg-[#4fb748] text-white mt-2 hover:bg-[#4fb748]/80 transition-all duration-200 float-right"
+        <div className="lg:w-1/2 p-5 sm:p-8">
+          <div className="text-center mb-6">
+            <h2 className="text-xl font-bold text-slate-900 tracking-tight">Create your account</h2>
+            <p className="text-sm text-slate-500 mt-1">Step {activeTab} of 4</p>
+          </div>
+
+          {/* CUSTOM PREMIUM STEP INDICATOR */}
+          <ol className="flex items-start w-full mb-8">
+            {stepDefs.map((step, idx) => {
+              const isCompleted = completedSteps.includes(step.id);
+              const isActive = activeTab === step.id;
+              return (
+                <li key={step.id} className="flex-1 flex items-center last:flex-none">
+                  <button
+                    type="button"
+                    onClick={() => handleTabClick(step.id)}
+                    className="flex flex-col items-center gap-1.5 group"
                   >
-                    Next
+                    <span
+                      className={`flex items-center justify-center h-8 w-8 rounded-full text-[13px] font-semibold border-2 transition-colors
+                        ${
+                          isCompleted
+                            ? "bg-[#4f9748] border-[#4f9748] text-white"
+                            : isActive
+                            ? "border-[#4f9748] text-[#4f9748] bg-white"
+                            : "border-slate-200 text-slate-400 bg-white group-hover:border-slate-300"
+                        }`}
+                    >
+                      {isCompleted ? "✓" : step.id}
+                    </span>
+                    <span
+                      className={`hidden sm:block text-[11px] text-center max-w-[86px] leading-tight
+                        ${isActive || isCompleted ? "text-slate-700 font-medium" : "text-slate-400"}`}
+                    >
+                      {step.name}
+                    </span>
+                  </button>
+                  {idx < stepDefs.length - 1 && (
+                    <span
+                      className={`flex-1 h-[2px] mx-2 mb-5 sm:mb-6 rounded-full transition-colors ${
+                        completedSteps.includes(stepDefs[idx + 1].id) || isCompleted
+                          ? "bg-[#4f9748]"
+                          : "bg-slate-200"
+                      }`}
+                    />
+                  )}
+                </li>
+              );
+            })}
+          </ol>
+
+          {/* CONTENT */}
+          <div className="rounded-2xl border border-slate-200 bg-slate-50/40 px-4 pt-5 pb-6 sm:px-6">
+            {renderContent()}
+          </div>
+
+          {/* NEXT */}
+          {activeTab < 4 && (
+            <div className="w-full flex flex-row gap-2 justify-end overflow-hidden">
+              {activeTab > 2 && (
+                <button onClick={handlePrevious} className={`${secondaryBtnCls} mt-4`}>
+                  Previous
                 </button>
+              )}
+              <button onClick={handleNext} className={`${primaryBtnCls} mt-4`}>
+                Next
+              </button>
             </div>
-        )}
+          )}
+        </div>
       </div>
     </section>
   );

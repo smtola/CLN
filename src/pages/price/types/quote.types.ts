@@ -128,3 +128,22 @@ export interface Quote {
     email?: string;
   };
 }
+
+export interface FreightQuoteRequest {
+  company_name: string;
+  full_name: string;
+  email: string;
+  address: string;
+  tel: string;
+  job: string;
+  origin_destination: string;
+  product_name: string;
+  weight_dimensions: string;
+  service: string;
+  container_size: string;
+}
+
+export interface FreightQuoteResponse {
+  message?: string;
+  [key: string]: unknown;
+}

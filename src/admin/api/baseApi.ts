@@ -1,4 +1,4 @@
-const BASE_URL = 'https://api.clncambodia.com/api/v1/docs';
+const BASE_URL = 'https://api.clncambodia.com/api/v1';
 
 interface RequestConfig {
   url: string;

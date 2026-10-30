@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import type { ChangeEvent, DragEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { CheckCircle2, ChevronDown, Loader2, UploadCloud, X, FileEdit, FilePlus2 } from "lucide-react";
 import { uploadFile, type UploadProgress, deleteFiles } from "../services/s3Service";
 import { showError, showSuccess, showLoading, closeAlert, getApiErrorMessage } from "../utils/swalHelper";
 
@@ -555,179 +556,211 @@ function CRUDForm<T>({
       setIsSubmitting(false);
     }
   };
-  
+
   return (
-    <div className="p-3 md:p-6 bg-white rounded w-full mx-auto mt-[2rem]">
-      <h1 className="text-xl md:text-2xl font-bold mb-4 md:mb-6">{id ? "Edit" : "Add"} {entityName}</h1>
+    <div className="relative overflow-hidden rounded-2xl border border-slate-200/70 bg-white shadow-[0_1px_2px_rgba(16,24,40,0.04),0_8px_24px_-8px_rgba(16,24,40,0.10)] md:rounded-3xl ">
+      {/* Gradient top rule — the one place the accent lives besides the primary action */}
+      <div className="h-1 w-full bg-gradient-to-r from-teal-600 via-sky-500 to-blue-600" />
 
-      <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6" encType="multipart/form-data">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-        {fields.map(f => (
-          <div key={String(f.name)}>
-            <label className="block font-medium mb-2 text-sm md:text-base">{f.label}</label>
-
-            {f.type === "select" ? (
-              <select
-                name={String(f.name)}
-                value={(form[f.name] as string) || ""}
-                onChange={handleChange}
-                className="w-full border rounded-lg px-3 py-2 text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-blue-400"
-                disabled={f.readOnly}
-              >
-                <option value="">Select {f.label}</option>
-                {extraSelectOptions?.[f.name]?.map((opt,idx) => (
-                  <option key={idx} value={opt.name}>{opt.name}</option>
-                ))}
-              </select>
-            ) : f.type === "textarea" ? (
-              <textarea
-                name={String(f.name)}
-                value={(form[f.name] as string) || ""}
-                onChange={handleChange}
-                className="w-full border rounded-lg px-3 py-2 text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-blue-400 min-h-[100px]"
-                readOnly={f.readOnly}
-              />
-            ) : f.type === "file" || f.type === "multi-image" ? (
-              <div>
-                <div
-                  onDragOver={(e) => handleDragOver(e, f)}
-                  onDragLeave={(e) => handleDragLeave(e, f)}
-                  onDrop={(e) => handleDrop(e, f)}
-                  className={`border-2 border-dashed rounded-lg p-6 transition-colors ${
-                    isDragging[String(f.name)]
-                      ? "border-blue-500 bg-blue-50"
-                      : "border-gray-300 hover:border-gray-400"
-                  } ${f.readOnly ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
-                  onClick={() => {
-                    if (!f.readOnly && fileInputRefs.current[String(f.name)]) {
-                      fileInputRefs.current[String(f.name)]?.click();
-                    }
-                  }}
-                >
-                  <input
-                    ref={(el) => {
-                      fileInputRefs.current[String(f.name)] = el;
-                    }}
-                    type="file"
-                    name={String(f.name)}
-                    onChange={(e) => handleFileChange(e, f)}
-                    className="hidden"
-                    multiple={f.multiple}
-                    accept={f.accept || "image/*"}
-                    disabled={f.readOnly}
-                  />
-                  <div className="text-center">
-                    <svg
-                      className="mx-auto h-12 w-12 text-gray-400"
-                      stroke="currentColor"
-                      fill="none"
-                      viewBox="0 0 48 48"
-                      aria-hidden="true"
-                    >
-                      <path
-                        d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
-                        strokeWidth={2}
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                    <div className="mt-4 flex text-sm leading-6 text-gray-600">
-                      <label className="relative cursor-pointer rounded-md font-semibold text-blue-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-blue-600 focus-within:ring-offset-2">
-                        <span>Upload {f.multiple ? "files" : "a file"}</span>
-                      </label>
-                      <p className="pl-1">or drag and drop</p>
-                    </div>
-                    <p className="text-xs leading-5 text-gray-600 mt-2">
-                      {f.accept || "Images"} up to {f.maxFileSize || 10}MB
-                      {f.multiple && f.maxFiles && ` (max ${f.maxFiles} files)`}
-                    </p>
-                  </div>
-                </div>
-
-                {errors[String(f.name)] && (
-                  <p className="mt-2 text-sm text-red-600">{errors[String(f.name)]}</p>
-                )}
-
-                {uploadStates[String(f.name)] && uploadStates[String(f.name)].length > 0 && (
-                  <div className="mt-4 space-y-3">
-                    {uploadStates[String(f.name)].map((uploadState, idx) => (
-                      <div
-                        key={idx}
-                        className="border border-gray-200 rounded-lg p-3 bg-gray-50"
-                      >
-                        <div className="flex items-start gap-3">
-                          <div className="relative w-20 h-20 rounded-lg overflow-hidden border border-gray-300 flex-shrink-0">
-                            <img
-                              src={uploadState.preview}
-                              alt="preview"
-                              className="w-full h-full object-cover"
-                            />
-                            {!f.readOnly && (
-                              <button
-                                type="button"
-                                onClick={() => removePreview(f.name, idx)}
-                                className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600"
-                              >
-                                &times; 
-                              </button>
-                            )}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-gray-900 truncate">
-                              {uploadState.file.name} 
-                            </p>
-                            <p className="text-xs text-gray-500 mt-1">
-                              {formatFileSize(uploadState.file.size)}
-                            </p>
-                            {uploadState.uploading && (
-                              <div className="mt-2">
-                                <div className="flex items-center justify-between text-xs text-gray-600 mb-1">
-                                  <span>Uploading...</span>
-                                  <span>{uploadState.progress}%</span>
-                                </div>
-                                <div className="w-full bg-gray-200 rounded-full h-2">
-                                  <div
-                                    className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                                    style={{ width: `${uploadState.progress}%` }}
-                                  />
-                                </div>
-                              </div>
-                            )}
-                            {uploadState.error && (
-                              <p className="text-xs text-red-600 mt-1">{uploadState.error}</p>
-                            )}
-                            {!uploadState.uploading && uploadState.progress === 100 && (
-                              <p className="text-xs text-green-600 mt-1">✓ Uploaded</p>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ) : (
-              <input
-                type={f.type || "text"}
-                name={String(f.name)}
-                value={(form[f.name] as string) || ""}
-                onChange={handleChange}
-                className="w-full border rounded-lg px-3 py-2 text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-blue-400"
-                readOnly={f.readOnly}
-              />
-            )}
+      <div className="p-4 md:p-8">
+        {/* Header */}
+        <div className="mb-6 flex items-center gap-3 md:mb-8">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-teal-600 to-blue-600 text-white shadow-md shadow-blue-600/20 md:h-12 md:w-12">
+            {id ? <FileEdit className="h-5 w-5 md:h-6 md:w-6" /> : <FilePlus2 className="h-5 w-5 md:h-6 md:w-6" />}
           </div>
-        ))}
+          <div className="min-w-0">
+            <h1 className="text-xl font-semibold tracking-tight text-slate-900 md:text-2xl">
+              {id ? "Edit" : "Add"} {entityName}
+            </h1>
+            <p className="text-sm text-slate-500">
+              {id ? `Update the details for this ${entityName.toLowerCase()}.` : `Fill in the details to create a new ${entityName.toLowerCase()}.`}
+            </p>
+          </div>
         </div>
 
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="w-full float-end sm:w-auto bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 disabled:cursor-not-allowed text-white px-5 py-2 rounded-lg transition-colors text-sm md:text-base font-medium"
-        >
-          {isSubmitting ? "Uploading..." : id ? "Update" : "Create"}
-        </button>
-      </form>
+        <form onSubmit={handleSubmit} className="space-y-6" encType="multipart/form-data">
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2 md:gap-6">
+            {fields.map(f => (
+              <div key={String(f.name)} className={f.type === "file" || f.type === "multi-image" || f.type === "textarea" ? "md:col-span-2" : ""}>
+                <label
+                  htmlFor={String(f.name)}
+                  className="mb-1.5 block text-sm font-medium text-slate-700"
+                >
+                  {f.label}
+                </label>
+
+                {f.type === "select" ? (
+                  <div className="relative">
+                    <select
+                      id={String(f.name)}
+                      name={String(f.name)}
+                      value={(form[f.name] as string) || ""}
+                      onChange={handleChange}
+                      className="w-full appearance-none rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 pr-9 text-sm text-slate-900 shadow-sm transition-all duration-150 hover:border-slate-300 focus:border-teal-500 focus:outline-none focus:ring-4 focus:ring-teal-500/10 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400 md:text-base"
+                      disabled={f.readOnly}
+                    >
+                      <option value="">Select {f.label}</option>
+                      {extraSelectOptions?.[f.name]?.map((opt, idx) => (
+                        <option key={idx} value={opt.name}>{opt.name}</option>
+                      ))}
+                    </select>
+                    <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  </div>
+                ) : f.type === "textarea" ? (
+                  <textarea
+                    id={String(f.name)}
+                    name={String(f.name)}
+                    value={(form[f.name] as string) || ""}
+                    onChange={handleChange}
+                    className="min-h-[110px] w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 shadow-sm transition-all duration-150 hover:border-slate-300 focus:border-teal-500 focus:outline-none focus:ring-4 focus:ring-teal-500/10 md:text-base"
+                    readOnly={f.readOnly}
+                  />
+                ) : f.type === "file" || f.type === "multi-image" ? (
+                  <div>
+                    <div
+                      onDragOver={(e) => handleDragOver(e, f)}
+                      onDragLeave={(e) => handleDragLeave(e, f)}
+                      onDrop={(e) => handleDrop(e, f)}
+                      className={`relative overflow-hidden rounded-xl border-2 border-dashed p-6 transition-all duration-150 md:p-8 ${
+                        isDragging[String(f.name)]
+                          ? "border-teal-500 bg-teal-50/60 ring-4 ring-teal-500/10"
+                          : "border-slate-200 bg-slate-50/50 hover:border-slate-300 hover:bg-slate-50"
+                      } ${f.readOnly ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}
+                      onClick={() => {
+                        if (!f.readOnly && fileInputRefs.current[String(f.name)]) {
+                          fileInputRefs.current[String(f.name)]?.click();
+                        }
+                      }}
+                    >
+                      <input
+                        ref={(el) => {
+                          fileInputRefs.current[String(f.name)] = el;
+                        }}
+                        type="file"
+                        name={String(f.name)}
+                        onChange={(e) => handleFileChange(e, f)}
+                        className="hidden"
+                        multiple={f.multiple}
+                        accept={f.accept || "image/*"}
+                        disabled={f.readOnly}
+                      />
+                      <div className="text-center">
+                        <div
+                          className={`mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br transition-colors duration-150 ${
+                            isDragging[String(f.name)]
+                              ? "from-teal-600 to-blue-600 text-white"
+                              : "from-slate-100 to-slate-100 text-slate-400"
+                          }`}
+                        >
+                          <UploadCloud className="h-5 w-5" />
+                        </div>
+                        <div className="mt-3 flex justify-center text-sm leading-6 text-slate-700">
+                          <span className="font-semibold text-teal-700">Upload {f.multiple ? "files" : "a file"}</span>
+                          <p className="pl-1 text-slate-500">or drag and drop</p>
+                        </div>
+                        <p className="mt-1.5 text-xs leading-5 text-slate-400">
+                          {f.accept || "Images"} up to {f.maxFileSize || 10}MB
+                          {f.multiple && f.maxFiles && ` · max ${f.maxFiles} files`}
+                        </p>
+                      </div>
+                    </div>
+
+                    {errors[String(f.name)] && (
+                      <p className="mt-2 text-sm text-red-600">{errors[String(f.name)]}</p>
+                    )}
+
+                    {uploadStates[String(f.name)] && uploadStates[String(f.name)].length > 0 && (
+                      <div className="mt-4 space-y-2.5">
+                        {uploadStates[String(f.name)].map((uploadState, idx) => (
+                          <div
+                            key={idx}
+                            className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm transition-shadow duration-150 hover:shadow-md"
+                          >
+                            <div className="flex items-start gap-3">
+                              <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border border-slate-200 md:h-20 md:w-20">
+                                <img
+                                  src={uploadState.preview}
+                                  alt="preview"
+                                  className="h-full w-full object-cover"
+                                />
+                                {!f.readOnly && (
+                                  <button
+                                    type="button"
+                                    onClick={() => removePreview(f.name, idx)}
+                                    aria-label="Remove file"
+                                    className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-slate-900/80 text-white transition-transform duration-150 hover:bg-red-600 active:scale-90"
+                                  >
+                                    <X className="h-3 w-3" />
+                                  </button>
+                                )}
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <p className="truncate text-sm font-medium text-slate-900">
+                                  {uploadState.file.name}
+                                </p>
+                                <p className="mt-0.5 text-xs text-slate-500">
+                                  {formatFileSize(uploadState.file.size)}
+                                </p>
+                                {uploadState.uploading && (
+                                  <div className="mt-2">
+                                    <div className="mb-1 flex items-center justify-between text-xs text-slate-600">
+                                      <span className="inline-flex items-center gap-1">
+                                        <Loader2 className="h-3 w-3 animate-spin text-amber-500" />
+                                        Uploading
+                                      </span>
+                                      <span className="font-medium text-slate-700">{uploadState.progress}%</span>
+                                    </div>
+                                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
+                                      <div
+                                        className="h-1.5 rounded-full bg-gradient-to-r from-amber-400 to-amber-500 transition-all duration-300"
+                                        style={{ width: `${uploadState.progress}%` }}
+                                      />
+                                    </div>
+                                  </div>
+                                )}
+                                {uploadState.error && (
+                                  <p className="mt-1 text-xs text-red-600">{uploadState.error}</p>
+                                )}
+                                {!uploadState.uploading && uploadState.progress === 100 && (
+                                  <p className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-teal-700">
+                                    <CheckCircle2 className="h-3.5 w-3.5" />
+                                    Uploaded
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <input
+                    id={String(f.name)}
+                    type={f.type || "text"}
+                    name={String(f.name)}
+                    value={(form[f.name] as string) || ""}
+                    onChange={handleChange}
+                    className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 shadow-sm transition-all duration-150 hover:border-slate-300 focus:border-teal-500 focus:outline-none focus:ring-4 focus:ring-teal-500/10 disabled:cursor-not-allowed disabled:bg-slate-50 md:text-base"
+                    readOnly={f.readOnly}
+                  />
+                )}
+              </div>
+            ))}
+          </div>
+
+          <div className="flex justify-end border-t border-slate-100 pt-5">
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-teal-600 to-blue-600 px-6 py-2.5 text-sm font-medium text-white shadow-md shadow-blue-600/20 transition-all duration-150 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-blue-600/30 active:scale-[0.98] disabled:cursor-not-allowed disabled:translate-y-0 disabled:from-slate-300 disabled:to-slate-300 disabled:shadow-none sm:w-auto md:text-base"
+            >
+              {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
+              {isSubmitting ? "Uploading..." : id ? "Save changes" : "Create"}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

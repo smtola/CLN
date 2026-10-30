@@ -1,3 +1,5 @@
+const CAMBODIA_TZ = 'Asia/Phnom_Penh';
+
 export const formatCurrency = (amount?: number | null, currency: string = 'USD'): string => {
   if (amount == null || isNaN(amount)) return '-';
   const symbols: Record<string, string> = {
@@ -29,12 +31,11 @@ export const formatDate = (dateString?: string): string => {
   if (!dateString) return '-';
   const date = new Date(dateString);
   if (isNaN(date.getTime())) return '-';
-  return date.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
+  return date.toLocaleDateString('en-GB', {
     day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    timeZone: CAMBODIA_TZ,
   });
 };
 
@@ -49,8 +50,10 @@ export const formatDateTime = (dateString?: string): string => {
     hour: '2-digit',
     minute: '2-digit',
     second: '2-digit',
+    timeZone: CAMBODIA_TZ,
   });
 };
+
 
 export const formatRelativeTime = (dateString?: string): string => {
   if (!dateString) return '-';

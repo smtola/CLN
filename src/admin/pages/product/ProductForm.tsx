@@ -58,6 +58,7 @@ const ProductForm = () => {
   };
 
   return (
+    <div className="p-3 md:p-6">
     <CRUDForm<Product>
       fetchItem={getProductById}
       createItem={createProduct}
@@ -67,6 +68,7 @@ const ProductForm = () => {
       onChangeField={handleFieldChange}
       extraSelectOptions={{ category: categories }} // pass categories for select field
     />
+    </div>
   );
 };
 

@@ -60,7 +60,7 @@ const AboutCLN: React.FC = () => {
               ABOUT CLN
             </h1>
             <p className="text-[16px] font-light text-justify text-white mt-2">
-              <span className="font-semibold">CLN Cambodia logistics </span>&nbsp; is a registered company that established its own office in Cambodia since 2015. Currently, we have an office in Phnom Penh and collaborate with many shipping companies both locally and overseas. Our company is now 30 years of experience in handling import and export logistics, along with advanced information technology, we are dedicated to offering the best international and domestic logistics services and networks that enable our customers to make “All the Possible Moves” in their supply chains. We also comply with Cambodia’s labor laws and are committed to providing the best services to meet our customers’ expectations.
+              <span className="font-semibold">CLN Cambodia logistics </span>&nbsp; is a registered company established in Cambodia since 2015. Currently, we have an office in Phnom Penh and collaborate with many shipping companies both locally and overseas. With over 30 years of experience in handling import and export logistics, along with advanced information technology, we are dedicated to offering the best international and domestic logistics services and networks that enable our customers to make “All the Possible Moves” in their supply chains. We also comply with Cambodia’s labor laws and are committed to providing the best services to meet our customers’ expectations.
               
             </p>
           </div>

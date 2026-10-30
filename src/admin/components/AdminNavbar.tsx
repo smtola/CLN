@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { NavLink, Link,useNavigate } from "react-router-dom";
+import { NavLink, Link, useNavigate } from "react-router-dom";
 import { logout } from "../../authService";
 import Swal from "sweetalert2";
 
@@ -28,7 +28,6 @@ const AdminNavbar = () => {
         timer: 1500,
         showConfirmButton: false,
       });
-     
     } catch (err: unknown) {
       Swal.fire(
         "Error",
@@ -43,6 +42,8 @@ const AdminNavbar = () => {
     { to: "/admin/product", label: "Product" },
     { to: "/admin/service", label: "Service" },
     { to: "/admin/seo", label: "SEO" },
+    { to: "/admin/rate", label: "Rate" },
+    { to: "/admin/port", label: "Port" },
     { to: "/admin/quote-history", label: "Quote History" },
     { to: "/admin/profile", label: "Profile" },
     { to: "/admin/user", label: "User" },
@@ -54,58 +55,73 @@ const AdminNavbar = () => {
       {/* Mobile Hamburger Button */}
       <button
         onClick={toggleMenu}
-        className="md:hidden fixed top-4 left-4 z-50 bg-[#c4ffc0] text-[#4FB748] p-2 rounded-lg shadow-lg hover:bg-[#b0e8ac] transition-colors"
         aria-label="Toggle menu"
+        aria-expanded={isOpen}
+        className="fixed left-4 top-4 z-50 rounded-lg bg-[#c4ffc0] p-2 text-[#4FB748] shadow-lg transition-colors duration-200 hover:bg-[#b0e8ac] active:scale-95 md:hidden"
       >
-        <svg
-          className="w-6 h-6"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          {isOpen ? (
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M6 18L18 6M6 6l12 12"
-            />
-          ) : (
+        <div className="relative h-6 w-6">
+          <svg
+            className={`absolute inset-0 h-6 w-6 transition-all duration-200 ${
+              isOpen ? "rotate-45 scale-75 opacity-0" : "rotate-0 scale-100 opacity-100"
+            }`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
               strokeWidth={2}
               d="M4 6h16M4 12h16M4 18h16"
             />
-          )}
-        </svg>
+          </svg>
+          <svg
+            className={`absolute inset-0 h-6 w-6 transition-all duration-200 ${
+              isOpen ? "rotate-0 scale-100 opacity-100" : "-rotate-45 scale-75 opacity-0"
+            }`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </div>
       </button>
 
-      {/* Backdrop for Mobile */}
-      {isOpen && (
-        <div
-          className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-40"
-          onClick={closeMenu}
-        />
-      )}
+      {/* Backdrop for Mobile — always mounted, fades via opacity so it never pops */}
+      <div
+        onClick={closeMenu}
+        aria-hidden="true"
+        className={`fixed inset-0 z-40 bg-black transition-opacity duration-300 md:hidden ${
+          isOpen ? "pointer-events-auto opacity-50" : "pointer-events-none opacity-0"
+        }`}
+      />
 
       {/* Sidebar Navigation */}
       <nav
         className={`
           fixed
-          top-0 left-0
-          w-64
-          bg-[#eff6ee] text-[#4FB748]
-          min-h-screen p-4
-          z-40
+          left-0 top-0
+          flex h-screen w-64 flex-col
           border-r border-[#4FB748]
-          shadow
+          bg-[#eff6ee] text-[#4FB748]
+          p-4
+          shadow-xl
+          z-40
           transform transition-transform duration-300 ease-in-out
           ${isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
         `}
       >
-        <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6">Admin Panel</h2>
-        <ul className="space-y-1 mb-4">
+        <h2 className="mb-4 shrink-0 text-xl font-bold md:mb-6 md:text-2xl">
+          Admin Panel
+        </h2>
+
+        <ul className="mb-4 flex-1 space-y-1 overflow-y-auto">
           {navLinks.map((link) => (
             <li key={link.to}>
               <NavLink
@@ -113,10 +129,10 @@ const AdminNavbar = () => {
                 end={link.end}
                 onClick={closeMenu}
                 className={({ isActive }) =>
-                  `block px-3 py-2 rounded text-sm md:text-base transition-colors ${
+                  `block rounded px-3 py-2 text-sm transition-all duration-200 md:text-base ${
                     isActive
-                      ? "text-[#EE3A23] bg-[#ffd4d0] border-l-4 border-[#EE3A23]"
-                      : "hover:bg-[#b0e8ac] hover:text-[#4FB748]"
+                      ? "border-l-4 border-[#EE3A23] bg-[#ffd4d0] text-[#EE3A23]"
+                      : "border-l-4 border-transparent hover:translate-x-0.5 hover:bg-[#b0e8ac] hover:text-[#4FB748]"
                   }`
                 }
               >
@@ -125,16 +141,16 @@ const AdminNavbar = () => {
             </li>
           ))}
         </ul>
-        
+
         {/* Navigate to Client Side Button */}
-        <div className="mt-6 pt-4 border-t border-[#4FB748]/30 space-y-2">
+        <div className="shrink-0 space-y-2 border-t border-[#4FB748]/30 pt-4">
           <Link
             to="/"
             onClick={closeMenu}
-            className="flex items-center gap-2 w-full px-3 py-2 rounded-lg bg-[#4FB748] text-white hover:bg-[#3d7a38] transition-colors text-sm md:text-base font-medium shadow-md"
+            className="flex w-full items-center gap-2 rounded-lg bg-[#4FB748] px-3 py-2 text-sm font-medium text-white shadow-md transition-all duration-200 hover:bg-[#3d7a38] hover:shadow-lg active:scale-[0.98] md:text-base"
           >
             <svg
-              className="w-5 h-5"
+              className="h-5 w-5"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -150,11 +166,11 @@ const AdminNavbar = () => {
           </Link>
           <button
             onClick={handleLogout}
-            className="flex items-center gap-2 w-full px-3 py-2 rounded-lg bg-[#f03d3d] text-white hover:bg-[#ed7e7e] transition-colors text-sm md:text-base font-medium shadow-md"
+            className="flex w-full items-center gap-2 rounded-lg bg-[#f03d3d] px-3 py-2 text-sm font-medium text-white shadow-md transition-all duration-200 hover:bg-[#ed7e7e] hover:shadow-lg active:scale-[0.98] md:text-base"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="w-5 h-5"
+              className="h-5 w-5"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"

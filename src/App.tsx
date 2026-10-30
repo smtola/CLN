@@ -5,7 +5,6 @@ import Footer from "./components/footer"
 import AboutCLN from "./pages/about-us/AboutUs"
 import Service from "./pages/services/Service"
 import Products from "./pages/products/Product"
-import ContactUs from "./pages/contact-us/contact-us"
 import SignupPage from "./pages/auth/SignupPage"
 import VerifyEmail from "./pages/auth/VerifyEmail"
 import LoginPage from "./pages/auth/Login"
@@ -15,6 +14,8 @@ import AdminPenal from "./admin/AdminPenal"
 import PriceApp from "./pages/price/App"
 import ForgetPassword from "./pages/auth/ForgetPassword"
 import ResetPassword from "./pages/auth/ResetPassword"
+import FreightQuotePage from "./pages/price/pages/FreightQuotePage"
+import ContactUs from "./pages/contact-us/contact-us"
 
 function App() {
   const location = useLocation();
@@ -73,12 +74,20 @@ function App() {
         <Route 
           path="/price/admin" 
           element={
-            <ProtectedRoute role="ADMIN">
-              <PriceApp 
-                defaultTab="ADMIN"
+            <ProtectedRoute role="USER">
+              <PriceApp
                 showHeader={true}
                 showFooter={true}
               />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route 
+          path="/freight-quote" 
+          element={
+            <ProtectedRoute role="USER">
+              <FreightQuotePage />
             </ProtectedRoute>
           }
         />

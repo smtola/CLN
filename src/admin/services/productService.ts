@@ -17,7 +17,7 @@ export const getProducts = async (params?: {
   }
 
   const response = await baseApi.get<ProductResponse>(
-    `/web/products?${query.toString()}`
+    `/docs/web/products?${query.toString()}`
   );
 
   return response;
@@ -25,7 +25,7 @@ export const getProducts = async (params?: {
 
 // ✅ GET a single Product
 export const getProductById = async (id: string): Promise<Product> => {
-  const response = await baseApi.get<Product | { data: Product }>(`/web/products/${id}`);
+  const response = await baseApi.get<Product | { data: Product }>(`/docs/web/products/${id}`);
   
   // Handle wrapped responses
   if (response && typeof response === 'object' && 'data' in response) {
@@ -37,7 +37,7 @@ export const getProductById = async (id: string): Promise<Product> => {
 
 // ✅ CREATE a new Product
 export const createProduct = async (data: Omit<Product, "_id">): Promise<Product> => {
-  return baseApi.post<Product>("/web/products", data);
+  return baseApi.post<Product>("/docs/web/products", data);
 };
 
 // ✅ UPDATE a Product
@@ -45,10 +45,10 @@ export const updateProduct = async (
   id: string,
   data: Partial<Product>
 ): Promise<Product> => {
-  return baseApi.put<Product>(`/web/products/${id}`, data);
+  return baseApi.put<Product>(`/docs/web/products/${id}`, data);
 };
 
 // ✅ DELETE a Product
 export const deleteProduct = async (id: string): Promise<void> => {
-  return baseApi.delete<void>(`/web/products/${id}`);
+  return baseApi.delete<void>(`/docs/web/products/${id}`);
 };

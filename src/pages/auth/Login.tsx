@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import Swal from "sweetalert2";
+import { showError, showSuccess} from "../../utils/swalHelper";
 import { login } from "../../authService";
 import { getPublicIp } from "../../utils/getIp";
 const Banner = "/assets/image/banner.png";
@@ -17,13 +17,14 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+
   const validateForm = () => {
     if (!businessEmail.trim() && !password) {
-      setError("Email and Password are required.");
+      showError("Email and Password are required.");
       return false;
     }
     if (!businessEmail.trim()) {
-      setError("Email is required.");
+      showError("Email is required.");
       return false;
     }
     if (!password) {
@@ -43,19 +44,9 @@ export default function LoginPage() {
 
       if (res.requiresOtp) {
         navigate("/auth/verify-otp", { state: { businessEmail } });
-        Swal.fire({
-          icon: "success",
-          title: res.msg,
-          timer: 1500,
-          showConfirmButton: false,
-        });
+        showSuccess(res.msg || "OTP sent", undefined, 1500);
       } else if (res.access_token && res.refresh_token) {
-        Swal.fire({
-          icon: "success",
-          title: "Login Successful",
-          timer: 1500,
-          showConfirmButton: false,
-        });
+        showSuccess("Login Successful", undefined, 1500);
         localStorage.setItem("token", res.access_token);
         // localStorage.setItem("role", res.role); // "admin" or "user"
 
@@ -69,96 +60,131 @@ export default function LoginPage() {
         // Login failed (wrong credentials, unverified email, etc.) — surface it as a toast, not just inline text
         const message = res.msg || "Invalid email or password. Please try again.";
         setError(message);
-        Swal.fire({
-          icon: "error",
-          title: "Login Failed",
-          text: message,
-          confirmButtonColor: "#d33",
-        });
+        showError("Login Failed", message);
       }
     } catch (err: unknown) {
-      Swal.fire(
-        "Error",
-        err instanceof Error ? err.message : "Unknown error occurred",
-        "error"
-      );
+      showError("Error", err instanceof Error ? err.message : "Unknown error occurred");
     } finally {
       setLoading(false);
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") handleLogin();
+  };
+
+  const emailInvalid = !!error && (error.includes("Email") || error.includes("Email and"));
+  const passwordInvalid = !!error && (error.includes("Password") || error.includes("Email and"));
+
   return (
-    <section className="overflow-hidden flex flex-col md:flex-row w-full max-w-[400px] md:max-w-screen-md xl:max-w-screen-xl shadow-[rgba(9,_30,_66,_0.25)_0px_4px_8px_-2px,_rgba(9,_30,_66,_0.08)_0px_0px_0px_1px] mx-auto my-[2rem] rounded-[20px]">
-      <div className="w-full md:w-[50%]">
-        <img
-          alt="Banner"
-          src={Banner}
-          className="h-56 w-full object-cover sm:h-full"
-        />
-      </div>
-      <div className="w-full md:w-[50%] md:p-4 lg:px-14 lg:py-24">
-        <div className="w-full max-w-md mx-auto bg-white p-8 rounded-2xl">
-          <h1 className="text-2xl font-bold text-center mb-6 text-[#4f9748]">Login</h1>
+    <section className="min-h-[80vh] flex items-center justify-center px-4 py-10">
+      <div className="overflow-hidden flex flex-col md:flex-row w-full max-w-[420px] md:max-w-screen-md xl:max-w-screen-xl rounded-[28px] bg-white shadow-[0_1px_2px_rgba(9,30,66,0.08),0_24px_48px_-24px_rgba(9,30,66,0.25)] mx-auto">
+        <div className="w-full md:w-[50%] relative min-h-[220px] md:min-h-0 overflow-hidden">
+          <img alt="" src={Banner} className="absolute inset-0 h-full w-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/35 to-black/10" />
+          <div className="absolute inset-0 bg-gradient-to-br from-[#173318]/60 via-transparent to-transparent" />
+          <div className="absolute -top-24 -right-24 h-72 w-72 rounded-full bg-[#4f9748]/30 blur-3xl" />
+          <div className="absolute -bottom-24 -left-16 h-72 w-72 rounded-full bg-emerald-400/20 blur-3xl" />
 
-          <div className="space-y-4">
-            {/* BusinessEmail */}
-            <input
-              type="text"
-              placeholder="Email"
-              value={businessEmail}
-              onChange={(e) => setBusinessEmail(e.target.value)}
-              className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 bg-gray-200 text-black ${
-                error?.includes("Email") || error?.includes("Email and")
-                  ? "border-red-500 focus:ring-red-500"
-                  : "focus:ring-blue-500"
-              }`}
-            />
-
-            {/* Password with toggle */}
-            <div className="relative">
-              <input
-                type={showPassword ? "text" : "password"}
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 bg-gray-200 text-black ${
-                  error?.includes("Password") || error?.includes("BusinessEmail and")
-                    ? "border-red-500 focus:ring-red-500"
-                    : "focus:ring-blue-500"
-                }`}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-gray-700"
-              >
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
+          <div className="relative z-10 flex h-full flex-col justify-between p-6 md:p-10 text-white">
+            <div className="flex items-center gap-2.5">
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/15 backdrop-blur-sm border border-white/20 text-[13px] font-bold tracking-tight">
+                CLN
+              </span>
+              <span className="text-sm font-medium text-white/80">CLN (Cambodia) Co., Ltd.</span>
             </div>
-            {error && (
-              <p className="text-red-500 text-sm mb-4">{error}</p>
-            )}
-            {/* Login button */}
-            <button
-              onClick={handleLogin}
-              disabled={loading}
-              className={`w-full py-2 rounded-lg text-white font-semibold transition ${
-                loading
-                  ? "bg-gray-400 cursor-not-allowed"
-                  : "bg-[#4F9848]/80 hover:bg-[#4F9848]"
-              }`}
-            >
-              {loading ? "Logging in..." : "Login"}
-            </button>
-            <span className="text-end text-gray-600 flex justify-end">
-              <NavLink to="/auth/forget-password" className="text-end text-[12px] font-light text-red-600 hover:underline">Forget Password</NavLink>
-            </span>
-            <span className="text-sm text-gray-600 flex justify-center">
-              Don’t have an account? &nbsp;
-              <NavLink to="/auth/sign-up" className="text-blue-600 hover:underline">
-                Sign Up
-              </NavLink>
-            </span>
+
+            <div className="mt-8 md:mt-0">
+              <h2 className="text-[26px] md:text-[30px] font-bold tracking-tight leading-[1.15]">
+                Your trade operations, in one login
+              </h2>
+              <p className="mt-2.5 text-[14px] text-white/75 max-w-xs">
+                Track shipments, manage documents, and coordinate with partners.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="w-full md:w-[50%] flex items-center">
+          <div className="w-full max-w-md mx-auto px-6 py-10 sm:px-10 sm:py-14">
+            <div className="mb-8 text-center">
+              <h1 className="text-[26px] font-bold text-[#4f9748] tracking-tight">Welcome back</h1>
+              <p className="mt-1.5 text-sm text-slate-500">Sign in to your account to continue</p>
+            </div>
+
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <label htmlFor="businessEmail" className="text-sm font-medium text-slate-700">
+                  Email
+                </label>
+                <input
+                  id="businessEmail"
+                  type="text"
+                  placeholder="you@company.com"
+                  value={businessEmail}
+                  onChange={(e) => setBusinessEmail(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  className={`w-full rounded-xl border bg-slate-50 px-4 py-3 text-[15px] text-slate-900
+                    placeholder:text-slate-400 outline-none transition-colors
+                    focus:ring-2 focus:ring-[#4f9748]/30 focus:border-[#4f9748]
+                    ${emailInvalid ? "border-red-400" : "border-slate-200"}`}
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label htmlFor="password" className="text-sm font-medium text-slate-700">
+                    Password
+                  </label>
+                  <NavLink
+                    to="/auth/forget-password"
+                    className="text-xs font-medium text-[#4f9748] hover:underline"
+                  >
+                    Forgot password?
+                  </NavLink>
+                </div>
+                <div className="relative">
+                  <input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Enter your password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    className={`w-full rounded-xl border bg-slate-50 px-4 py-3 pr-11 text-[15px] text-slate-900
+                      placeholder:text-slate-400 outline-none transition-colors
+                      focus:ring-2 focus:ring-[#4f9748]/30 focus:border-[#4f9748]
+                      ${passwordInvalid ? "border-red-400" : "border-slate-200"}`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    className="absolute inset-y-0 right-3 flex items-center text-slate-400 hover:text-[#4f9748] transition-colors"
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+              </div>
+
+              {error && <p className="text-[13px] text-red-500">{error}</p>}
+
+              <button
+                onClick={handleLogin}
+                disabled={loading}
+                className={`w-full py-3 rounded-xl text-white text-[15px] font-semibold shadow-sm transition-all
+                  ${loading ? "bg-slate-300 cursor-not-allowed" : "bg-[#4f9748] hover:bg-[#437d3d] active:scale-[0.99]"}`}
+              >
+                {loading ? "Logging in..." : "Login"}
+              </button>
+
+              <p className="text-center text-sm text-slate-500 pt-2">
+                Don&apos;t have an account?{" "}
+                <NavLink to="/auth/sign-up" className="font-medium text-[#4f9748] hover:underline">
+                  Sign Up
+                </NavLink>
+              </p>
+            </div>
           </div>
         </div>
       </div>

@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { Plus, Search, ChevronDown, ImageOff, Pencil, Trash2, ChevronLeft, ChevronRight, LayoutGrid } from "lucide-react";
 import { getServices, deleteService } from "../../services/serviceService";
 import type { ServiceItem, ServiceResponse } from "../../types/service";
 import { deleteFiles } from "../../services/s3Service";
@@ -102,10 +103,10 @@ const ServiceList = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
+      <div className="flex min-h-[400px] items-center justify-center">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mb-4" />
-          <p className="text-gray-600">Loading services...</p>
+          <div className="mx-auto mb-4 h-9 w-9 animate-spin rounded-full border-2 border-slate-200 border-t-teal-600" />
+          <p className="text-sm text-slate-500">Loading services…</p>
         </div>
       </div>
     );
@@ -113,132 +114,164 @@ const ServiceList = () => {
 
   return (
     <div className="p-3 md:p-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-        <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Services</h1>
+      {/* Header */}
+      <div className="mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight text-slate-900 md:text-3xl">Services</h1>
+          <p className="mt-1 text-sm text-slate-500">Manage the services you offer.</p>
+        </div>
         <button
-          className="w-full sm:w-auto bg-blue-500 hover:bg-blue-600 text-white px-4 md:px-6 py-2 rounded-lg shadow-md transition-colors duration-200 font-medium text-sm md:text-base"
+          className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-teal-600 to-blue-600 px-5 py-2.5 text-sm font-medium text-white shadow-md shadow-blue-600/20 transition-all duration-150 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-blue-600/30 active:scale-[0.98] sm:w-auto md:text-base"
           onClick={() => navigate("/admin/service/create")}
         >
-          + Add Service
+          <Plus className="h-4 w-4" />
+          Add service
         </button>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-3 mb-6 items-start sm:items-center">
-        <input
-          type="text"
-          placeholder="Search services..."
-          className="border rounded px-3 py-2 flex-1"
-          value={filters.search || ""}
-          onChange={(e) => {
-            setFilters((prev) => ({ ...prev, search: e.target.value }));
-            setPage(1);
-          }}
-        />
+      {/* Filters/Search/Sort */}
+      <div className="mb-4 flex flex-col gap-3 rounded-2xl border border-slate-200/70 bg-white p-3 shadow-sm sm:flex-row sm:items-center md:p-4">
+        <div className="relative flex-1">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <input
+            type="text"
+            placeholder="Search services..."
+            className="w-full rounded-lg border border-slate-200 py-2 pl-9 pr-3 text-sm text-slate-900 shadow-sm transition-all duration-150 hover:border-slate-300 focus:border-teal-500 focus:outline-none focus:ring-4 focus:ring-teal-500/10"
+            value={filters.search || ""}
+            onChange={(e) => {
+              setFilters((prev) => ({ ...prev, search: e.target.value }));
+              setPage(1);
+            }}
+          />
+        </div>
 
-        <select
-          className="border rounded px-3 py-2"
-          value={`${filters.sortBy || ""}-${filters.sortOrder || "asc"}`}
-          onChange={(e) => {
-            const [sortBy, sortOrder] = e.target.value.split("-") as [
-              "title" | "key",
-              "asc" | "desc"
-            ];
-            setFilters((prev) => ({ ...prev, sortBy, sortOrder }));
-          }}
-        >
-          <option value="-asc">Sort By</option>
-          <option value="title-asc">Title ↑</option>
-          <option value="title-desc">Title ↓</option>
-          <option value="key-asc">Key ↑</option>
-          <option value="key-desc">Key ↓</option>
-        </select>
-      </div>
+        <div className="relative">
+          <select
+            className="w-full appearance-none rounded-lg border border-slate-200 bg-white py-2 pl-3 pr-9 text-sm text-slate-900 shadow-sm transition-all duration-150 hover:border-slate-300 focus:border-teal-500 focus:outline-none focus:ring-4 focus:ring-teal-500/10 sm:w-auto"
+            value={`${filters.sortBy || ""}-${filters.sortOrder || "asc"}`}
+            onChange={(e) => {
+              const [sortBy, sortOrder] = e.target.value.split("-") as [
+                "title" | "key",
+                "asc" | "desc"
+              ];
+              setFilters((prev) => ({ ...prev, sortBy, sortOrder }));
+            }}
+          >
+            <option value="-asc">Sort by</option>
+            <option value="title-asc">Title ↑</option>
+            <option value="title-desc">Title ↓</option>
+            <option value="key-asc">Key ↑</option>
+            <option value="key-desc">Key ↓</option>
+          </select>
+          <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+        </div>
 
-      <div className="mb-4 flex items-center justify-end gap-2">
-        <label>Pages:</label>
-        <select
-          className="border rounded px-2 py-1"
-          value={pageSize}
-          onChange={(e) => handlePageSizeChange(Number(e.target.value))}
-        >
-          {[5, 10, 20, 50].map((size) => (
-            <option key={size} value={size}>
-              {size}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {displayedServices.length === 0 ? (
-        <div className="bg-white rounded-lg shadow p-6 text-center">No services found.</div>
-      ) : (
-        <div className="overflow-x-auto bg-white rounded-lg shadow">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Image
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Title
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Key
-                </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {displayedServices.map((service) => (
-                <tr key={service._id}>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {service.image ? (
-                      <img src={service.image} alt={service.title} className="w-12 h-12 object-cover rounded" />
-                    ) : (
-                      <span className="text-xs text-gray-400">No image</span>
-                    )}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">{service.title}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">{service.key}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right">
-                    <button
-                      className="text-blue-600 hover:text-blue-900 mr-4"
-                      onClick={() => navigate(`/admin/service/edit/${service._id}`)}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      className="text-red-600 hover:text-red-900"
-                      onClick={() => handleDelete(service._id)}
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
+        <div className="flex items-center gap-2 sm:ml-auto">
+          <label className="text-sm text-slate-500">Per page</label>
+          <div className="relative">
+            <select
+              className="appearance-none rounded-lg border border-slate-200 bg-white py-2 pl-3 pr-8 text-sm text-slate-900 shadow-sm transition-all duration-150 hover:border-slate-300 focus:border-teal-500 focus:outline-none focus:ring-4 focus:ring-teal-500/10"
+              value={pageSize}
+              onChange={(e) => handlePageSizeChange(Number(e.target.value))}
+            >
+              {[5, 10, 20, 50].map((size) => (
+                <option key={size} value={size}>{size}</option>
               ))}
-            </tbody>
-          </table>
+            </select>
+            <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+          </div>
+        </div>
+      </div>
 
-          <div className="flex justify-end gap-2 p-4">
-            <button
-              disabled={page === 1}
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              className="px-3 py-1 border rounded disabled:opacity-50"
-            >
-              Previous
-            </button>
-            <span className="px-3 py-1 border rounded">
-              {page} / {totalPages}
-            </span>
-            <button
-              disabled={page === totalPages}
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              className="px-3 py-1 border rounded disabled:opacity-50"
-            >
-              Next
-            </button>
+      {/* Service Table */}
+      {displayedServices.length === 0 ? (
+        <div className="rounded-2xl border border-slate-200/70 bg-white p-12 text-center shadow-sm">
+          <LayoutGrid className="mx-auto h-10 w-10 text-slate-300" />
+          <p className="mt-3 text-sm font-medium text-slate-700">No services found</p>
+          <p className="mt-1 text-sm text-slate-500">Try adjusting your search.</p>
+        </div>
+      ) : (
+        <div className="overflow-hidden rounded-2xl border border-slate-200/70 bg-white shadow-sm">
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-slate-100">
+              <thead className="bg-slate-50/80">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500">Image</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500">Title</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500">Key</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-slate-500">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {displayedServices.map((service) => (
+                  <tr key={service._id} className="transition-colors duration-150 hover:bg-slate-50/60">
+                    <td className="whitespace-nowrap px-6 py-3.5">
+                      {service.image ? (
+                        <img
+                          src={service.image}
+                          alt={service.title}
+                          className="h-10 w-10 rounded-lg border border-slate-200 object-cover shadow-sm"
+                        />
+                      ) : (
+                        <span className="flex h-10 w-10 items-center justify-center rounded-lg border border-dashed border-slate-200 text-slate-300">
+                          <ImageOff className="h-4 w-4" />
+                        </span>
+                      )}
+                    </td>
+                    <td className="whitespace-nowrap px-6 py-3.5 text-sm font-medium text-slate-900">
+                      {service.title}
+                    </td>
+                    <td className="whitespace-nowrap px-6 py-3.5">
+                      <span className="inline-flex items-center rounded-full bg-teal-50 px-2.5 py-1 text-xs font-medium text-teal-700">
+                        {service.key}
+                      </span>
+                    </td>
+                    <td className="whitespace-nowrap px-6 py-3.5 text-right">
+                      <button
+                        className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-sm font-medium text-slate-600 transition-colors duration-150 hover:bg-blue-50 hover:text-blue-700"
+                        onClick={() => navigate(`/admin/service/edit/${service._id}`)}
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                        Edit
+                      </button>
+                      <button
+                        className="ml-1 inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-sm font-medium text-slate-600 transition-colors duration-150 hover:bg-red-50 hover:text-red-700"
+                        onClick={() => handleDelete(service._id)}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Pagination */}
+          <div className="flex items-center justify-between border-t border-slate-100 px-4 py-3 sm:px-6">
+            <p className="text-sm text-slate-500">
+              Page <span className="font-medium text-slate-700">{page}</span> of{" "}
+              <span className="font-medium text-slate-700">{totalPages}</span>
+            </p>
+            <div className="flex gap-2">
+              <button
+                disabled={page === 1}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                className="flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-600 transition-colors duration-150 hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
+              >
+                <ChevronLeft className="h-3.5 w-3.5" />
+                Previous
+              </button>
+              <button
+                disabled={page === totalPages}
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                className="flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-600 transition-colors duration-150 hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
+              >
+                Next
+                <ChevronRight className="h-3.5 w-3.5" />
+              </button>
+            </div>
           </div>
         </div>
       )}

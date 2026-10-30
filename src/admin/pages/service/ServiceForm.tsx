@@ -32,6 +32,7 @@ const ServiceForm = () => {
   };
 
   return (
+    <div className="p-3 md:p-6">
     <CRUDForm<ServiceItem>
       fetchItem={getServiceById}
       createItem={createService}
@@ -40,6 +41,7 @@ const ServiceForm = () => {
       entityName="Service"
       onChangeField={handleFieldChange}
     />
+    </div>
   );
 };
 

@@ -2,7 +2,7 @@
 
 import { useState, useRef, type FormEvent, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import Swal from "sweetalert2";
+import { showSuccess, showError, showWarning } from "../../utils/swalHelper";
 import { resendOTP, verifyOTP } from "../../authService";
 import Banner from "/assets/image/banner.png";
 
@@ -146,7 +146,7 @@ export default function VerifyOTPPage() {
 
     const now = Date.now();
     if (attemptCooldownEnd > now) {
-      Swal.fire("Error", `You have exceeded the maximum OTP attempts. Try again later!`, "error");
+      showError("Error", `You have exceeded the maximum OTP attempts. Try again later!`);
       return;
     }
 
@@ -154,7 +154,7 @@ export default function VerifyOTPPage() {
     if (otpCode.length < OTP_LENGTH) {
       setShake(true);
       setTimeout(() => setShake(false), 400);
-      Swal.fire("Warning", "Please enter complete OTP", "warning");
+      showWarning("Warning", "Please enter complete OTP");
       return;
     }
 
@@ -182,15 +182,11 @@ export default function VerifyOTPPage() {
               : `You have exceeded the maximum OTP attempts. Wait ${formatTime(cooldownSec)} to try again.`;
         }
 
-        Swal.fire({
-          icon: "error",
-          title: "Error",
-          text: errorMessage,
-        });
+        showError("Error", errorMessage);
         return;
       }
 
-      Swal.fire({ icon: "success", title: "Verified", timer: 1500, showConfirmButton: false });
+      showSuccess("Verified", undefined, 1500);
       localStorage.removeItem("otpAttempts");
       localStorage.removeItem("otpCooldownEnd");
       localStorage.removeItem("otpEndTime");
@@ -203,7 +199,7 @@ export default function VerifyOTPPage() {
       if (cooldownSec > 0) {
         setAttemptCooldownEnd(Date.now() + cooldownSec * 1000);
       }
-      Swal.fire("Error", err instanceof Error ? err.message : "Unknown error", "error");
+      showError("Error", err instanceof Error ? err.message : "Unknown error");
     } finally {
       setLoading(false);
     }
@@ -222,11 +218,11 @@ export default function VerifyOTPPage() {
     try {
       const res = await resendOTP(businessEmail);
       if (!res.status) {
-        Swal.fire("Error", res.msg ?? "Resend failed", "error");
+        showError("Error", res.msg ?? "Resend failed");
         return;
       }
 
-      Swal.fire("Success", res.msg ?? "OTP resent", "success");
+      showSuccess(res.msg ?? "OTP resent");
       setOtp(Array(OTP_LENGTH).fill(""));
       localStorage.setItem("otpEndTime", (Date.now() + OTP_EXPIRE_SECONDS * 1000).toString());
       setOtpTimeLeft(OTP_EXPIRE_SECONDS);
@@ -241,67 +237,112 @@ export default function VerifyOTPPage() {
 
   /* ---------------- UI ---------------- */
   return (
-    <section className="overflow-hidden flex flex-col lg:flex-row w-full lg:max-w-screen-xl xl:shadow-[rgba(9,_30,_66,_0.25)_0px_4px_8px_-2px,_rgba(9,_30,_66,_0.08)_0px_0px_0px_1px] mx-auto my-[2rem] px-5 xl:px-0 xl:rounded-[20px]">
-      <div className="md:w-1/2">
-        <img src={Banner} alt="" className="w-full h-56 md:h-full object-cover" />
-      </div>
+    <section className="min-h-[80vh] flex items-center justify-center px-4 py-10">
+      <div className="overflow-hidden flex flex-col lg:flex-row w-full max-w-[440px] lg:max-w-screen-xl rounded-[28px] bg-white shadow-[0_1px_2px_rgba(9,30,66,0.08),0_24px_48px_-24px_rgba(9,30,66,0.25)] mx-auto">
+        <div className="lg:w-1/2 relative min-h-[220px] lg:min-h-0 overflow-hidden">
+          <img src={Banner} alt="" className="absolute inset-0 h-full w-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/35 to-black/10" />
+          <div className="absolute inset-0 bg-gradient-to-br from-[#173318]/60 via-transparent to-transparent" />
+          <div className="absolute -top-24 -right-24 h-72 w-72 rounded-full bg-[#4f9748]/30 blur-3xl" />
+          <div className="absolute -bottom-24 -left-16 h-72 w-72 rounded-full bg-emerald-400/20 blur-3xl" />
 
-      <div className="md:w-1/2 p-10 text-center">
-        <h1 className="text-2xl font-bold text-[#4f9748] mb-2">Two-Factor Verification</h1>
+          <div className="relative z-10 flex h-full flex-col justify-between p-6 lg:p-10 text-white">
+            <div className="flex items-center gap-2.5">
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/15 backdrop-blur-sm border border-white/20 text-[13px] font-bold tracking-tight">
+                CLN
+              </span>
+              <span className="text-sm font-medium text-white/80">CLN (Cambodia) Co., Ltd.</span>
+            </div>
 
-        <p className="text-sm text-gray-500 mb-4">Enter the {OTP_LENGTH}-digit OTP sent to your email</p>
-        {!cooldownActive &&
-          <p className="text-sm text-slate-500 mb-2">
-            {otpTimeLeft > 0 ? <>Code expires in <b>{formatTime(otpTimeLeft)}</b></> : <>⏳ Code expired</>}
-          </p>
-        }
-
-        {cooldownActive && (
-          <p className="text-sm text-red-500 mb-2">
-            You have exceeded the maximum OTP attempts. Wait {formatTime(Math.floor((attemptCooldownEnd - Date.now()) / 1000))} to try again.
-          </p>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className={`flex justify-center gap-3 ${shake ? "animate-shake" : ""}`}>
-            {otp.map((value, index) => (
-              <input
-                key={index}
-                ref={(el) => void (inputsRef.current[index] = el)}
-                value={value}
-                maxLength={1}
-                inputMode="numeric"
-                onChange={(e) => handleChange(e, index)}
-                onKeyDown={(e) => handleKeyDown(e, index)}
-                onPaste={handlePaste}
-                disabled={loading || cooldownActive}
-                className={`w-12 h-12 md:w-14 md:h-14 text-center text-2xl font-bold rounded border outline-none
-                  ${shake ? "border-red-500 ring-2 ring-red-200 bg-red-50" : "border-slate-300 bg-slate-100"}
-                  focus:ring-2 focus:ring-indigo-200`}
-              />
-            ))}
+            <div className="mt-8 lg:mt-0">
+              <h2 className="text-[26px] lg:text-[30px] font-bold tracking-tight leading-[1.15]">
+                One more step
+              </h2>
+              <p className="mt-2.5 text-[14px] text-white/75 max-w-xs">
+                A quick code keeps your business account secure.
+              </p>
+            </div>
           </div>
+        </div>
 
-          <button
-            type="submit"
-            disabled={!isOtpComplete || loading || cooldownActive}
-            className="w-full bg-[#4f9748] text-white py-2.5 rounded-lg font-semibold disabled:bg-gray-400"
-          >
-            {loading ? "Verifying..." : "Verify OTP"}
-          </button>
+        <div className="lg:w-1/2 flex items-center">
+          <div className="w-full max-w-md mx-auto px-6 py-10 sm:px-10 sm:py-14 text-center">
+            <div className="mb-2 flex justify-center">
+              <div className="h-14 w-14 rounded-2xl bg-[#4f9748]/10 flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#4f9748" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="11" width="18" height="10" rx="2" />
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                </svg>
+              </div>
+            </div>
 
-          <p className="text-sm text-slate-500">
-            Didn’t receive code?{" "}
-            <button
-              type="button"
-              onClick={handleResend}
-              disabled={resending}
-              className="font-medium text-[#4f9748] disabled:text-gray-400"
-            >
-              {resending ? "Resending..." : "Resend"}
-            </button>
-          </p>
-        </form>
+            <h1 className="text-[26px] font-bold text-[#4f9748] tracking-tight mb-1.5">Two-Factor Verification</h1>
+            <p className="text-sm text-slate-500 mb-5">Enter the {OTP_LENGTH}-digit code sent to your email</p>
+
+            {!cooldownActive && (
+              <p className="text-sm text-slate-500 mb-4">
+                {otpTimeLeft > 0 ? (
+                  <>Code expires in <span className="font-semibold text-slate-700">{formatTime(otpTimeLeft)}</span></>
+                ) : (
+                  <>⏳ Code expired</>
+                )}
+              </p>
+            )}
+
+            {cooldownActive && (
+              <div className="mb-4 rounded-xl bg-red-50 border border-red-100 px-3 py-2.5 text-sm text-red-600">
+                You&apos;ve exceeded the maximum OTP attempts. Wait{" "}
+                <span className="font-semibold">
+                  {formatTime(Math.floor((attemptCooldownEnd - Date.now()) / 1000))}
+                </span>{" "}
+                to try again.
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className={`flex justify-center gap-2.5 ${shake ? "animate-shake" : ""}`}>
+                {otp.map((value, index) => (
+                  <input
+                    key={index}
+                    ref={(el) => void (inputsRef.current[index] = el)}
+                    value={value}
+                    maxLength={1}
+                    inputMode="numeric"
+                    onChange={(e) => handleChange(e, index)}
+                    onKeyDown={(e) => handleKeyDown(e, index)}
+                    onPaste={handlePaste}
+                    disabled={loading || cooldownActive}
+                    className={`w-11 h-12 md:w-13 md:h-14 text-center text-xl font-semibold rounded-xl border outline-none transition-colors
+                      disabled:opacity-50 disabled:cursor-not-allowed
+                      ${shake ? "border-red-400 ring-2 ring-red-100 bg-red-50" : "border-slate-200 bg-slate-50"}
+                      focus:ring-2 focus:ring-[#4f9748]/30 focus:border-[#4f9748]`}
+                  />
+                ))}
+              </div>
+
+              <button
+                type="submit"
+                disabled={!isOtpComplete || loading || cooldownActive}
+                className="w-full py-3 rounded-xl text-white text-[15px] font-semibold shadow-sm transition-all
+                  bg-[#4f9748] hover:bg-[#437d3d] active:scale-[0.99] disabled:bg-slate-300 disabled:cursor-not-allowed disabled:active:scale-100"
+              >
+                {loading ? "Verifying..." : "Verify OTP"}
+              </button>
+
+              <p className="text-sm text-slate-500">
+                Didn&apos;t receive code?{" "}
+                <button
+                  type="button"
+                  onClick={handleResend}
+                  disabled={resending}
+                  className="font-semibold text-[#4f9748] hover:underline disabled:text-slate-400"
+                >
+                  {resending ? "Resending..." : "Resend"}
+                </button>
+              </p>
+            </form>
+          </div>
+        </div>
       </div>
 
       {/* Shake animation */}

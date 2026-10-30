@@ -1,13 +1,79 @@
-import { Eye, EyeOff } from "lucide-react";
+import { Building2, Check, Eye, EyeOff, ShieldCheck, User, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { changePassword, checkPassword, fetchProfile } from "../../authService";
 import type { Profile } from "../../types/auth";
 import { showError, showSuccess } from "../../admin/utils/swalHelper";
+// Adjust this path to wherever PasswordStrengthInput.tsx actually lives in your project
+import PasswordStrengthInput from "../PasswordStrengthInput";
 
 interface ShowPassword {
   current: boolean;
   new: boolean;
   confirm: boolean;
+}
+
+/** Simple slate-styled password field (no strength meter) — used for Current/Confirm */
+function SimplePasswordField({
+  id,
+  label,
+  value,
+  onChange,
+  error,
+  show,
+  onToggleShow,
+  matchOk,
+  matchLabel = "Passwords match",
+}: {
+  id: string;
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  error?: string;
+  show: boolean;
+  onToggleShow: () => void;
+  /** Optional: show a green check when the value is non-empty and valid (e.g. passwords match, password verified) */
+  matchOk?: boolean;
+  /** Accessible label for the check icon; defaults to "Passwords match" */
+  matchLabel?: string;
+}) {
+  return (
+    <div className="w-full">
+      <label htmlFor={id} className="mb-2 block text-sm text-gray-700">
+        {label}
+      </label>
+      <div className="relative">
+        <input
+          id={id}
+          type={show ? "text" : "password"}
+          placeholder={label}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className={`w-full rounded-xl border bg-slate-50 px-4 py-3 pr-16 text-base text-slate-900
+            outline-none transition-colors placeholder:text-slate-400
+            focus:border-[#4f9748] focus:ring-2 focus:ring-[#4f9748]/30
+            ${error ? "border-red-400" : "border-slate-200"}`}
+        />
+        <div className="absolute right-3 top-1/2 flex -translate-y-1/2 items-center gap-2">
+          {matchOk && (
+            <Check className="h-4 w-4 text-[#4f9748]" aria-label={matchLabel} />
+          )}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onToggleShow();
+            }}
+            aria-label={show ? "Hide password" : "Show password"}
+            className="text-slate-400 transition-transform transition-colors duration-150 hover:text-[#4f9748] active:scale-90"
+          >
+            {show ? <EyeOff size={18} /> : <Eye size={18} />}
+          </button>
+        </div>
+      </div>
+      {error && <p className="mt-1.5 text-[11px] font-light text-red-600">{error}</p>}
+    </div>
+  );
 }
 
 const defaultData = {
@@ -17,6 +83,31 @@ const defaultData = {
     confirm_password: "",
   },
 };
+
+/** Small presentational helper — keeps the label/value pairing consistent everywhere */
+function Field({ label, value }: { label: string; value?: string }) {
+  return (
+    <div>
+      <h1 className="text-md font-semibold text-gray-400">{label}</h1>
+      <p className="text-md font-light text-gray-900">{value || "—"}</p>
+    </div>
+  );
+}
+
+function SectionHeader({
+  icon,
+  title,
+}: {
+  icon: React.ReactNode;
+  title: string;
+}) {
+  return (
+    <div className="mb-3 flex items-center gap-2 border-b border-gray-100 pb-2">
+      <span className="text-gray-400">{icon}</span>
+      <h2 className="text-sm font-semibold text-gray-500">{title}</h2>
+    </div>
+  );
+}
 
 const Profiles = () => {
   const modalRef = useRef<HTMLDialogElement>(null);
@@ -30,7 +121,7 @@ const Profiles = () => {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [users, setUsers] = useState<Profile>();
-  
+
   useEffect(() => {
     const fetchUser = async () => {
       const res = await fetchProfile();
@@ -74,28 +165,23 @@ const Profiles = () => {
 
     setLoading(true);
     try {
-      const result = await checkPassword(formData.uai.current_password);
-      
-      if ("valid" in result && result.valid) {
+      const checkResult = await checkPassword(formData.uai.current_password);
+
+      if ("valid" in checkResult && checkResult.valid) {
         if (!validation()) return;
         setPasswordValid(true);
-        console.log(
-          "Current password correct. Proceed to change password:",
-          formData.uai.new_password
-        );
-        // TODO: Call your "change password" API here
-        // Step 3: Call change-password API
-        const result = await changePassword(
+
+        const changeResult = await changePassword(
           formData.uai.current_password,
           formData.uai.new_password,
           formData.uai.confirm_password
         );
 
-        if (result.status) {
+        if (changeResult.status) {
           showSuccess("Password changed successfully!");
           setFormData(defaultData);
         } else {
-          showError(result.msg || "Failed to change password");
+          showError(changeResult.msg || "Failed to change password");
         }
       } else {
         setPasswordValid(false);
@@ -119,328 +205,194 @@ const Profiles = () => {
   return (
     <div>
       <button
-        className="block w-full text-center font-bold border-b px-4 py-2 text-md text-blue-700 hover:bg-blue-100"
+        className="flex w-full items-center gap-2.5 rounded-lg px-4 py-2 text-left text-sm font-medium text-blue-700 transition-colors duration-150 hover:bg-blue-100"
         onClick={() => modalRef.current?.showModal()}
       >
+        <User className="h-4 w-4" />
         Profile
       </button>
 
-      <dialog ref={modalRef} className="modal rounded">
-        <div className="modal-box w-11/12 max-w-5xl ">
-          <h3 className="font-bold text-xl text-center mb-4">
-              User & Account Information
-          </h3>{" "}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-            {/* User & Account Information */}{" "}
-            <div className="shadow-[rgba(9,_30,_66,_0.25)_0px_4px_8px_-2px,_rgba(9,_30,_66,_0.08)_0px_0px_0px_1px] p-3 rounded">
-              <ul className="flex flex-row items-start">
-                {" "}
-                <li className="w-[60%] mx-auto">
-                  {" "}
-                  <h1 className="text-md font-semibold text-gray-400">
-                    First Name
-                  </h1>{" "}
-                  <p className="text-md font-light text-gray-900">{users?.uai.firstName}</p>{" "}
-                </li>{" "}
-                <li className="w-[40%] mx-auto">
-                  {" "}
-                  <h1 className="text-start text-md font-semibold text-gray-400">
-                    Last Name
-                  </h1>{" "}
-                  <p className="text-md font-light text-gray-900">{users?.uai.lastName}</p>{" "}
-                </li>{" "}
-              </ul>{" "}
-              <ul className="flex flex-row items-start">
-                {" "}
-                <li className="w-[60%] mx-auto">
-                  {" "}
-                  <h1 className="text-start text-md font-semibold text-gray-400">
-                    Job Title
-                  </h1>{" "}
-                  <p className="text-md font-light text-gray-900">{users?.uai.jobTitle}</p>{" "}
-                </li>{" "}
-                <li className="w-[40%] mx-auto">
-                  {" "}
-                  <h1 className="text-start text-md font-semibold text-gray-400">
-                    Phone Number
-                  </h1>{" "}
-                  <p className="text-md font-light text-gray-900">{users?.uai.phoneNumber}</p>{" "}
-                </li>{" "}
-              </ul>{" "}
-              <ul className="flex flex-row items-start">
-                {" "}
-                <li className="w-[60%] mx-auto">
-                  {" "}
-                  <h1 className="text-start text-md font-semibold text-gray-400">
-                    Business Email
-                  </h1>{" "}
-                  <p className="text-md font-light text-gray-900">
-                  {users?.uai.businessEmail}
-                  </p>{" "}
-                </li>{" "}
-                <li className="w-[40%] mx-auto">
-                  {" "}
-                  <h1 className="text-start text-md font-semibold text-gray-400">
-                    User ID
-                  </h1>{" "}
-                  <p className="text-md font-light text-gray-900">{users?.uai.userId}</p>{" "}
-                </li>{" "}
-              </ul>{" "}
+      <style>{`
+        dialog.profile-modal[open] {
+          animation: profileModalIn 0.18s ease-out;
+        }
+        dialog.profile-modal[open]::backdrop {
+          animation: profileBackdropIn 0.18s ease-out;
+        }
+        @keyframes profileModalIn {
+          from { opacity: 0; transform: scale(0.97) translateY(6px); }
+          to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        @keyframes profileBackdropIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+      `}</style>
+
+      <dialog
+        ref={modalRef}
+        className="modal profile-modal rounded backdrop:bg-black/40 backdrop:backdrop-blur-sm"
+      >
+        <div className="modal-box w-11/12 max-w-5xl rounded-2xl p-0">
+          {/* Header */}
+          <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
+            <div>
+              <h3 className="text-lg font-bold text-gray-900">
+                User &amp; Account Information
+              </h3>
+              <p className="text-sm text-gray-400">
+                Review your details and manage your password
+              </p>
             </div>
-            
-            {/* ---------------- Current Password ---------------- */}
-          <div className="shadow-[rgba(9,_30,_66,_0.25)_0px_4px_8px_-2px,_rgba(9,_30,_66,_0.08)_0px_0px_0px_1px] p-3 rounded">
-          <hr className="my-2 sm:hidden" />
-            <form className="space-y-4">
-                  <div className="space-y-2">
-                    <label className="text-md font-semibold text-gray-400">
-                      Current Password
-                    </label>
-                    <div className="relative">
-                      <input
-                        type={showPassword.current ? "text" : "password"}
-                        placeholder="Current Password"
-                        value={formData.uai.current_password}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            uai: {
-                              ...formData.uai,
-                              current_password: e.target.value,
-                            },
-                          })
-                        }
-                        className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 bg-gray-200 text-black ${
-                          passwordValid === false
-                            ? "border-red-500"
-                            : "border-gray-300"
-                        }`}
-                      />
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setShowPassword((prev) => ({
-                            ...prev,
-                            current: !prev.current,
-                          }));
-                        }}
-                        className="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-gray-700"
-                      >
-                        {showPassword.current ? (
-                          <EyeOff size={18} />
-                        ) : (
-                          <Eye size={18} />
-                        )}
-                      </button>
-                    </div>
-                    {errors.current_password && (
-                      <p className="text-red-600 text-md">
-                        {errors.current_password}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* ---------------- New Password ---------------- */}
-                  <div className="space-y-2">
-                    <label className="text-md font-semibold text-gray-400">
-                      New Password
-                    </label>
-                    <div className="relative">
-                      <input
-                        type={showPassword.new ? "text" : "password"}
-                        placeholder="New Password"
-                        value={formData.uai.new_password}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            uai: { ...formData.uai, new_password: e.target.value },
-                          })
-                        }
-                        className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 bg-gray-200 text-black"
-                      />
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setShowPassword((prev) => ({ ...prev, new: !prev.new }));
-                        }}
-                        className="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-gray-700"
-                      >
-                        {showPassword.new ? <EyeOff size={18} /> : <Eye size={18} />}
-                      </button>
-                    </div>
-                    {errors.new_password && (
-                      <p className="text-red-600 text-md">{errors.new_password}</p>
-                    )}
-                  </div>
-
-                  {/* ---------------- confirm Password ---------------- */}
-                  <div className="space-y-2">
-                    <label className="text-md font-semibold text-gray-400">
-                      confirm Password
-                    </label>
-                    <div className="relative">
-                      <input
-                        type={showPassword.confirm ? "text" : "password"}
-                        placeholder="confirm Password"
-                        value={formData.uai.confirm_password}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            uai: { ...formData.uai, confirm_password: e.target.value },
-                          })
-                        }
-                        className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 bg-gray-200 text-black"
-                      />
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setShowPassword((prev) => ({
-                            ...prev,
-                            confirm: !prev.confirm,
-                          }));
-                        }}
-                        className="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-gray-700"
-                      >
-                        {showPassword.confirm ? (
-                          <EyeOff size={18} />
-                        ) : (
-                          <Eye size={18} />
-                        )}
-                      </button>
-                    </div>
-                    {errors.confirm_password && (
-                      <p className="text-red-600 text-md">{errors.confirm_password}</p>
-                    )}
-                  </div>
-
-                  {/* ---------------- Submit Button ---------------- */}
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      handleSubmit();
-                    }}
-                    disabled={loading}
-                    className={`w-full py-2 rounded-lg text-white font-semibold transition my-2 ${
-                      loading
-                        ? "bg-gray-400 cursor-not-allowed"
-                        : "bg-[#4F9848]/80 hover:bg-[#4F9848]"
-                    }`}
-                  >
-                    {loading ? "Processing..." : "Change"}
-                  </button>
+            <form method="dialog">
+              <button
+                aria-label="Close"
+                className="rounded-full p-1.5 text-gray-400 transition-colors duration-150 hover:bg-gray-100 hover:text-gray-600"
+              >
+                <X className="h-5 w-5" />
+              </button>
             </form>
           </div>
 
-            
-            {/* Company Information */}{" "}
-            <div className=" md:col-span-2 shadow-[rgba(9,_30,_66,_0.25)_0px_4px_8px_-2px,_rgba(9,_30,_66,_0.08)_0px_0px_0px_1px] p-3 rounded">
-            <hr className="my-2 sm:hidden" />
-              <ul className="flex flex-row items-start">
-                {" "}
-                <li className="w-[60%] mx-auto">
-                  {" "}
-                  <h1 className="text-start text-md font-semibold text-gray-400">
-                    Company Name
-                  </h1>{" "}
-                  <p className="text-md font-light text-gray-900">{users?.ci.companyName}</p>{" "}
-                </li>{" "}
-                <li className="w-[40%] mx-auto">
-                  {" "}
-                  <h1 className="text-start text-md font-semibold text-gray-400">
-                    Local Language
-                  </h1>{" "}
-                  <p className="text-md font-light text-gray-900">{users?.ci.localLang}</p>{" "}
-                </li>{" "}
-              </ul>{" "}
-              <ul className="flex flex-row items-start">
-                {" "}
-                <li className="w-[60%] mx-auto">
-                  {" "}
-                  <h1 className="text-start text-md font-semibold text-gray-400">
-                    Trade Name
-                  </h1>{" "}
-                  <p className="text-md font-light text-gray-900">{users?.ci.tradeName}</p>{" "}
-                </li>{" "}
-                <li className="w-[40%] mx-auto">
-                  {" "}
-                  <h1 className="text-start text-md font-semibold text-gray-400">
-                    Shipping Party Type
-                  </h1>{" "}
-                  <p className="text-md font-light text-gray-900">{users?.ci.SPT}</p>{" "}
-                </li>{" "}
-              </ul>{" "}
-              <ul className="flex flex-row items-start">
-                {" "}
-                <li className="w-[60%] mx-auto">
-                  {" "}
-                  <h1 className="text-start text-md font-semibold text-gray-400">
-                    Company Business Type
-                  </h1>{" "}
-                  <p className="text-md font-light text-gray-900">{users?.ci.CBT}</p>{" "}
-                </li>{" "}
-                <li className="w-[40%] mx-auto">
-                  {" "}
-                  <h1 className="text-start text-md font-semibold text-gray-400">
-                    Address
-                  </h1>{" "}
-                  <p className="text-md font-light text-gray-900">{users?.ci.address}</p>{" "}
-                </li>{" "}
-              </ul>{" "}
-              <ul className="flex flex-row items-start">
-                {" "}
-                <li className="w-[60%] mx-auto">
-                  {" "}
-                  <h1 className="text-start text-md font-semibold text-gray-400">
-                    City
-                  </h1>{" "}
-                  <p className="text-md font-light text-gray-900">{users?.ci.city}</p>{" "}
-                </li>{" "}
-                <li className="w-[40%] mx-auto">
-                  {" "}
-                  <h1 className="text-start text-md font-semibold text-gray-400">
-                    Country
-                  </h1>{" "}
-                  <p className="text-md font-light text-gray-900">{users?.ci.country}</p>{" "}
-                </li>{" "}
-              </ul>{" "}
-              <ul className="flex flex-row items-start">
-                {" "}
-                <li className="w-[60%] mx-auto">
-                  {" "}
-                  <h1 className="text-start text-md font-semibold text-gray-400">
-                    Zip Code
-                  </h1>{" "}
-                  <p className="text-md font-light text-gray-900">{users?.ci.zipCode}</p>{" "}
-                </li>{" "}
-                <li className="w-[40%] mx-auto">
-                  {" "}
-                  <h1 className="text-start text-md font-semibold text-gray-400">
-                    Department
-                  </h1>{" "}
-                  <p className="text-md font-light text-gray-900">{users?.ci.department}</p>{" "}
-                </li>{" "}
-              </ul>{" "}
-              <ul className="flex flex-row items-start">
-                {" "}
-                <li className="w-[100%] mx-auto">
-                  {" "}
-                  <h1 className="text-start text-md font-semibold text-gray-400">
-                    Trade
-                  </h1>{" "}
-                  <p className="text-md font-light text-gray-900">{users?.ci.trade}</p>{" "}
-                </li>{" "}
-              </ul>{" "}
+          {/* Body */}
+          <div className="grid grid-cols-1 gap-4 p-6 md:grid-cols-2">
+            {/* User & Account Information */}
+            <div className="rounded-xl border border-gray-100 p-4 shadow-[rgba(9,_30,_66,_0.25)_0px_4px_8px_-2px,_rgba(9,_30,_66,_0.08)_0px_0px_0px_1px]">
+              <SectionHeader icon={<User className="h-4 w-4" />} title="Personal Details" />
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <Field label="First Name" value={users?.uai.firstName} />
+                  <Field label="Last Name" value={users?.uai.lastName} />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <Field label="Job Title" value={users?.uai.jobTitle} />
+                  <Field label="Phone Number" value={users?.uai.phoneNumber} />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <Field label="Business Email" value={users?.uai.businessEmail} />
+                  <Field label="User ID" value={users?.uai.userId} />
+                </div>
+              </div>
+            </div>
+
+            {/* Security / Password */}
+            <div className="rounded-xl border border-gray-100 p-4 shadow-[rgba(9,_30,_66,_0.25)_0px_4px_8px_-2px,_rgba(9,_30,_66,_0.08)_0px_0px_0px_1px]">
+              <SectionHeader icon={<ShieldCheck className="h-4 w-4" />} title="Security" />
+              <form className="space-y-4">
+                <SimplePasswordField
+                  id="current_password"
+                  label="Current Password"
+                  value={formData.uai.current_password}
+                  onChange={(v) =>
+                    setFormData({
+                      ...formData,
+                      uai: { ...formData.uai, current_password: v },
+                    })
+                  }
+                  error={errors.current_password}
+                  show={showPassword.current}
+                  onToggleShow={() =>
+                    setShowPassword((prev) => ({ ...prev, current: !prev.current }))
+                  }
+                  matchOk={passwordValid === true}
+                  matchLabel="Password verified"
+                />
+
+                <PasswordStrengthInput
+                  id="new_password"
+                  label="New Password"
+                  value={formData.uai.new_password}
+                  onChange={(v) =>
+                    setFormData({
+                      ...formData,
+                      uai: { ...formData.uai, new_password: v },
+                    })
+                  }
+                  error={errors.new_password}
+                  disallowedValues={[
+                    users?.uai.firstName,
+                    users?.uai.lastName,
+                    users?.uai.userId,
+                    users?.uai.businessEmail,
+                  ]
+                    .filter(Boolean)
+                    .map((v) => String(v))}
+                />
+
+                <SimplePasswordField
+                  id="confirm_password"
+                  label="Confirm Password"
+                  value={formData.uai.confirm_password}
+                  onChange={(v) =>
+                    setFormData({
+                      ...formData,
+                      uai: { ...formData.uai, confirm_password: v },
+                    })
+                  }
+                  error={errors.confirm_password}
+                  show={showPassword.confirm}
+                  onToggleShow={() =>
+                    setShowPassword((prev) => ({ ...prev, confirm: !prev.confirm }))
+                  }
+                  matchOk={
+                    formData.uai.confirm_password.length > 0 &&
+                    formData.uai.confirm_password === formData.uai.new_password
+                  }
+                />
+
+                {/* ---------------- Submit Button ---------------- */}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleSubmit();
+                  }}
+                  disabled={loading}
+                  className={`my-2 w-full rounded-xl py-2.5 font-semibold text-white transition-colors duration-150 ${
+                    loading
+                      ? "cursor-not-allowed bg-gray-400"
+                      : "bg-[#4F9848]/80 hover:bg-[#4F9848]"
+                  }`}
+                >
+                  {loading ? "Processing..." : "Change"}
+                </button>
+              </form>
+            </div>
+
+            {/* Company Information */}
+            <div className="rounded-xl border border-gray-100 p-4 shadow-[rgba(9,_30,_66,_0.25)_0px_4px_8px_-2px,_rgba(9,_30,_66,_0.08)_0px_0px_0px_1px] md:col-span-2">
+              <SectionHeader icon={<Building2 className="h-4 w-4" />} title="Company Information" />
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <Field label="Company Name" value={users?.ci.companyName} />
+                  <Field label="Local Language" value={users?.ci.localLang} />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <Field label="Trade Name" value={users?.ci.tradeName} />
+                  <Field label="Shipping Party Type" value={users?.ci.SPT} />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <Field label="Company Business Type" value={users?.ci.CBT} />
+                  <Field label="Address" value={users?.ci.address} />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <Field label="City" value={users?.ci.city} />
+                  <Field label="Country" value={users?.ci.country} />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <Field label="Zip Code" value={users?.ci.zipCode} />
+                  <Field label="Department" value={users?.ci.department} />
+                </div>
+                <div>
+                  <Field label="Trade" value={users?.ci.trade} />
+                </div>
+              </div>
             </div>
           </div>
-          <div className="modal-action border-t pt-3 sm:border-0">
+
+          {/* Footer */}
+          <div className="modal-action border-t border-gray-100 px-6 py-3">
             <form method="dialog">
               <button className="btn btn-sm rounded">Close</button>
             </form>

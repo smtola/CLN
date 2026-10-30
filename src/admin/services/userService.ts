@@ -9,7 +9,7 @@ export type ApiResponse<T> = {
 };
 // ✅ GET all users
 export const getUsers = async (): Promise<User[]> => {
-  const response = await baseApi.get<User[] | { data: User[] } | { users: User[] }>('/auth/users');
+  const response = await baseApi.get<User[] | { data: User[] } | { users: User[] }>('/docs/auth/users');
   
   // Handle different response formats
   if (Array.isArray(response)) {
@@ -33,13 +33,13 @@ export const getUsers = async (): Promise<User[]> => {
 
 // ✅ GET a single user
 export const getUserById = async (_id: string): Promise<ApiResponse<Profile>> => {
-  return baseApi.get<ApiResponse<Profile>>(`/auth/users/${_id}`);
+  return baseApi.get<ApiResponse<Profile>>(`/docs/auth/users/${_id}`);
 };
 
 
 // ✅ CREATE a new user
 export const createUser = async (data: Omit<Profile, '_id'>): Promise<Profile> => {
-  return baseApi.post<Profile>('/auth/users', data);
+  return baseApi.post<Profile>('/docs/auth/users', data);
 };
 
 
@@ -47,13 +47,13 @@ export const updateUser = async (
   _id: string,
   data: UpdateUserPayload
 ): Promise<ApiResponse<UserType>> => {
-  return baseApi.put<ApiResponse<UserType>>(`/auth/users/${_id}`, data);
+  return baseApi.put<ApiResponse<UserType>>(`/docs/auth/users/${_id}`, data);
 };
 
 
 // ✅ DELETE a user
 export const deleteUser = async (_id: string): Promise<void> => {
-  return baseApi.delete<void>(`/auth/users/${_id}`);
+  return baseApi.delete<void>(`/docs/auth/users/${_id}`);
 };
 
 // ✅ recovere a user
@@ -61,10 +61,10 @@ export const recoveredUser = async (
   _id: string,
   data: UpdateUserPayload
 ): Promise<ApiResponse<UserType>> => {
-  return baseApi.put<ApiResponse<UserType>>(`/auth/users/recovered/${_id}`, data);
+  return baseApi.put<ApiResponse<UserType>>(`/docs/auth/users/recovered/${_id}`, data);
 };
 
 // ✅ empty a trash
 export const emptyTrash = async (_id: string): Promise<ApiResponse<UserType>> => {
-  return baseApi.delete<ApiResponse<UserType>>(`/auth/users/empty_trash/${_id}`);
+  return baseApi.delete<ApiResponse<UserType>>(`/docs/auth/users/empty_trash/${_id}`);
 };

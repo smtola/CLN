@@ -22,7 +22,7 @@ import {
   CONTAINER_TYPE_OPTIONS,
   WEIGHT_BREAK_OPTIONS,
 } from '../utils/constants';
-import { formatCurrency, capitalizeFirst } from '../utils/formatters';
+import { formatCurrency, capitalizeFirst, formatDate } from '../utils/formatters';
 import LocationSearch from './LocationSearch';
 import type { Location } from '../types/common.types';
 import { showError } from '../../../admin/utils/swalHelper';
@@ -978,7 +978,7 @@ const AdminPanel: React.FC = () => {
   }
 
   return (
-    <div className="space-b-4">
+    <div className="p-3 md:p-6">
       {/* Page header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
@@ -1130,7 +1130,7 @@ const AdminPanel: React.FC = () => {
 
                     <td className="px-4 py-3 text-xs text-slate-600 whitespace-nowrap text-nowrap">
                       {card.valid_from || card.valid_to
-                        ? `${card.valid_from || '…'} → ${card.valid_to || '…'}`
+                        ? `${formatDate(card.valid_from) || '…'} → ${formatDate(card.valid_to) || '…'}`
                         : <span className="text-slate-400">Always</span>}
                     </td>
                     <td className="px-4 py-3 text-slate-500 text-xs max-w-[160px] truncate text-nowrap">{card.remark || '—'}</td>

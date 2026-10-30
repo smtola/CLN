@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { Plus, FileText, Pencil, Trash2, ImageOff } from "lucide-react";
 import { getSEO, deleteSEO } from "../../services/seoService";
 import type { SeoMeta } from "../../../types/seo";
 import { confirmDelete, showError, showSuccess, getApiErrorMessage } from "../../utils/swalHelper";
@@ -8,14 +9,18 @@ const ImageCell = ({ src, alt }: { src: string; alt: string }) => {
   const [hasError, setHasError] = useState(false);
 
   if (hasError || !src) {
-    return <span className="text-xs text-gray-400">N/A</span>;
+    return (
+      <span className="flex h-12 w-12 items-center justify-center rounded-lg border border-dashed border-slate-200 text-slate-300">
+        <ImageOff className="h-4 w-4" />
+      </span>
+    );
   }
 
   return (
     <img
       src={src}
       alt={alt}
-      className="h-12 w-12 object-cover rounded-md border border-gray-200"
+      className="h-12 w-12 rounded-lg border border-slate-200 object-cover shadow-sm"
       onError={() => setHasError(true)}
     />
   );
@@ -71,10 +76,10 @@ const SEOList = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
+      <div className="flex min-h-[400px] items-center justify-center">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mb-4"></div>
-          <p className="text-gray-600">Loading SEO entries...</p>
+          <div className="mx-auto mb-4 h-9 w-9 animate-spin rounded-full border-2 border-slate-200 border-t-teal-600" />
+          <p className="text-sm text-slate-500">Loading SEO entries…</p>
         </div>
       </div>
     );
@@ -82,96 +87,94 @@ const SEOList = () => {
 
   return (
     <div className="p-3 md:p-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-        <h1 className="text-2xl md:text-3xl font-bold text-gray-800">SEO Management</h1>
+      {/* Header */}
+      <div className="mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight text-slate-900 md:text-3xl">SEO management</h1>
+          <p className="mt-1 text-sm text-slate-500">Manage meta titles, descriptions, and keywords per page.</p>
+        </div>
         <button
-          className="w-full sm:w-auto bg-blue-500 hover:bg-blue-600 text-white px-4 md:px-6 py-2 rounded-lg shadow-md transition-colors duration-200 font-medium text-sm md:text-base"
+          className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-teal-600 to-blue-600 px-5 py-2.5 text-sm font-medium text-white shadow-md shadow-blue-600/20 transition-all duration-150 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-blue-600/30 active:scale-[0.98] sm:w-auto md:text-base"
           onClick={() => navigate("/admin/seo/create")}
         >
-          + Add SEO Entry
+          <Plus className="h-4 w-4" />
+          Add SEO entry
         </button>
       </div>
 
       {seos.length === 0 ? (
-        <div className="bg-white rounded-lg shadow p-6 md:p-8 text-center">
-          <p className="text-gray-500 text-base md:text-lg">No SEO entries found.</p>
+        <div className="rounded-2xl border border-slate-200/70 bg-white p-10 text-center shadow-sm md:p-12">
+          <FileText className="mx-auto h-10 w-10 text-slate-300" />
+          <p className="mt-3 text-sm font-medium text-slate-700">No SEO entries found</p>
+          <p className="mt-1 text-sm text-slate-500">Create your first entry to manage page metadata.</p>
           <button
-            className="mt-4 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors duration-200 text-sm md:text-base"
+            className="mt-5 inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-teal-600 to-blue-600 px-5 py-2.5 text-sm font-medium text-white shadow-md shadow-blue-600/20 transition-all duration-150 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-blue-600/30 active:scale-[0.98]"
             onClick={() => navigate("/admin/seo/create")}
           >
+            <Plus className="h-4 w-4" />
             Create your first SEO entry
           </button>
         </div>
       ) : (
         <>
           {/* Desktop Table View */}
-          <div className="hidden md:block bg-white rounded-lg shadow overflow-hidden">
+          <div className="hidden overflow-hidden rounded-2xl border border-slate-200/70 bg-white shadow-sm md:block">
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
+              <table className="min-w-full divide-y divide-slate-100">
+                <thead className="bg-slate-50/80">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Page
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Image
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Title
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Description
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Keywords
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Actions
-                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500">Page</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500">Image</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500">Title</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500">Description</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500">Keywords</th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-slate-500">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className="divide-y divide-slate-100">
                   {seos.map((seo, idx) => {
                     const seoId = (seo as unknown as { id?: string }).id || idx.toString();
                     return (
-                      <tr key={seoId} className="hover:bg-gray-50 transition-colors">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-indigo-100 text-indigo-800">
+                      <tr key={seoId} className="transition-colors duration-150 hover:bg-slate-50/60">
+                        <td className="whitespace-nowrap px-6 py-4">
+                          <span className="inline-flex items-center rounded-full bg-teal-50 px-2.5 py-1 text-xs font-medium text-teal-700">
                             {seo.page || 'N/A'}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="whitespace-nowrap px-6 py-4">
                           <ImageCell
                             src={seo.image || seo.ogImage || ''}
                             alt={seo.title || seo.page || 'SEO Image'}
                           />
                         </td>
                         <td className="px-6 py-4">
-                          <div className="text-sm text-nowrap font-medium text-gray-900 line-clamp-2">
+                          <div className="text-nowrap text-sm font-medium text-slate-900 line-clamp-2">
                             {seo.title || 'N/A'}
                           </div>
                         </td>
                         <td className="px-6 py-4">
-                          <div className="text-sm text-gray-500 line-clamp-2 max-w-md">
+                          <div className="line-clamp-2 max-w-md text-sm text-slate-500">
                             {seo.description || 'N/A'}
                           </div>
                         </td>
                         <td className="px-6 py-4">
-                          <div className="text-sm text-gray-500 line-clamp-2 max-w-xs">
+                          <div className="line-clamp-2 max-w-xs text-sm text-slate-500">
                             {seo.keywords || 'N/A'}
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <td className="whitespace-nowrap px-6 py-4 text-right">
                           <button
-                            className="text-blue-600 hover:text-blue-900 mr-4 transition-colors"
+                            className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-sm font-medium text-slate-600 transition-colors duration-150 hover:bg-blue-50 hover:text-blue-700"
                             onClick={() => navigate(`/admin/seo/edit/${seo.page}`)}
                           >
+                            <Pencil className="h-3.5 w-3.5" />
                             Edit
                           </button>
                           <button
-                            className="text-red-600 hover:text-red-900 transition-colors"
+                            className="ml-1 inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-sm font-medium text-slate-600 transition-colors duration-150 hover:bg-red-50 hover:text-red-700"
                             onClick={() => handleDelete(seo.page || '')}
                           >
+                            <Trash2 className="h-3.5 w-3.5" />
                             Delete
                           </button>
                         </td>
@@ -184,51 +187,50 @@ const SEOList = () => {
           </div>
 
           {/* Mobile/Tablet Card View */}
-          <div className="md:hidden space-y-4">
+          <div className="space-y-3 md:hidden">
             {seos.map((seo, idx) => {
               const seoId = (seo as unknown as { id?: string }).id || idx.toString();
               return (
-                <div key={seoId} className="bg-white rounded-lg shadow p-4">
-                  <div className="flex flex-col space-y-3">
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wide">Page</h3>
-                      <span className="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-indigo-100 text-indigo-800 mt-1">
+                <div key={seoId} className="rounded-2xl border border-slate-200/70 bg-white p-4 shadow-sm">
+                  <div className="flex items-start gap-3">
+                    <ImageCell
+                      src={seo.image || seo.ogImage || ''}
+                      alt={seo.title || seo.page || 'SEO Image'}
+                    />
+                    <div className="min-w-0 flex-1">
+                      <span className="inline-flex items-center rounded-full bg-teal-50 px-2.5 py-1 text-xs font-medium text-teal-700">
                         {seo.page || 'N/A'}
                       </span>
+                      <p className="mt-1.5 truncate text-sm font-semibold text-slate-900">{seo.title || 'N/A'}</p>
+                    </div>
+                  </div>
+
+                  <div className="mt-3 space-y-2 border-t border-slate-100 pt-3">
+                    <div>
+                      <p className="text-xs font-medium text-slate-400">Description</p>
+                      <p className="mt-0.5 line-clamp-2 text-sm text-slate-600">{seo.description || 'N/A'}</p>
                     </div>
                     <div>
-                      <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-2">Image</h3>
-                      <ImageCell
-                        src={seo.image || seo.ogImage || ''}
-                        alt={seo.title || seo.page || 'SEO Image'}
-                      />
+                      <p className="text-xs font-medium text-slate-400">Keywords</p>
+                      <p className="mt-0.5 line-clamp-2 text-sm text-slate-600">{seo.keywords || 'N/A'}</p>
                     </div>
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wide">Title</h3>
-                      <p className="text-base font-semibold text-gray-900 mt-1">{seo.title || 'N/A'}</p>
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wide">Description</h3>
-                      <p className="text-sm text-gray-600 mt-1 line-clamp-3">{seo.description || 'N/A'}</p>
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wide">Keywords</h3>
-                      <p className="text-sm text-gray-600 mt-1 line-clamp-2">{seo.keywords || 'N/A'}</p>
-                    </div>
-                    <div className="flex gap-3 pt-2 border-t border-gray-200">
-                      <button
-                        className="flex-1 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors text-sm font-medium"
-                        onClick={() => navigate(`/admin/seo/edit/${seo.page}`)}
-                      >
-                        Edit
-                      </button>
-                      <button
-                        className="flex-1 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors text-sm font-medium"
-                        onClick={() => handleDelete(seo.page || '')}
-                      >
-                        Delete
-                      </button>
-                    </div>
+                  </div>
+
+                  <div className="mt-3 flex gap-2 border-t border-slate-100 pt-3">
+                    <button
+                      className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700 transition-colors duration-150 hover:bg-blue-100"
+                      onClick={() => navigate(`/admin/seo/edit/${seo.page}`)}
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                      Edit
+                    </button>
+                    <button
+                      className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-red-50 px-4 py-2 text-sm font-medium text-red-700 transition-colors duration-150 hover:bg-red-100"
+                      onClick={() => handleDelete(seo.page || '')}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                      Delete
+                    </button>
                   </div>
                 </div>
               );

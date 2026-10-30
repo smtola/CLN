@@ -20,6 +20,7 @@ const fields: FieldConfig<SeoMeta>[] = [
 ];
 
 const SEOForm = () => (
+  <div className="p-3 md:p-6">
   <CRUDForm<SeoMeta>
     fetchItem={getSEOById}
     createItem={createSEO}
@@ -27,6 +28,7 @@ const SEOForm = () => (
     fields={fields}
     entityName="SEO"
   />
+  </div>
 );
 
 export default SEOForm;

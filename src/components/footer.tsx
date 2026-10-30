@@ -45,9 +45,7 @@ const Footer: React.FC = () => {
     { name: "Home", href: "/" },
     { name: "About Us", href: "/about-us" },
     { name: "Services", href: "/services" },
-    { name: "Products", href: "/products" },
-    { name: "Contact Us", href: "/contact-us" },
-    // { name: "Spot On", href: "/price/quote" },
+    { name: "Products", href: "/products" }
   ];
 
   return (

@@ -139,7 +139,7 @@ const DetailModal = ({
                 {quote.departure_date && (
                   <div className="flex justify-between">
                     <span className="text-slate-500">Departure</span>
-                    <span className="font-semibold font-mono" style={{ color: BRAND.ink }}>{quote.departure_date}</span>
+                    <span className="font-semibold font-mono" style={{ color: BRAND.ink }}>{formatDate(quote.departure_date)}</span>
                   </div>
                 )}
               </div>
@@ -451,7 +451,7 @@ const QuoteHistory: React.FC = () => {
                       <p className="text-xs text-slate-400 mt-0.5 text-nowrap">→ {quote.destination}</p>
                     </td>
                     <td className="px-4 py-3 text-slate-600 whitespace-nowrap text-nowrap">
-                      {quote.departure_date || <span className="text-slate-300">—</span>}
+                      {formatDate(quote.departure_date) || <span className="text-slate-300">—</span>}
                     </td>
                     {/* <td className="px-4 py-3 text-slate-600 whitespace-nowrap text-nowrap">{formatDistance(quote.distance_km)}</td> */}
                     <td className="px-4 py-3 text-slate-600 whitespace-nowrap text-nowrap">{formatWeight(quote.chargeable_weight)}</td>

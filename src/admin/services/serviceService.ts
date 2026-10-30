@@ -14,12 +14,12 @@ export const getServices = async (params?: {
   if (params?.search) query.append("search", params.search);
   if (params?.order) query.append("order", params.order);
 
-  return baseApi.get<ServiceResponse>(`/web/services?${query.toString()}`);
+  return baseApi.get<ServiceResponse>(`/docs/web/services?${query.toString()}`);
 };
 
 export const getServiceById = async (id: string): Promise<ServiceItem> => {
   const response = await baseApi.get<ServiceItem | { data: ServiceItem }>(
-    `/web/services/${id}`
+    `/docs/web/services/${id}`
   );
 
   if (response && typeof response === "object" && "data" in response) {
@@ -32,16 +32,16 @@ export const getServiceById = async (id: string): Promise<ServiceItem> => {
 export const createService = async (
   data: Omit<ServiceItem, "_id">
 ): Promise<ServiceItem> => {
-  return baseApi.post<ServiceItem>("/web/services", data);
+  return baseApi.post<ServiceItem>("/docs/web/services", data);
 };
 
 export const updateService = async (
   id: string,
   data: Partial<ServiceItem>
 ): Promise<ServiceItem> => {
-  return baseApi.put<ServiceItem>(`/web/services/${id}`, data);
+  return baseApi.put<ServiceItem>(`/docs/web/services/${id}`, data);
 };
 
 export const deleteService = async (id: string): Promise<void> => {
-  return baseApi.delete<void>(`/web/services/${id}`);
+  return baseApi.delete<void>(`/docs/web/services/${id}`);
 };

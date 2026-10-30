@@ -3,7 +3,7 @@ import type { Category } from "../types/category";
 
 // ✅ GET all categories
 export const getCategories = async (): Promise<Category[]> => {
-  const response = await baseApi.get<Category[] | { data: Category[] } | { categories: Category[] }>("/web/categories");
+  const response = await baseApi.get<Category[] | { data: Category[] } | { categories: Category[] }>("/docs/web/categories");
   
   // Handle different response formats
   if (Array.isArray(response)) {
@@ -27,7 +27,7 @@ export const getCategories = async (): Promise<Category[]> => {
 
 // ✅ GET a single category
 export const getCategoryById = async (id: string): Promise<Category> => {
-  const response = await baseApi.get<Category | { data: Category }>(`/web/categories/${id}`);
+  const response = await baseApi.get<Category | { data: Category }>(`/docs/web/categories/${id}`);
   
   // Handle wrapped responses
   if (response && typeof response === 'object' && 'data' in response) {
@@ -39,7 +39,7 @@ export const getCategoryById = async (id: string): Promise<Category> => {
 
 // ✅ CREATE a new category
 export const createCategory = async (data: Omit<Category, "_id">): Promise<Category> => {
-  return baseApi.post<Category>("/web/categories", data);
+  return baseApi.post<Category>("/docs/web/categories", data);
 };
 
 // ✅ UPDATE a category
@@ -47,10 +47,10 @@ export const updateCategory = async (
   id: string,
   data: Partial<Category>
 ): Promise<Category> => {
-  return baseApi.put<Category>(`/web/categories/${id}`, data);
+  return baseApi.put<Category>(`/docs/web/categories/${id}`, data);
 };
 
 // ✅ DELETE a category
 export const deleteCategory = async (id: string): Promise<void> => {
-  return baseApi.delete<void>(`/web/categories/${id}`);
+  return baseApi.delete<void>(`/docs/web/categories/${id}`);
 };
