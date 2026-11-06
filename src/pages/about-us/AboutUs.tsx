@@ -203,7 +203,7 @@ const AboutCLN: React.FC = () => {
       </section>
 
       {/* GLOBAL NETWORK */}
-      <div className="w-full overflow-hidden bg-white">
+      <div className="w-full bg-white">
         <GlobalNetwork />
       </div>
     </>
