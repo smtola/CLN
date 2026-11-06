@@ -7,7 +7,7 @@ export default function Services() {
       <div className="cln-shell">
         <p data-reveal className="cln-eyebrow">Our services</p>
         <h2 id="services-title" data-reveal className="mt-4 max-w-3xl font-display text-headline font-extrabold text-cln-charcoal">
-          Everything your cargo needs, from one team.
+          The best team for everything your cargo need.
         </h2>
         <ul className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {services.map((s) => (

@@ -46,4 +46,5 @@ export const pillars = [
 export const partners = [
   { name: 'Cambodia Logistics Association (CLA)', logo: '/assets/image/camfalogo.webp' },
   { name: 'Cambodia Chamber of Commerce', logo: '/assets/image/ccoc.webp' },
+  { name: 'FIATA', logo: '/assets/image/fiata.svg' },
 ];

@@ -15,10 +15,9 @@ export default function Hero() {
 
       <div className="cln-shell pb-section pt-32">
         <p data-hero-fade className="cln-eyebrow !text-white/80">Cambodia’s Trusted Logistics Partner</p>
-        <SplitWords as="h1" id="hero-title" text="ALL THE POSSIBLE MOVES." accent={['moves']} className="mt-4 block font-display text-hero font-extrabold uppercase" />
+        <SplitWords as="h1" id="hero-title" text="CLN CAMBODIA LOGISTICS" accent={['CLN']} className="mt-4 block font-display text-hero font-extrabold uppercase" />
         <p data-hero-fade className="mt-6 max-w-xl font-body text-lead text-white/85">
-          Connecting businesses to opportunities through smarter logistics solutions.
-        </p>
+          ALL THE POSSIBLE MOVES.        </p>
         <div data-hero-fade className="mt-8 flex flex-wrap gap-3">
           <Link to="/services" className="cln-btn-primary" data-magnetic data-cursor="EXPLORE">Explore Our Services <span aria-hidden="true">→</span></Link>
           <QuoteCTA className="cln-btn-ghost" />
