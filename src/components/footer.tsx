@@ -59,11 +59,11 @@ const Footer: React.FC = () => {
 
             {/* Brand column */}
             <div className="space-y-4">
-              <a href="/" className="inline-block bg-white rounded-lg p-2 shadow-sm">
-                <img src={Logo} alt="CLN Cambodia Logo" width={130} height={80} className="h-[60px] w-auto object-contain" />
+              <a href="/" className="inline-block bg-cln-navy rounded-lg">
+                <img src={Logo} alt="CLN Cambodia Logo" width={160} height={80} className="h-[100px] w-auto object-contain" />
               </a>
               <p className="text-[14px] md:text-[16px] text-white/80 leading-relaxed font-[300]">
-                Your trusted logistics partner in Cambodia with over 30+ years of experience in import & export operations.
+                with over 30+ years of experience in import & export operations.
               </p>
               <div className="flex gap-3">
                 <a href="https://www.facebook.com/clncambodia/" aria-label="Facebook"
@@ -99,9 +99,9 @@ const Footer: React.FC = () => {
                 {services.map((item) => (
                     <li key={item.key}>
                       <NavLink to={`/services?tab=${item.key}`}
-                        className={`flex items-center gap-2 px-4 py-2.5 text-[13px] hover:bg-[#fff]/10 hover:text-[#4F9748] transition-colors
+                        className={`flex items-center gap-2 px-4 py-2.5 text-[13px] hover:bg-[#fff]/10 hover:text-[#a72323] transition-colors
                           ${activeTab === item.key ? "bg-[#fff]/10 text-[#fff] font-medium" : ""}`}>
-                        <span className="w-1.5 h-1.5 rounded-full bg-[#4F9748] shrink-0" />
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#a72323] shrink-0" />
                         {item.title}
                       </NavLink>
                     </li>

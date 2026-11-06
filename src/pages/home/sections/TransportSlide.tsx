@@ -112,22 +112,23 @@ const LAYERS: Layer[] = [
 const clamp = (v: number, min = 0, max = 1) => Math.min(max, Math.max(min, v));
 const ease = (t: number) => t * t * (3 - 2 * t);
 
-function usePrefersReducedMotion() {
-  const [reduced, setReduced] = useState(
-    () => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches
-  );
+function useMediaQuery(query: string) {
+  const [matches, setMatches] = useState(() => typeof window !== "undefined" && window.matchMedia(query).matches);
   useEffect(() => {
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const onChange = () => setReduced(mq.matches);
+    const mq = window.matchMedia(query);
+    const onChange = () => setMatches(mq.matches);
+    onChange();
     mq.addEventListener("change", onChange);
     return () => mq.removeEventListener("change", onChange);
-  }, []);
-  return reduced;
+  }, [query]);
+  return matches;
 }
 
 /* ---------- Component ---------- */
 const TransportSlide: React.FC = () => {
-  const reduced = usePrefersReducedMotion();
+  const reduced = useMediaQuery("(prefers-reduced-motion: reduce)");
+  // Short landscape screens (small laptops, phones on their side): text left, vehicle right
+  const compact = useMediaQuery("(max-height: 640px) and (min-width: 560px)");
   const sectionRef = useRef<HTMLElement>(null);
   const vehicleRefs = useRef<(HTMLDivElement | null)[]>([]);
   const layerRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -201,6 +202,41 @@ const TransportSlide: React.FC = () => {
       ) : null
     );
 
+  const textBlock = (
+    <>
+      <h2 className="font-semibold text-neutral-600" style={{ fontSize: compact ? "0.95rem" : "clamp(0.95rem,2.4vh,1.25rem)" }}>
+        Land, sea and air. One network.
+      </h2>
+      <div className="mt-2 grid">
+        {MODES.map((m, i) => (
+          <div
+            key={m.id}
+            aria-hidden={active !== i}
+            className={`col-start-1 row-start-1 transition-all duration-500 ${
+              active === i ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-3 opacity-0"
+            }`}
+          >
+            <p
+              className="font-extrabold leading-none tracking-tight"
+              style={{ color: m.color, fontSize: compact ? "clamp(2.5rem,13vh,4.5rem)" : "clamp(2.75rem,11vh,6rem)" }}
+            >
+              {m.label}
+            </p>
+            <p className="mt-2 font-bold text-neutral-900" style={{ fontSize: compact ? "1.1rem" : "clamp(1.05rem,2.6vh,1.5rem)" }}>
+              {m.title}
+            </p>
+            <p
+              className="mt-1.5 max-w-[56ch] leading-relaxed text-neutral-700"
+              style={{ fontSize: compact ? "0.9rem" : "clamp(0.9rem,2vh,1.125rem)" }}
+            >
+              {m.text}
+            </p>
+          </div>
+        ))}
+      </div>
+    </>
+  );
+
   /* Reduced motion: plain list, no scroll effects */
   if (reduced) {
     return (
@@ -237,27 +273,15 @@ const TransportSlide: React.FC = () => {
           </div>
         ))}
 
-        {/* Text */}
-        <div className="relative z-10 mx-auto w-full max-w-screen-xl px-4 pt-14 md:px-8 md:pt-20">
-          <h2 className="text-lg font-semibold text-neutral-600 md:text-xl">Land, sea and air. One network.</h2>
-          <div className="mt-3 grid">
-            {MODES.map((m, i) => (
-              <div
-                key={m.id}
-                aria-hidden={active !== i}
-                className={`col-start-1 row-start-1 transition-all duration-500 ${
-                  active === i ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-3 opacity-0"
-                }`}
-              >
-                <p className="text-6xl font-extrabold leading-none tracking-tight md:text-8xl" style={{ color: m.color }}>
-                  {m.label}
-                </p>
-                <p className="mt-3 text-xl font-bold text-neutral-900 md:text-2xl">{m.title}</p>
-                <p className="mt-2 max-w-[56ch] text-base leading-relaxed text-neutral-700 md:text-lg">{m.text}</p>
-              </div>
-            ))}
+        {/* Text (stacked above the scene on normal screens) */}
+        {!compact && (
+          <div
+            className="relative z-10 mx-auto w-full max-w-screen-xl px-4 md:px-8"
+            style={{ paddingTop: "clamp(1rem,7vh,5rem)" }}
+          >
+            {textBlock}
           </div>
-        </div>
+        )}
 
         {/* Scenery and vehicles */}
         <div className="relative min-h-0 flex-1">
@@ -278,23 +302,32 @@ const TransportSlide: React.FC = () => {
               ref={(node) => {
                 vehicleRefs.current[i] = node;
               }}
-              className="absolute inset-x-0 top-0 flex items-end justify-center will-change-transform"
-              style={{ bottom: m.lift, transform: i === 0 ? "none" : "translate3d(110vw,0,0)" }}
+              className="absolute top-0 flex items-end justify-center will-change-transform"
+              style={{
+                left: compact ? "40%" : 0,
+                right: 0,
+                bottom: m.lift,
+                transform: i === 0 ? "none" : "translate3d(110vw,0,0)",
+              }}
             >
               <img
                 src={m.image}
                 alt={m.alt}
                 draggable={false}
-                className="max-h-full w-[min(92vw,960px)] object-contain object-bottom drop-shadow-[0_12px_14px_rgba(0,0,0,0.18)]"
+                className={`max-h-full object-contain object-bottom drop-shadow-[0_12px_14px_rgba(0,0,0,0.18)] ${
+                  compact ? "w-[min(56vw,960px)]" : "w-[min(92vw,960px)]"
+                }`}
               />
             </div>
           ))}
+
+          {compact && <div className="absolute inset-y-0 left-0 z-10 w-[42%] pl-8 pt-5">{textBlock}</div>}
         </div>
 
         {/* Progress rail */}
         <div className="relative z-10 bg-white/80 backdrop-blur">
-          <div className="mx-auto w-full max-w-screen-xl px-4 py-4 md:px-8">
-            <div className="mb-3 flex justify-between">
+          <div className={`mx-auto w-full max-w-screen-xl px-4 pr-20 md:px-8 md:pr-24 ${compact ? "py-2" : "py-4"}`}>
+            <div className={`flex gap-2 ${compact ? "mb-2" : "mb-3"}`}>
               {MODES.map((m, i) => (
                 <button
                   key={m.id}
