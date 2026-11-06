@@ -13,3 +13,45 @@
 body{
     background-color: white;
 }
+/* ───────── CLN design system (Phase 2) ─────────
+   Tokens are also exposed in tailwind.config.js (cln.*, text-hero, py-section …). */
+:root {
+  --cln-red: #EE3A23;
+  --cln-green: #4FB748;
+  --cln-charcoal: #151719;
+  --cln-navy: #101B2A;
+  --cln-mist: #F4F5F6;
+  --cln-gray: #6B7280;
+  --cln-ease: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@layer components {
+  .cln-shell { @apply mx-auto w-full max-w-shell px-gutter; }
+  .cln-section { @apply py-section; }
+  .cln-eyebrow { @apply text-xs font-semibold uppercase tracking-[0.3em] text-cln-green; }
+  .cln-btn {
+    @apply inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-semibold
+           transition-colors duration-300 focus-visible:outline focus-visible:outline-2
+           focus-visible:outline-offset-4 focus-visible:outline-cln-red;
+  }
+  .cln-btn-primary { @apply cln-btn bg-cln-red text-white hover:bg-cln-red-dark; }
+  .cln-btn-ghost { @apply cln-btn border border-white/60 text-white hover:bg-white/10; }
+  /* Word wrapper used by the scroll-typography helper */
+  .cln-word { display: inline-block; will-change: transform, opacity; }
+}
+
+/* Visible keyboard focus everywhere */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--cln-red);
+  outline-offset: 3px;
+}
+
+/* Animation must never hide essential content */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

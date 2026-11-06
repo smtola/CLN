@@ -50,7 +50,7 @@ const Footer: React.FC = () => {
 
   return (
     <>
-      <footer className="w-full bg-[#4fb748] text-white">
+      <footer className="w-full bg-cln-navy text-white">
         {/* Top accent bar */}
         <div className="w-full h-1 bg-gradient-to-r from-[#EE3A23] via-white/40 to-[#EE3A23]" />
 
