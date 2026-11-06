@@ -16,6 +16,7 @@ import FinalCTA from './sections/FinalCTA';
 import ScrollProgress from '../../components/ui/ScrollProgress';
 import CustomCursor from '../../components/ui/CustomCursor';
 import { useHomeAnimations } from './useHomeAnimations';
+import TransportSlide from './sections/TransportSlide.tsx';
 
 const Home: React.FC = () => {
   const [seo, setSeo] = useState<SEOProps>({});
@@ -46,6 +47,7 @@ const Home: React.FC = () => {
       <CustomCursor />
       <main id="main" ref={mainRef}>
         <Hero />
+        <TransportSlide />
         <MovementInMotion />
         <GlobalNetwork />
         <Services />
