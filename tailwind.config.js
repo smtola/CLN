@@ -20,7 +20,7 @@ export default {
           green: '#4FB748',
           'green-dark': '#3d7d38',
           charcoal: '#151719',
-          navy: '#101B2A',
+          navy: '#4F9748',
           mist: '#F4F5F6',
           gray: '#6B7280',
         },

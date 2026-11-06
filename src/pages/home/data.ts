@@ -4,15 +4,15 @@
 export interface ServiceCard { key: string; title: string; blurb: string; image: string; to: string }
 
 export const services: ServiceCard[] = [
-  { key: 'moc', title: 'MoC / MAFF / MCFA', blurb: 'Ministry permits and documentation support.', image: '/assets/image/moc-maff-mcfa.jpg', to: '/services' },
-  { key: 'Customs', title: 'Customs Clearance', blurb: 'Import and export customs handling.', image: '/assets/image/custom clearance.jpg', to: '/services?tab=Customs' },
-  { key: 'land', title: 'Cross Border', blurb: 'Cross-border land transportation.', image: '/assets/image/cross_2.png', to: '/services?tab=land' },
-  { key: 'sea', title: 'Sea Freight', blurb: 'International FCL / LCL freight.', image: '/assets/image/ship.png', to: '/services?tab=sea' },
-  { key: 'air', title: 'Air Freight', blurb: 'International air cargo.', image: '/assets/image/airplan.png', to: '/services?tab=air' },
-  { key: 'packing', title: 'Packing & Warehouse', blurb: 'Packing, storage and distribution.', image: '/assets/image/warehouse.jpg', to: '/services?tab=packing' },
-  { key: 'iec', title: 'International Express Courier', blurb: 'Express courier for documents and parcels.', image: '/assets/image/international express.jpg', to: '/services?tab=iec' },
-  { key: 'consolidation', title: 'Consolidation', blurb: 'Cargo consolidation.', image: '/assets/image/consolidation.jpg', to: '/services?tab=consolidation' },
-  { key: 'door2door', title: 'Door to Door Service', blurb: 'End-to-end door-to-door logistics.', image: '/assets/image/door_to_door.png', to: '/services?tab=door2door' },
+  { key: 'moc', title: 'MoC / MAFF / MCFA', blurb: 'Ministry of Commerce, and Ministry of Agriculture, Forestry and Fisheries.', image: '/assets/image/moc-maff-mcfa.webp', to: '/services' },
+  { key: 'Customs', title: 'Customs Clearance', blurb: 'Import and export customs clearance.', image: '/assets/image/custom clearance.webp', to: '/services?tab=Customs' },
+  { key: 'land', title: 'Cross Border', blurb: 'Cross-border land transportation.', image: '/assets/image/cross_2.webp', to: '/services?tab=land' },
+  { key: 'sea', title: 'Sea Freight', blurb: 'International FCL / LCL freight.', image: '/assets/image/ship.webp', to: '/services?tab=sea' },
+  { key: 'air', title: 'Air Freight', blurb: 'International air cargo.', image: '/assets/image/airplan.webp', to: '/services?tab=air' },
+  { key: 'packing', title: 'Packing & Warehouse', blurb: 'Packing and warehousing.', image: '/assets/image/warehouse.webp', to: '/services?tab=packing' },
+  { key: 'iec', title: 'International Express Courier', blurb: 'International express courier.', image: '/assets/image/international express.webp', to: '/services?tab=iec' },
+  { key: 'consolidation', title: 'Consolidation', blurb: 'Cargo consolidation.', image: '/assets/image/consolidation.webp', to: '/services?tab=consolidation' },
+  { key: 'door2door', title: 'Door to Door Service', blurb: 'Door-to-door logistics.', image: '/assets/image/door_to_door.webp', to: '/services?tab=door2door' },
 ];
 
 export const stats = [
@@ -30,10 +30,10 @@ export const routes: { mode: Mode; title: string; to: string; text: string; angl
 ]; // CONFIRM: specific countries/ports/airports to show
 
 export const ecosystem = [
-  { id: 'land', title: 'LAND', text: 'Cross-border transportation.', image: '/assets/image/cross_2.png', alt: 'CLN cross-border truck' },
-  { id: 'sea', title: 'SEA', text: 'International FCL / LCL freight.', image: '/assets/image/ship.png', alt: 'Container ship' },
-  { id: 'air', title: 'AIR', text: 'International air cargo.', image: '/assets/image/airplan.png', alt: 'Cargo aircraft' },
-  { id: 'warehouse', title: 'WAREHOUSE', text: 'Storage and distribution.', image: '/assets/image/warehouse.jpg', alt: 'Warehouse' },
+  { id: 'land', title: 'LAND', text: 'Cross-border transportation.', image: '/assets/image/cross_2.webp', alt: 'CLN cross-border truck' },
+  { id: 'sea', title: 'SEA', text: 'International FCL / LCL freight.', image: '/assets/image/ship.webp', alt: 'Container ship' },
+  { id: 'air', title: 'AIR', text: 'International air cargo.', image: '/assets/image/airplan.webp', alt: 'Cargo aircraft' },
+  { id: 'warehouse', title: 'WAREHOUSE', text: 'Storage and distribution.', image: '/assets/image/warehouse.webp', alt: 'Warehouse' },
 ];
 
 export const pillars = [
@@ -44,6 +44,6 @@ export const pillars = [
 ];
 
 export const partners = [
-  { name: 'Cambodia Logistics Association (CLA)', logo: '/assets/image/camfalogo.jpg' },
-  { name: 'Cambodia Chamber of Commerce', logo: '/assets/image/ccoc.jpg' },
+  { name: 'Cambodia Logistics Association (CLA)', logo: '/assets/image/camfalogo.webp' },
+  { name: 'Cambodia Chamber of Commerce', logo: '/assets/image/ccoc.webp' },
 ];

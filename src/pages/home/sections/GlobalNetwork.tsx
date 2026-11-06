@@ -1,73 +1,295 @@
-import { useState } from 'react';
-import { routes, type Mode } from '../data';
+import { useMemo, useState } from "react";
 
-const HUB = { x: 300, y: 220 };
-const COLORS: Record<Mode, string> = { land: '#4FB748', sea: '#6FA8FF', air: '#EE3A23' };
-const point = (angle: number, r: number) => ({
-  x: HUB.x + r * Math.cos((angle * Math.PI) / 180),
-  y: HUB.y + r * Math.sin((angle * Math.PI) / 180),
-});
+type Mode = "land" | "sea" | "air";
+type Filter = "all" | Mode;
+type Province = { name: string; x: number; y: number; d: string };
+type Point = { name: string; x: number; y: number };
 
+/* ---------- Map shapes (traced from your Cambodia map image) ----------
+    Coordinates use a 1200 x 1000 canvas.
+   Drawn largest first so small areas (Phnom Penh, Kep) sit on top. */
+const MAP_VIEWBOX = "0 0 1200 1000";
+
+const PROVINCES: Province[] = [
+  { name: "Preah Vihear", x: 595, y: 211, d: "M523,69 507,84 501,84 492,80 487,85 488,92 486,98 486,114 484,118 488,123 495,126 498,129 498,132 489,138 479,153 476,163 479,180 472,187 471,195 464,206 464,208 473,215 477,223 479,234 479,246 472,259 472,264 481,267 501,268 517,275 522,275 530,269 535,269 537,274 527,282 523,293 511,302 508,334 521,334 541,323 581,323 584,326 584,332 578,344 578,354 590,377 599,383 643,354 647,345 653,339 667,333 694,307 716,296 724,296 728,293 728,289 734,276 733,265 737,253 734,232 725,219 724,202 734,192 739,192 745,197 765,196 765,187 770,183 801,183 803,180 792,167 782,160 780,150 775,148 772,144 762,146 757,141 749,143 745,137 739,134 735,135 731,130 728,130 721,137 715,138 709,143 697,142 691,145 686,144 674,129 669,128 661,118 660,112 650,104 651,89 648,87 645,89 645,96 639,102 639,110 627,117 617,118 612,114 610,106 602,96 605,83 604,79 587,77 578,70 569,72 562,65 558,65 549,73 544,73 541,67 539,67 534,74 529,74 526,69Z" },
+  { name: "Mondulkiri", x: 1117, y: 528, d: "M913,305 915,323 912,335 920,344 930,350 932,357 929,360 926,360 920,356 914,356 910,361 910,372 915,376 916,380 920,384 925,385 930,392 941,394 969,411 975,420 975,428 971,435 959,445 941,455 931,464 925,475 921,488 920,504 924,511 937,522 952,526 961,531 968,538 971,550 978,558 995,562 1014,575 1020,588 1017,605 1024,616 1042,615 1058,608 1064,601 1070,599 1075,594 1081,582 1089,578 1092,575 1094,567 1102,562 1115,560 1128,553 1140,552 1152,565 1152,568 1158,571 1162,568 1162,562 1167,557 1181,551 1184,546 1183,533 1191,518 1187,509 1192,502 1192,489 1187,478 1190,471 1186,465 1186,445 1182,437 1171,425 1171,414 1168,409 1171,399 1166,393 1193,324 1186,329 1182,327 1173,328 1163,320 1152,324 1147,330 1143,331 1134,322 1125,324 1118,314 1113,312 1112,317 1101,325 1095,325 1092,321 1087,321 1083,324 1077,323 1075,325 1082,341 1082,345 1077,351 1057,356 1027,356 1017,351 1010,351 974,324 965,321 960,316 950,315 944,308 935,306 927,300 923,300 918,304Z" },
+  { name: "Kampong Thom", x: 579, y: 468, d: "M772,511 766,465 759,442 759,436 763,429 763,425 755,417 759,408 758,405 751,402 753,390 750,380 752,372 739,355 737,346 740,338 729,331 732,308 729,294 724,297 716,297 694,308 667,334 653,340 648,345 643,355 599,384 589,377 577,354 577,344 583,332 583,326 581,324 541,324 521,335 509,336 508,341 504,345 488,352 486,355 486,378 482,395 470,402 463,409 460,418 455,418 451,422 440,422 435,428 432,437 426,441 427,457 432,460 450,461 460,456 471,456 476,458 483,465 486,472 486,481 480,493 485,496 489,502 487,505 479,505 478,507 480,509 488,506 490,511 493,512 492,505 496,503 500,496 511,488 517,486 527,487 532,491 540,493 551,501 566,504 569,511 570,527 575,530 574,539 577,540 579,536 582,536 584,539 583,544 573,557 574,568 578,574 585,569 600,566 605,570 608,576 627,575 631,581 640,577 647,585 650,585 653,583 653,579 649,575 651,567 645,563 644,552 637,547 637,541 639,539 642,539 645,536 652,538 654,536 665,534 670,539 676,539 685,546 691,540 692,533 696,527 695,520 698,517 708,517 714,524 722,525 728,516 735,512 760,514Z" },
+  { name: "Koh Kong", x: 148, y: 717, d: "M190,919 196,928 199,928 204,932 206,939 217,931 215,927 207,923 203,915 194,915ZM146,741 145,746 150,754 151,763 141,768 142,782 144,785 143,799 147,804 151,805 157,793 156,784 154,782 156,776 152,768 153,763 157,759 157,754 153,749 154,745 150,741ZM100,622 98,635 106,642 106,648 109,650 109,659 112,662 111,667 118,675 119,681 124,684 128,690 129,716 132,719 132,725 135,728 139,725 138,716 135,711 138,696 135,689 125,681 125,677 122,674 123,670 125,670 139,686 142,696 148,692 156,694 155,697 151,696 147,698 140,705 140,710 144,708 147,711 147,714 152,714 154,717 151,722 145,722 143,729 148,732 149,736 152,736 155,733 153,726 158,725 158,739 161,744 167,748 170,754 174,752 174,747 177,746 180,749 180,756 186,762 185,765 182,765 175,757 164,762 162,760 163,756 161,757 162,762 166,766 166,775 171,782 177,781 183,791 182,794 177,791 171,792 165,798 162,811 167,813 173,828 173,840 168,846 171,858 171,869 167,875 167,880 176,885 175,893 179,891 185,894 192,892 201,881 215,882 222,886 226,892 235,891 240,888 239,872 242,867 243,859 252,846 249,842 249,839 253,835 252,829 255,828 259,830 262,825 275,828 279,832 284,844 293,844 300,848 298,854 299,866 303,872 304,878 311,888 310,904 307,907 302,908 300,911 301,916 298,920 302,922 310,920 314,912 319,908 319,902 321,900 320,893 323,886 334,887 358,870 362,869 369,861 384,862 388,859 385,851 391,843 390,837 395,831 402,831 404,827 396,819 393,809 393,798 397,792 391,778 387,778 383,774 381,768 381,761 387,756 387,753 373,741 368,740 363,744 357,743 351,734 342,731 331,718 326,718 323,715 327,703 320,695 320,681 324,679 326,675 321,670 321,665 324,662 329,662 331,664 336,663 336,658 330,652 330,649 326,644 316,645 313,642 306,644 303,641 303,636 297,636 290,630 289,623 283,621 267,604 256,603 252,599 250,599 244,606 241,606 238,602 233,602 231,604 232,608 226,614 226,618 223,621 220,621 212,630 202,630 194,635 187,634 177,640 163,638 141,625 120,625 110,622Z" },
+  { name: "Kratie", x: 843, y: 517, d: "M740,342 738,346 740,355 753,372 751,380 753,387 752,402 759,405 759,411 756,414 756,417 764,425 764,429 760,436 760,442 767,465 773,512 777,524 781,527 786,545 785,553 777,560 776,566 787,570 796,567 798,569 798,578 800,581 816,578 827,583 835,584 841,595 846,596 849,599 849,603 845,607 847,610 853,614 868,617 878,624 877,634 880,639 928,641 932,637 938,637 943,641 946,641 950,637 960,639 976,637 980,639 983,636 986,636 990,640 997,638 1002,633 1003,626 1008,617 1012,613 1019,613 1016,605 1019,588 1015,578 1003,567 989,561 978,559 971,552 968,540 961,532 952,527 937,523 923,511 919,504 920,488 924,475 930,464 941,454 968,437 974,428 974,420 969,412 941,395 930,393 926,387 920,385 909,372 909,361 914,355 920,355 926,359 931,357 929,350 920,345 911,335 914,323 912,305 895,303 890,305 884,313 863,310 858,311 840,334 840,342 836,346 827,343 825,345 826,351 823,358 818,363 810,365 804,369 799,369 786,364 766,348 752,347Z" },
+  { name: "Siem Reap", x: 345, y: 315, d: "M483,116 474,115 468,126 455,130 436,142 427,143 420,150 415,152 408,151 392,135 391,125 382,127 376,126 373,129 367,129 364,127 349,128 331,138 328,148 317,156 304,170 293,171 287,174 271,187 258,185 253,190 245,193 245,197 250,205 246,214 250,226 250,235 243,242 243,256 246,262 242,275 242,280 245,285 243,306 245,306 252,314 261,314 264,312 273,313 290,323 307,326 313,332 315,337 326,342 337,342 341,345 356,347 380,358 391,370 403,397 405,407 411,410 412,417 416,420 415,429 422,434 425,440 428,440 431,437 434,428 440,421 451,421 455,417 460,417 462,409 470,401 481,395 485,378 485,355 488,351 501,346 507,341 510,302 522,293 526,282 536,274 535,270 530,270 522,276 517,276 505,270 475,267 471,264 471,259 478,246 478,234 476,223 472,215 466,211 463,206 470,195 471,187 478,180 478,174 475,168 478,153 488,138 497,132 497,129 488,124Z" },
+  { name: "Ratanakiri", x: 1053, y: 283, d: "M1077,512 1079,515 1078,519 1141,519 1152,514 1082,514 1081,510ZM1176,2 1172,4 1170,11 1164,17 1159,19 1159,23 1156,27 1157,35 1154,39 1147,40 1145,37 1137,37 1134,34 1132,27 1121,26 1119,28 1119,33 1111,41 1112,48 1109,51 1101,50 1100,56 1096,61 1085,67 1080,74 1076,74 1071,67 1066,64 1065,69 1059,74 1058,78 1050,84 1051,90 1048,93 1044,93 1034,87 1019,97 995,71 994,66 988,67 981,64 978,60 973,60 971,65 971,100 973,103 973,110 967,117 968,124 964,140 969,143 975,154 975,158 969,166 969,175 971,177 974,195 982,207 993,209 996,213 1005,214 1008,217 1011,234 1020,252 1024,252 1025,256 1021,260 1011,261 1002,265 998,264 988,270 980,270 970,260 962,258 959,260 959,271 965,286 972,297 971,304 975,312 975,317 972,320 972,323 980,327 994,339 1004,344 1010,350 1017,350 1027,355 1057,355 1070,353 1077,350 1081,345 1079,335 1074,328 1074,325 1077,322 1083,323 1087,320 1092,320 1095,324 1101,324 1111,317 1113,311 1116,311 1126,324 1134,321 1143,330 1147,329 1152,323 1163,319 1173,327 1182,326 1186,328 1191,323 1195,322 1197,315 1199,314 1199,271 1187,258 1177,231 1169,227 1160,216 1159,208 1162,198 1159,195 1159,192 1162,188 1162,184 1157,178 1157,166 1155,164 1141,166 1137,162 1137,146 1131,139 1132,132 1136,127 1136,118 1141,109 1142,94 1138,90 1138,84 1144,75 1145,68 1150,63 1154,63 1157,67 1163,63 1167,54 1167,43 1172,39 1174,34 1171,25 1179,13 1177,9 1178,4Z" },
+  { name: "Stung Treng", x: 827, y: 280, d: "M949,28 934,38 937,48 933,49 928,46 926,48 928,55 918,63 901,65 896,61 894,56 884,56 884,68 878,81 865,84 862,81 855,82 849,80 845,87 834,85 832,82 828,84 828,91 834,94 838,99 838,115 853,125 859,141 869,151 867,160 857,166 854,170 855,183 852,186 846,187 837,183 829,183 825,188 821,189 806,181 801,184 775,183 766,187 767,195 765,197 745,198 739,193 734,193 725,202 726,219 731,224 737,239 737,259 734,265 735,276 729,289 733,306 730,331 737,334 742,342 752,346 766,347 786,363 799,368 804,368 810,364 818,362 822,358 823,353 826,350 824,345 827,342 833,345 836,345 839,342 839,334 858,310 884,312 890,304 895,302 913,304 918,303 923,299 927,299 935,305 944,307 950,314 960,315 970,322 970,319 974,316 973,309 968,305 971,297 963,286 963,282 958,272 959,265 957,259 959,257 967,257 973,260 980,269 988,269 996,263 1020,259 1023,256 1023,254 1015,247 1006,218 1003,215 994,214 990,210 982,208 973,196 968,175 968,166 973,158 973,153 970,146 963,140 967,122 966,114 972,110 972,104 970,101 971,59 964,50 960,50 956,47 956,38Z" },
+  { name: "Pursat", x: 356, y: 508, d: "M464,514 451,509 445,503 436,500 425,500 418,493 416,485 410,480 412,472 407,472 405,469 408,461 401,456 404,450 398,449 398,443 392,449 381,449 377,445 370,445 366,439 357,436 355,431 350,430 346,425 344,426 344,429 340,431 338,429 340,423 331,420 328,416 328,403 317,394 312,400 316,405 316,408 308,413 308,422 304,425 297,425 293,429 295,438 291,442 289,450 293,460 290,466 290,471 294,477 292,483 294,490 286,503 260,507 244,497 229,496 220,492 211,498 208,498 205,502 193,502 184,510 177,509 169,516 163,515 160,522 153,522 149,518 149,513 147,511 142,511 135,521 118,524 114,531 111,531 108,528 102,528 99,536 93,540 89,546 90,556 86,568 83,592 89,602 93,614 99,621 109,620 117,623 139,623 168,639 177,639 187,633 194,634 202,629 212,629 220,620 225,618 225,614 231,608 231,603 233,601 238,601 241,605 244,605 250,598 252,598 256,602 267,603 283,620 290,623 290,629 297,635 304,636 304,641 306,643 326,643 337,658 337,661 343,664 345,659 355,652 353,648 355,642 360,640 368,642 370,644 370,649 375,652 386,645 386,637 395,629 396,618 398,616 415,617 417,615 420,605 418,590 414,582 415,571 421,566 425,559 433,559 441,551 449,550 454,545 455,535 460,530 466,528 463,523Z" },
+  { name: "Battambang", x: 199, y: 379, d: "M5,294 5,309 2,314 4,326 2,331 10,342 12,358 17,364 20,372 29,379 32,390 41,397 47,397 50,394 50,379 58,372 66,369 77,370 83,373 89,380 93,410 94,472 92,474 80,472 72,479 56,482 56,484 63,487 77,503 85,508 87,511 87,518 90,522 100,527 108,527 111,530 114,530 118,523 135,520 142,510 147,510 153,521 160,521 162,515 169,515 177,508 184,509 193,501 204,502 208,497 211,497 217,492 224,492 229,495 241,495 260,506 268,506 274,503 284,503 287,501 293,490 291,485 293,477 289,471 289,466 292,460 288,450 289,444 294,438 292,429 297,424 304,424 307,422 307,413 316,407 312,402 312,399 317,393 325,392 324,389 319,387 313,381 310,375 310,357 306,348 306,343 312,336 312,332 307,327 290,324 273,314 264,313 261,315 252,315 242,306 228,306 185,295 157,298 146,306 134,307 119,301 102,299 97,295 92,294 86,296 67,315 57,318Z" },
+  { name: "Kampong Cham", x: 704, y: 633, d: "M581,573 581,579 584,582 584,589 578,605 581,629 573,636 569,643 568,652 566,654 569,661 567,666 569,670 581,670 584,674 587,674 593,662 603,658 609,665 616,665 620,669 621,679 618,683 618,688 627,691 635,691 641,689 653,680 670,663 684,661 691,665 699,666 703,670 702,683 705,686 719,685 727,688 762,691 766,689 773,693 778,705 788,706 796,703 800,706 801,710 811,710 817,716 822,716 826,713 827,706 833,701 835,691 840,685 853,686 862,693 876,690 881,695 890,695 901,707 908,707 920,702 930,710 937,709 937,704 928,691 928,684 934,675 933,667 939,661 935,658 928,642 880,640 876,634 877,624 868,618 853,615 847,611 845,606 848,603 848,599 840,595 835,585 827,584 816,579 800,582 797,578 796,568 793,568 790,571 777,568 775,562 783,555 785,545 780,527 776,524 773,513 760,515 735,513 730,515 722,526 714,525 708,518 698,518 696,520 696,528 692,540 685,547 676,540 670,540 665,535 656,536 652,539 646,536 642,540 639,540 638,547 645,552 646,563 651,566 650,575 654,579 654,583 650,586 647,586 640,578 631,582 627,576 608,577 600,567 588,569Z" },
+  { name: "Kampong Speu", x: 484, y: 762, d: "M322,665 322,670 327,675 327,677 321,681 321,695 328,703 324,715 326,717 331,717 342,730 351,733 357,742 363,743 370,739 387,751 388,756 382,761 382,768 384,774 393,779 397,789 397,794 394,798 396,817 405,829 413,835 418,843 439,843 455,834 467,831 471,836 493,836 497,842 511,844 518,848 530,845 532,817 536,805 537,790 543,784 546,777 556,769 546,763 539,763 534,766 529,766 526,763 532,713 544,688 547,670 541,670 536,674 527,673 508,681 499,691 486,691 480,686 464,685 450,673 449,662 435,648 435,630 422,621 420,610 415,618 398,617 396,629 386,638 387,645 377,652 373,653 369,649 368,643 360,641 354,644 356,652 349,656 343,665 339,663 335,665 324,663Z" },
+  { name: "Banteay Meanchey", x: 145, y: 263, d: "M253,181 238,171 231,156 228,156 214,171 199,172 195,168 194,159 199,150 202,132 195,122 190,120 182,121 175,118 165,105 154,116 145,117 138,122 139,133 130,147 131,161 122,166 104,181 99,199 90,210 89,220 73,227 64,235 56,236 52,242 53,246 57,250 64,251 67,257 57,258 45,266 37,264 32,266 23,266 20,264 13,265 7,262 0,268 6,278 4,291 33,307 57,317 67,314 86,295 95,293 102,298 119,300 134,306 146,305 157,297 185,294 228,305 241,305 243,302 244,288 241,275 245,266 242,256 242,242 249,235 249,226 245,216 249,205 244,197 244,193 252,189Z" },
+  { name: "Kampong Chhnang", x: 526, y: 574, d: "M524,487 513,488 503,494 497,501 493,513 465,515 463,519 467,529 457,534 455,545 450,551 441,552 435,560 427,560 415,574 416,583 419,588 423,621 436,630 436,648 450,662 451,673 464,684 480,685 486,690 499,690 508,680 526,673 536,673 541,669 553,667 560,657 565,656 568,643 573,633 580,627 577,605 584,586 580,577 574,572 572,557 575,550 582,544 583,539 582,537 577,541 573,539 574,531 569,527 568,511 564,504 551,502 540,494 532,492Z" },
+  { name: "Prey Veng", x: 679, y: 754, d: "M679,662 670,664 658,677 643,688 644,692 634,708 635,716 633,729 640,740 647,742 664,759 673,764 673,768 665,775 669,791 669,811 652,847 652,860 648,877 650,882 649,886 658,891 670,892 676,898 683,901 687,891 697,882 701,873 719,879 723,877 737,876 747,872 746,870 741,870 738,867 738,864 745,856 745,849 752,839 747,833 746,818 749,815 750,806 752,804 760,804 760,800 757,796 757,767 760,762 759,751 762,747 762,740 764,734 768,730 788,726 789,723 796,718 800,709 796,704 788,707 778,706 774,701 772,693 766,690 762,692 727,689 714,685 705,687 701,683 702,670 699,667Z" },
+  { name: "Oddar Meanchey", x: 266, y: 122, d: "M167,103 170,111 175,117 182,120 195,121 203,132 200,150 195,159 195,165 199,171 214,170 228,155 231,155 239,171 253,180 254,188 258,184 271,186 287,173 293,170 304,169 317,155 327,148 328,141 331,137 349,127 364,126 367,128 373,128 376,125 382,126 391,124 393,126 393,135 408,150 418,150 425,143 436,141 455,129 468,125 474,114 484,115 487,88 479,81 468,79 454,81 448,75 443,73 436,74 432,79 428,79 425,76 425,73 423,73 420,79 415,83 406,78 400,83 390,84 386,88 382,87 378,82 375,82 372,84 366,84 363,89 358,89 355,86 350,86 343,79 332,82 319,77 311,77 309,75 311,67 306,63 302,63 299,65 298,70 293,73 289,73 285,69 280,68 276,72 270,73 258,81 251,76 242,84 215,84 207,89 193,90 184,93Z" },
+  { name: "Kampot", x: 415, y: 956, d: "M352,876 356,887 353,895 355,910 351,917 351,929 361,939 360,948 362,954 358,957 359,960 390,968 413,966 414,969 418,971 424,966 437,967 440,964 441,958 448,954 468,968 470,973 470,986 474,989 475,996 478,999 483,998 490,1000 493,995 500,990 502,983 511,973 520,975 536,972 536,960 527,957 527,946 532,930 540,921 535,912 535,902 530,893 526,890 519,890 510,894 501,893 495,895 493,893 498,880 497,869 487,852 469,852 465,848 465,841 469,837 467,832 455,835 439,844 418,844 412,835 405,830 402,832 395,832 391,837 392,843 386,851 389,859 384,863 369,862 362,870Z" },
+  { name: "Takeo", x: 553, y: 869, d: "M550,786 543,785 538,790 537,805 532,825 532,843 529,847 518,849 511,845 497,843 491,836 487,838 474,836 466,841 466,848 469,851 487,851 491,855 499,872 498,884 494,890 495,894 501,892 510,893 519,889 526,889 531,893 535,900 536,912 541,921 533,930 528,946 528,957 537,960 537,974 553,977 571,977 581,970 593,950 623,933 626,930 626,927 619,917 619,909 612,895 612,874 609,870 603,868 603,856 607,850 609,827 602,826 600,824 601,816 588,807 587,802 591,792 589,789 581,784 565,786 562,783Z" },
+  { name: "Kandal", x: 630, y: 780, d: "M560,658 556,665 548,670 545,688 533,713 527,763 529,765 534,765 539,762 546,762 556,767 556,770 544,781 545,784 550,785 562,782 565,785 572,785 574,783 581,783 591,790 591,796 588,802 589,807 602,816 602,825 608,825 610,827 608,850 604,856 604,868 609,869 612,872 613,885 615,886 627,875 634,879 631,884 632,886 648,885 647,874 651,860 651,847 668,811 668,791 664,775 673,766 670,762 664,760 647,743 640,741 633,732 633,708 638,702 643,690 627,692 625,690 617,689 616,685 620,679 620,671 616,666 609,666 604,660 595,662 590,672 587,675 584,675 579,671 569,671 566,668 568,663 565,657Z" },
+  { name: "Svay Rieng", x: 780, y: 845, d: "M610,757 610,763 616,765 618,760 621,761 621,764 648,764 648,759 622,759 618,756ZM768,731 763,740 764,744 760,751 761,764 758,767 758,796 761,800 761,804 759,806 754,804 751,806 750,815 746,822 749,828 748,833 753,840 746,849 746,857 740,862 739,867 751,872 769,862 782,860 802,885 804,891 803,898 806,902 816,903 822,891 826,890 849,910 868,912 870,909 868,904 874,901 870,899 870,890 865,885 867,879 866,872 868,870 876,870 879,873 882,871 882,868 877,861 877,852 870,845 863,845 861,850 857,852 855,850 855,845 847,837 838,832 835,822 819,819 813,811 812,802 803,797 805,774 809,764 805,757 806,739 803,736 793,735 790,731 790,727Z" },
+  { name: "Preah Sihanouk", x: 265, y: 949, d: "M351,878 348,878 334,888 324,886 321,893 322,900 320,902 320,908 315,912 310,921 306,921 302,926 291,925 290,927 285,926 283,929 277,928 273,930 268,941 256,951 256,953 267,955 273,961 276,970 284,967 286,969 285,976 288,982 297,983 305,978 313,981 315,976 308,970 309,967 313,967 319,973 333,972 335,966 343,956 341,948 342,937 345,937 346,943 352,946 355,956 361,954 359,948 360,939 350,929 350,917 355,907 352,901 355,885Z" },
+  { name: "Pailin", x: 62, y: 430, d: "M77,371 66,370 55,375 50,381 51,394 47,398 42,398 36,401 37,408 34,411 34,414 37,417 39,425 37,433 44,441 41,454 37,457 38,464 35,467 35,470 42,478 51,478 55,481 72,478 80,471 89,473 93,472 91,394 88,388 88,380 83,374Z" },
+  { name: "Phnom Penh", x: 578, y: 745, d: "M587,705 575,706 571,712 562,711 555,720 554,726 561,733 559,739 560,748 555,759 560,763 572,759 573,754 576,752 583,757 589,750 596,748 597,737 592,731 590,731 590,739 588,741 577,741 575,739 575,729 577,727 590,727 591,725 586,718 588,709Z" },
+  { name: "Kep", x: 447, y: 982, d: "M444,956 441,960 441,964 437,968 442,977 442,984 448,988 454,983 457,983 465,992 473,993 473,989 469,986 469,973 467,968 447,955Z" },
+];
+
+/* ---------- Data (edit freely) ---------- */
+
+// Positions are pixels on the 1200 x 1000 map canvas.
+const LAOS = ["Stung Treng", "Ratanakiri"];
+const VIETNAM = ["Kampot", "Takeo", "Kandal", "Prey Veng", "Svay Rieng", "Tboung Khmum", "Kratie", "Ratanakiri"];
+const SIHANOUKVILLE_PORT = "Sihanoukville Autonomous Port (PAS)";
+const PHNOM_PENH_PORT = "Phnom Penh Autonomous Port";
+const AIRPORT = "Techo International Airport (KTI)";
+
+// Tboung Khmum is not a separate shape on this map; it highlights Kampong Cham.
+const SHAPE_OF: Record<string, string> = { "Tboung Khmum": "Kampong Cham" };
+const shapeOf = (name: string) => SHAPE_OF[name] ?? name;
+
+const HUB: Point = { name: "Phnom Penh", x: 581, y: 733 };
+
+const ROUTES: Record<Mode, Point[]> = {
+  land: [
+    { name: "Laos, Stung Treng", x: 935, y: 35 },
+    { name: "Laos, Ratanakiri", x: 1030, y: 70 },
+    { name: "Vietnam, Kampot", x: 455, y: 965 },
+    { name: "Vietnam, Takeo", x: 590, y: 945 },
+    { name: "Vietnam, Kandal", x: 625, y: 865 },
+    { name: "Vietnam, Prey Veng", x: 690, y: 870 },
+    { name: "Vietnam, Svay Rieng", x: 858, y: 885 },
+    { name: "Vietnam, Tboung Khmum", x: 915, y: 690 },
+    { name: "Vietnam, Kratie", x: 1000, y: 590 },
+    { name: "Vietnam, Ratanakiri", x: 1165, y: 310 },
+  ],
+  sea: [
+    { name: "Sihanoukville", x: 265, y: 949 },
+    { name: "Phnom Penh Autonomous Port, Kandal", x: 632, y: 770 },
+  ],
+  air: [{ name: "Techo International Airport, Kandal", x: 600, y: 812 }],
+};
+
+const MODES: Record<Mode, { label: string; color: string }> = {
+  land: { label: "Land", color: "#d4f0a8" },
+  sea: { label: "Sea", color: "#9ec5ff" },
+  air: { label: "Air", color: "#ffb0a2" },
+};
+
+const curve = (a: Point, b: Point) => {
+  const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+  const dx = b.x - a.x, dy = b.y - a.y;
+  return `M${a.x},${a.y} Q${mx - dy * 0.16},${my + dx * 0.16} ${b.x},${b.y}`;
+};
+
+function access(name: string): Record<Mode, string> {
+  const borders = [LAOS.includes(name) && "Laos", VIETNAM.includes(name) && "Vietnam"].filter(Boolean).join(" and ");
+  return {
+    land: borders ? `Cross-border, bordering ${borders}` : "Trucking to the nearest border crossing",
+    sea:
+      name === "Preah Sihanouk" ? `Direct, ${SIHANOUKVILLE_PORT}`
+      : name === "Kandal" ? `Direct, ${PHNOM_PENH_PORT}`
+      : `Via ${SIHANOUKVILLE_PORT} or ${PHNOM_PENH_PORT}`,
+    air: name === "Kandal" ? `Direct, ${AIRPORT}` : `Via ${AIRPORT}, Kandal`,
+  };
+}
+
+const NAMES: string[] = [...PROVINCES.map((p) => p.name), "Tboung Khmum"].sort((a, b) =>
+  a === "Phnom Penh" ? -1 : b === "Phnom Penh" ? 1 : a.localeCompare(b)
+);
+
+/* ---------- Component ---------- */
 export default function GlobalNetwork() {
-  const [filter, setFilter] = useState<Mode | 'all'>('all');
-  const [active, setActive] = useState<Mode>('sea');
-  const visible = routes.filter((r) => filter === 'all' || r.mode === filter);
-  const current = routes.find((r) => r.mode === active)!;
+  const [mode, setMode] = useState<Filter>("all");
+  const [query, setQuery] = useState("");
+  const [selected, setSelected] = useState("Phnom Penh");
+  const [hover, setHover] = useState<string | null>(null);
+
+  const names = useMemo(
+    () => NAMES.filter((n) => n.toLowerCase().includes(query.trim().toLowerCase())),
+    [query]
+  );
+  const info = access(selected);
+  const show = (m: Mode) => mode === "all" || mode === m;
+  const active = hover || selected;
+  const activeProv = PROVINCES.find((p) => p.name === shapeOf(active));
 
   return (
-    <section id="network" aria-labelledby="network-title" className="bg-white py-section">
-      <div className="cln-shell grid items-center gap-12 lg:grid-cols-2">
-        <div data-reveal>
-          <p className="cln-eyebrow">Global logistics network</p>
-          <h2 id="network-title" className="mt-4 font-display text-headline font-extrabold text-cln-charcoal">
-            Global logistics. <span className="text-cln-red">Local expertise.</span>
-          </h2>
-          <p className="mt-4 font-body text-lead text-cln-gray">
-            Land, sea and air services connected from our Phnom Penh office.
-          </p>
+    <section className="gn">
+      <style>{css}</style>
 
-          <div role="group" aria-label="Filter by transport mode" className="mt-8 flex flex-wrap gap-2">
-            {(['all', 'land', 'sea', 'air'] as const).map((m) => (
-              <button key={m} type="button" aria-pressed={filter === m} onClick={() => setFilter(m)}
-                className={`rounded-full border px-5 py-2 text-sm font-semibold capitalize transition-colors ${filter === m ? 'border-cln-charcoal bg-cln-charcoal text-white' : 'border-gray-300 text-cln-charcoal hover:border-cln-charcoal'}`}>
-                {m}
-              </button>
-            ))}
-          </div>
+      <div className="gn__text">
+        <h2 className="gn__title">
+          Global logistics. <span>Local expertise.</span>
+        </h2>
+        <p className="gn__lead">
+          Land, sea and air services reaching every city and province in Cambodia, connected from our Phnom Penh office.
+        </p>
 
-          <ul className="mt-6 space-y-2">
-            {visible.map((r) => (
-              <li key={r.mode}>
-                <button type="button" onClick={() => setActive(r.mode)} aria-pressed={active === r.mode}
-                  className={`w-full rounded-2xl border p-4 text-left transition-colors ${active === r.mode ? 'border-cln-red bg-cln-mist' : 'border-gray-200 hover:bg-cln-mist'}`}>
-                  <span className="font-display font-bold text-cln-charcoal">{r.title}</span>
-                  <span className="text-cln-gray"> · Phnom Penh → {r.to}</span>
-                </button>
-              </li>
-            ))}
-          </ul>
-          <p className="mt-4 min-h-[3rem] font-body text-cln-charcoal" aria-live="polite">{current.text}</p>
-          <p className="mt-2 text-xs text-cln-gray">Illustration of logistics connectivity. Not live shipment tracking.</p>
+        <div className="gn__pills" role="tablist" aria-label="Transport mode">
+          {(["all", "land", "sea", "air"] as Filter[]).map((m) => (
+            <button
+              key={m}
+              role="tab"
+              aria-selected={mode === m}
+              className={`gn__pill ${mode === m ? "is-on" : ""}`}
+              onClick={() => setMode(m)}
+            >
+              {m === "all" ? "All" : MODES[m].label}
+            </button>
+          ))}
         </div>
 
-        <svg viewBox="0 0 600 440" role="img" aria-label="Diagram of land, sea and air routes from Phnom Penh" className="h-auto w-full rounded-3xl bg-cln-navy">
-          {[1, 2, 3].map((i) => <circle key={i} cx={HUB.x} cy={HUB.y} r={i * 70} fill="none" stroke="#ffffff" strokeOpacity="0.08" />)}
-          {routes.map((r) => {
-            const end = point(r.angle, 190);
-            const show = filter === 'all' || filter === r.mode;
-            return (
-              <g key={r.mode} opacity={show ? 1 : 0.12}>
-                <path data-route-path d={`M${HUB.x} ${HUB.y} Q ${(HUB.x + end.x) / 2} ${(HUB.y + end.y) / 2 - 40} ${end.x} ${end.y}`} fill="none" stroke={COLORS[r.mode]} strokeWidth={active === r.mode ? 3 : 1.5} strokeDasharray="6 8" />
-                <circle data-node cx={end.x} cy={end.y} r={active === r.mode ? 9 : 6} fill={COLORS[r.mode]} />
-                <text x={end.x} y={end.y + 26} textAnchor="middle" fill="#fff" fontSize="13" fontFamily="Inter, sans-serif">{r.title}</text>
+        <ul className="gn__summary">
+          {show("land") && (
+            <li>
+              <b>Cross-border</b>
+              <span>Bordering Laos: {LAOS.join(", ")}.</span>
+              <span>Bordering Vietnam: {VIETNAM.join(", ")}.</span>
+            </li>
+          )}
+          {show("air") && (
+            <li>
+              <b>Air</b>
+              <span>{AIRPORT}, Kandal.</span>
+            </li>
+          )}
+          {show("sea") && (
+            <li>
+              <b>Sea</b>
+              <span>{SIHANOUKVILLE_PORT}.</span>
+              <span>{PHNOM_PENH_PORT}, Kandal.</span>
+            </li>
+          )}
+        </ul>
+
+        <div className="gn__detail" aria-live="polite">
+          <h3>{selected}{selected === "Phnom Penh" ? " (capital)" : ""}</h3>
+          <dl>
+            {(Object.keys(MODES) as Mode[]).filter(show).map((m) => (
+              <div key={m} className="gn__row">
+                <dt><i style={{ background: MODES[m].color }} />{MODES[m].label}</dt>
+                <dd>{info[m]}</dd>
+              </div>
+            ))}
+          </dl>
+          <p className="gn__note">International FCL / LCL freight.</p>
+        </div>
+
+        <input
+          className="gn__search"
+          type="search"
+          placeholder="Search city or province"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          aria-label="Search city or province"
+        />
+        <ul className="gn__list">
+          {names.map((n) => (
+            <li key={n}>
+              <button
+                className={selected === n ? "is-on" : ""}
+                onClick={() => setSelected(n)}
+                onMouseEnter={() => setHover(n)}
+                onMouseLeave={() => setHover(null)}
+              >
+                {n}
+              </button>
+            </li>
+          ))}
+          {names.length === 0 && <li className="gn__empty">No match. Try another name.</li>}
+        </ul>
+
+        <p className="gn__fine">Illustration of logistics connectivity. Not live shipment tracking.</p>
+      </div>
+
+      <div className="gn__map">
+        <svg viewBox={MAP_VIEWBOX} role="img" aria-label="Map of Cambodia with logistics routes from Phnom Penh">
+          {PROVINCES.map((p) => (
+            <path
+              key={p.name}
+              d={p.d}
+              className={`gn__prov ${p.name === shapeOf(selected) ? "is-sel" : ""} ${hover && p.name === shapeOf(hover) ? "is-hov" : ""}`}
+              fillRule="evenodd"
+              onClick={() => setSelected(p.name)}
+              onMouseEnter={() => setHover(p.name)}
+              onMouseLeave={() => setHover(null)}
+            >
+              <title>{p.name}</title>
+            </path>
+          ))}
+
+          {(Object.entries(ROUTES) as [Mode, Point[]][]).map(([m, list]) =>
+            list.map((r) => (
+              <g key={m + r.name} style={{ opacity: show(m) ? 1 : 0.1, transition: "opacity .25s" }} pointerEvents="none">
+                <path d={curve(HUB, r)} fill="none" stroke={MODES[m].color} strokeWidth="5" strokeDasharray="14 12" strokeLinecap="round" />
+                <circle cx={r.x} cy={r.y} r="11" fill={MODES[m].color} stroke="#2f5a22" strokeWidth="3" />
               </g>
-            );
-          })}
-          <circle data-node cx={HUB.x} cy={HUB.y} r="12" fill="#EE3A23" />
-          <circle cx={HUB.x} cy={HUB.y} r="22" fill="none" stroke="#EE3A23" strokeOpacity="0.4" />
-          <text x={HUB.x} y={HUB.y + 44} textAnchor="middle" fill="#fff" fontSize="14" fontWeight="700" fontFamily="Manrope, sans-serif">Phnom Penh</text>
+            ))
+          )}
+
+          <circle cx={HUB.x} cy={HUB.y} r="16" fill="#e4462f" stroke="#fff" strokeWidth="5" pointerEvents="none" />
+          <text x={HUB.x} y={HUB.y + 52} textAnchor="middle" className="gn__label gn__label--hub">Phnom Penh</text>
+          {activeProv && active !== "Phnom Penh" && (
+            <text x={activeProv.x} y={activeProv.y - 18} textAnchor="middle" className="gn__label">{active}</text>
+          )}
         </svg>
+
+        <ul className="gn__legend">
+          {(Object.entries(MODES) as [Mode, { label: string; color: string }][]).map(([m, v]) => (
+            <li key={m} style={{ opacity: show(m) ? 1 : 0.4 }}>
+              <i style={{ background: v.color }} />
+              {v.label}
+            </li>
+          ))}
+        </ul>
       </div>
     </section>
   );
 }
+
+/* ---------- Styles ---------- */
+const css = `
+.gn{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:56px;align-items:start;
+  max-width:1200px;margin:0 auto;padding:96px 24px;color:#17191c}
+.gn__title{font-size:clamp(2.2rem,4.4vw,3.6rem);line-height:1.05;font-weight:800;letter-spacing:-.02em;margin:0 0 16px}
+.gn__title span{color:#e4462f}
+.gn__lead{font-size:1.15rem;line-height:1.5;color:#5b6270;margin:0 0 28px;max-width:52ch}
+.gn__pills{display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap}
+.gn__pill{border:1px solid #dfe2e6;background:#fff;border-radius:999px;padding:10px 20px;font:inherit;font-weight:600;font-size:.95rem;cursor:pointer;color:#17191c}
+.gn__pill.is-on{background:#17191c;border-color:#17191c;color:#fff}
+.gn button:focus-visible,.gn input:focus-visible{outline:3px solid #62944f;outline-offset:2px}
+.gn__summary{list-style:none;margin:0 0 20px;padding:0;display:grid;gap:12px}
+.gn__summary li{display:grid;gap:2px;padding-left:14px;border-left:3px solid #62944f}
+.gn__summary b{font-size:1rem}
+.gn__summary span{color:#5b6270;font-size:.95rem;line-height:1.4}
+.gn__detail{border:1px solid #dfe2e6;border-radius:16px;padding:20px 22px;margin-bottom:20px;background:#fff}
+.gn__detail h3{margin:0 0 12px;font-size:1.2rem}
+.gn__detail dl{margin:0}
+.gn__row{display:flex;gap:16px;padding:8px 0;border-top:1px solid #eef0f2}
+.gn__row:first-child{border-top:0}
+.gn__row dt{width:84px;font-weight:700;display:flex;align-items:center;gap:8px}
+.gn__row dt i,.gn__legend i{width:10px;height:10px;border-radius:50%;display:inline-block}
+.gn__row dd{margin:0;color:#5b6270}
+.gn__note{margin:12px 0 0;font-size:.95rem}
+.gn__search{width:100%;box-sizing:border-box;border:1px solid #dfe2e6;border-radius:12px;padding:12px 14px;font:inherit;margin-bottom:12px}
+.gn__list{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:6px;max-height:170px;overflow:auto}
+.gn__list button{border:1px solid #e6e8eb;background:#fafafa;border-radius:8px;padding:6px 12px;font:inherit;font-size:.88rem;cursor:pointer}
+.gn__list button:hover{border-color:#62944f}
+.gn__list button.is-on{background:#62944f;border-color:#62944f;color:#fff}
+.gn__empty{color:#5b6270;font-size:.9rem}
+.gn__fine{margin:20px 0 0;font-size:.8rem;color:#6b7280}
+.gn__map{background:#62944f;border-radius:28px;padding:24px;position:sticky;top:24px}
+.gn__map svg{width:100%;height:auto;display:block}
+.gn__prov{fill:rgba(255,255,255,.16);stroke:rgba(255,255,255,.75);stroke-width:2.5;stroke-linejoin:round;cursor:pointer;transition:fill .15s}
+.gn__prov.is-hov{fill:rgba(255,255,255,.3)}
+.gn__prov.is-sel{fill:rgba(255,255,255,.42)}
+.gn__label{fill:#fff;font-size:34px;font-weight:700;paint-order:stroke;stroke:rgba(35,70,25,.8);stroke-width:8px;pointer-events:none}
+.gn__label--hub{font-size:42px}
+.gn__legend{list-style:none;display:flex;gap:18px;margin:10px 4px 0;padding:0;color:#fff;font-weight:600;font-size:.9rem}
+.gn__legend li{display:flex;align-items:center;gap:8px;transition:opacity .25s}
+@media (max-width:900px){.gn{grid-template-columns:1fr;gap:32px;padding:56px 20px}.gn__map{position:static}}
+@media (prefers-reduced-motion:reduce){.gn *{transition:none!important}}
+`;

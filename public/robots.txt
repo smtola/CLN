@@ -1,8 +1,14 @@
 User-agent: *
 Allow: /
-
-Sitemap: https://clncambodia.com/sitemap.xml
+Disallow: /admin/
+Disallow: /auth/
+Disallow: /price/
 
 User-agent: Googlebot
+Allow: /
 Disallow: /private
+Disallow: /admin/
+Disallow: /auth/
+Disallow: /price/
 
+Sitemap: https://clncambodia.com/sitemap.xml

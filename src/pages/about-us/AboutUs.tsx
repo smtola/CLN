@@ -1,233 +1,211 @@
-import React, {useEffect, useState} from "react";
+import React, { useEffect, useState } from "react";
 import AOS from "aos";
 import "aos/dist/aos.css";
-import SEO, {type SEOProps} from '../../components/SEO';
-import {fetchSEO} from "../../services/seoService.ts";
+import SEO, { type SEOProps } from "../../components/SEO";
+import { fetchSEO } from "../../services/seoService.ts";
+import { organizationSchema } from "../../components/schemaExamples.ts";
+import GlobalNetwork from "../home/sections/GlobalNetwork.tsx";
+
 const ceo = "/assets/image/Owner.jpeg";
 const banner_4 = "/assets/image/banner_4.png";
 const poster_1 = "/assets/image/poster_1.png";
 const lcl = "/assets/image/fcl-lcl.png";
-import { organizationSchema } from "../../components/schemaExamples.ts";
+
+const FACTS = [
+  { value: "2015", label: "Registered in Cambodia" },
+  { value: "30+ years", label: "Import and export logistics experience" },
+  { value: "Phnom Penh", label: "Office, with local and overseas shipping partners" },
+];
+
+const EyeIcon: React.FC = () => (
+  <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z" />
+    <circle cx="12" cy="12" r="3" />
+  </svg>
+);
+
+const TargetIcon: React.FC = () => (
+  <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <circle cx="12" cy="12" r="9" />
+    <circle cx="12" cy="12" r="5" />
+    <circle cx="12" cy="12" r="1" />
+  </svg>
+);
+
 const AboutCLN: React.FC = () => {
   const [seo, setSeo] = useState<SEOProps>({});
-  React.useEffect(() => {AOS.init({ duration: 1000 });
+
+  useEffect(() => {
+    AOS.init({
+      duration: 800,
+      once: true,
+      easing: "ease-out",
+      disable: () => window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+    });
   }, []);
 
   useEffect(() => {
-        fetchSEO("about-us")
-            .then((data) =>  setSeo(data))
-            .catch((error) => {
-                console.error("Failed to fetch SEO data:", error);
-                // Fallback SEO data
-                setSeo({
-                    title: "CLN | About Us",
-                    description: "Learn about CLN Cambodia and our logistics expertise.",
-                    keywords: "CLN Cambodia, about, logistics, transportation, company",
-                    ogTitle: "CLN Cambodia - About Us",
-                    ogDescription: "Learn about CLN Cambodia and our logistics expertise.",
-                    ogImage: "https://clncambodia.com/assets/image/seo.jpg",
-                    canonical: "https://clncambodia.com/about-us",
-                    url: "https://clncambodia.com/about-us"
-                });
-            });
-    }, []);
+    fetchSEO("about-us")
+      .then((data) => setSeo(data))
+      .catch((error) => {
+        console.error("Failed to fetch SEO data:", error);
+        // Fallback SEO data
+        setSeo({
+          title: "CLN | About Us",
+          description: "Learn about CLN Cambodia and our logistics expertise.",
+          keywords: "CLN Cambodia, about, logistics, transportation, company",
+          ogTitle: "CLN Cambodia - About Us",
+          ogDescription: "Learn about CLN Cambodia and our logistics expertise.",
+          ogImage: "https://clncambodia.com/assets/image/seo.jpg",
+          canonical: "https://clncambodia.com/about-us",
+          url: "https://clncambodia.com/about-us",
+        });
+      });
+  }, []);
 
   return (
     <>
       <SEO {...seo} schemaMarkup={organizationSchema} />
-      {/* ABOUT CLN SECTION */}
-      <section className="w-full h-fit bg-gradient-to-t md:bg-gradient-to-r from-[#EE3A23] to-[#4fb748] overflow-hidden">
-        <div className="flex flex-col md:flex-row md:gap-5 p-4 xl:max-w-screen-xl mx-auto">
-          <div
-            data-aos="fade-right"
-            data-aos-offset="300"
-            data-aos-easing="ease-in-sine"
-            className="w-[150px] h-[150px] md:h-full md:w-[40%] lg:w-[28%] mx-auto  bg-black/50 border-[1px] backdrop-blur-[100%] overflow-hidden rounded-full md:rounded-[10px]"
-          >
-            <img
-              src={ceo}
-              alt="CEO"
-              className="w-fit mx-auto object-fit object-center translate-y-[-15%] sm:translate-y-0"
-            />
-          </div>
-          <div
-            data-aos="fade-left"
-            data-aos-offset="300"
-            data-aos-easing="ease-in-sine"
-            className="w-full md:w-[60%]"
-          >
-            <h1 className="text-[18px] font-medium text-center md:text-start text-white">
-              ABOUT CLN
+
+      {/* HERO: ABOUT CLN */}
+      <section className="w-full overflow-hidden bg-white">
+        <div className="h-1.5 w-full bg-gradient-to-r from-[#EE3A23] to-[#4fb748]" />
+        <div className="mx-auto grid max-w-screen-xl items-center gap-12 px-4 py-14 md:px-8 md:py-20 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,0.75fr)]">
+          <div data-aos="fade-up">
+            <h1 className="text-4xl font-extrabold leading-[1.05] tracking-tight text-neutral-900 md:text-6xl">
+              Every possible move
+              <br />
+              in your <span className="text-[#EE3A23]">supply chain.</span>
             </h1>
-            <p className="text-[16px] font-light text-justify text-white mt-2">
-              <span className="font-semibold">CLN Cambodia logistics </span>&nbsp; is a registered company established in Cambodia since 2015. Currently, we have an office in Phnom Penh and collaborate with many shipping companies both locally and overseas. With over 30 years of experience in handling import and export logistics, along with advanced information technology, we are dedicated to offering the best international and domestic logistics services and networks that enable our customers to make “All the Possible Moves” in their supply chains. We also comply with Cambodia’s labor laws and are committed to providing the best services to meet our customers’ expectations.
-              
-            </p>
+
+            <div className="mt-8 max-w-[62ch] space-y-4 text-[17px] leading-relaxed text-neutral-600">
+              <p>
+                <span className="font-semibold text-neutral-900">CLN Cambodia Logistics</span> is a registered company
+                established in Cambodia in 2015. We have an office in Phnom Penh and work with many shipping companies,
+                both locally and overseas.
+              </p>
+              <p>
+                With over 30 years of experience in import and export logistics, and advanced information technology, we
+                offer international and domestic logistics services and networks that let our customers make “All the
+                Possible Moves” in their supply chains. We comply with Cambodia’s labor laws and are committed to meeting
+                our customers’ expectations.
+              </p>
+            </div>
+
+            <dl className="mt-10 grid gap-6 border-t border-neutral-200 pt-6 sm:grid-cols-3">
+              {FACTS.map((f) => (
+                <div key={f.value}>
+                  <dt className="text-2xl font-bold text-[#4F9748]">{f.value}</dt>
+                  <dd className="mt-1 text-sm leading-snug text-neutral-600">{f.label}</dd>
+                </div>
+              ))}
+            </dl>
           </div>
+
+          <figure data-aos="fade-up" data-aos-delay="150" className="mx-auto w-64 sm:w-72 lg:w-full lg:max-w-sm">
+            <div className="relative">
+              <div className="absolute inset-0 translate-x-3 translate-y-3 rotate-3 rounded-3xl bg-gradient-to-br from-[#EE3A23] to-[#4fb748]" aria-hidden="true" />
+              <img
+                src={ceo}
+                alt="CEO of CLN Cambodia"
+                className="relative aspect-[4/5] w-full rounded-3xl object-cover object-top shadow-lg"
+              />
+            </div>
+            <figcaption className="mt-6 text-center text-sm text-neutral-600 lg:text-left">CEO, CLN Cambodia</figcaption>
+          </figure>
         </div>
       </section>
 
-      {/* DIVIDER */}
-      <div className="w-full h-[3px] bg-gradient-to-l from-white to-[#4F9748]" />
-
-      {/* VISION & MISSION SECTION */}
-      <section className="w-full h-fit px-3 md:p-5 my-4 overflow-hidden">
-        <div className="flex flex-col md:flex-row gap-2 md:gap-5 xl:max-w-screen-xl mx-auto">
-          {/* VISION */}
-          <div
-            data-aos="fade-right"
-            data-aos-offset="300"
-            data-aos-easing="ease-in-sine"
-            className="w-full lg:w-[50%] flex flex-col gap-2"
-          >
-            <div className="flex gap-4 items-center mb-2">
-              <span>
-                {/* SVG for vision */}
-                <svg className="w-[28px]" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <g clip-path="url(#clip0_14_754)">
-                        <path d="M34.1185 25.1221C34.587 25.1221 34.9672 25.5023 34.9672 25.9708C34.9672 26.4393 34.587 26.8195 34.1185 26.8195C33.65 26.8195 33.2698 26.4393 33.2698 25.9708C33.2698 25.5023 33.65 25.1221 34.1185 25.1221Z" fill="#4F9748"/>
-                        <path d="M9.33577 25.1221C9.80424 25.1221 10.1845 25.5023 10.1845 25.9708C10.1845 26.4393 9.80424 26.8195 9.33577 26.8195C8.86729 26.8195 8.48706 26.4393 8.48706 25.9708C8.48706 25.5023 8.86729 25.1221 9.33577 25.1221Z" fill="#4F9748"/>
-                        <path d="M17.823 31.0634C17.823 35.7508 14.0234 39.5506 9.33583 39.5506C4.64835 39.5506 0.848633 35.7508 0.848633 31.0634C0.848633 30.0424 1.02857 29.0646 1.35871 28.1582C1.57598 27.5624 1.85776 26.9988 2.1947 26.4744C3.70542 24.1294 6.339 22.5762 9.33583 22.5762C14.0234 22.5762 17.823 26.3759 17.823 31.0634Z" stroke="#4F9748" stroke-width="2" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M12.5363 27.1045C13.6896 28.039 14.428 29.4665 14.428 31.063C14.428 33.8714 12.1441 36.1553 9.33569 36.1553" stroke="#4F9748" stroke-width="2" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M41.2594 26.4744C41.5964 26.9988 41.8781 27.5624 42.0955 28.1582C42.4255 29.0646 42.6055 30.0424 42.6055 31.0634C42.6055 35.7508 38.8059 39.5506 34.1183 39.5506C29.4308 39.5506 25.6311 35.7508 25.6311 31.0634C25.6311 26.376 29.4308 22.5762 34.1183 22.5762C37.1151 22.5762 39.7487 24.1294 41.2594 26.4744Z" stroke="#4F9748" stroke-width="2" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M37.3198 27.1006C37.7374 27.4392 38.1049 27.8458 38.4062 28.3135C38.609 28.6291 38.7771 28.9678 38.9044 29.3166C39.1081 29.8759 39.2107 30.4615 39.2107 31.0633C39.2107 33.8717 36.9269 36.1556 34.1184 36.1556" stroke="#4F9748" stroke-width="2" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M25.6311 12.3916V14.089V18.3327V24.2737V27.6686V31.0635" stroke="#4F9748" stroke-width="2" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M41.2594 26.474L35.574 13.941L33.4453 9.24749C32.8368 8.30287 31.8632 7.61541 30.7234 7.38455C30.4493 7.32854 30.1649 7.29883 29.8747 7.29883C27.5313 7.29883 25.6311 9.19911 25.6311 11.5425" stroke="#4F9748" stroke-width="2" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M17.8229 11.5425C17.8229 9.19911 15.9226 7.29883 13.5793 7.29883C13.289 7.29883 13.0047 7.32854 12.7306 7.38455C11.5907 7.61541 10.6173 8.30287 10.0087 9.24749L7.88015 13.941L2.19458 26.474" stroke="#4F9748" stroke-width="2" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M17.823 31.0635V27.6686V24.2737V18.3327V14.089V12.3916" stroke="#4F9748" stroke-width="2" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M17.823 27.668H25.6312" stroke="#4F9748" stroke-width="2" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M17.823 24.2734H25.6312" stroke="#4F9748" stroke-width="2" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M17.823 14.0889H25.6312" stroke="#4F9748" stroke-width="2" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M25.6311 12.3915V11.5427V6.45045C25.6311 5.04413 26.7709 3.9043 28.1773 3.9043C29.5835 3.9043 30.7234 5.04413 30.7234 6.45045V7.38405" stroke="#4F9748" stroke-width="2" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M12.7307 7.38405V6.45045C12.7307 5.04413 13.8705 3.9043 15.2769 3.9043C16.6832 3.9043 17.823 5.04413 17.823 6.45045V11.5427V12.3915" stroke="#4F9748" stroke-width="2" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M25.6311 18.3327C25.6311 15.0515 28.291 12.3916 31.5722 12.3916C33.1134 12.3916 34.5181 12.9789 35.5739 13.9414" stroke="#4F9748" stroke-width="2" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M7.88037 13.9414C8.93618 12.9789 10.3408 12.3916 11.8821 12.3916C15.1633 12.3916 17.8231 15.0515 17.8231 18.3327" stroke="#4F9748" stroke-width="2" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-                        </g>
-                        <defs>
-                        <clipPath id="clip0_14_754">
-                        <rect width="44" height="44" fill="white"/>
-                        </clipPath>
-                        </defs>
-                        </svg>    
-              </span>
-              <h2 className="text-[18px] font-bold text-black">OUR VISION</h2>
+      {/* VISION & MISSION */}
+      <section className="w-full overflow-hidden bg-neutral-50">
+        <div className="mx-auto grid max-w-screen-xl gap-6 px-4 py-14 md:px-8 md:py-20 lg:grid-cols-2 lg:gap-10">
+          <article data-aos="fade-up" className="rounded-2xl border-l-4 border-[#4F9748] bg-white p-7 shadow-sm md:p-9">
+            <div className="flex items-center gap-3 text-[#4F9748]">
+              <EyeIcon />
+              <h2 className="text-2xl font-bold text-neutral-900">Our vision</h2>
             </div>
-            <p className="text-[16px] font-light text-justify text-black">
-            At CLN Logistics, we’re here to make logistics simple, smooth, and stress-free for our customers. We take care of every part of the supply chain from moving cargo and coordinating partners to handling documents and sharing information so you always know what’s happening with your shipments.
-              <br />
-              <br />
-              By choosing the best routes, transportation methods, and partners, we help your business save time, reduce costs, and keep goods moving smoothly. With CLN Logistics, your supply chain isn’t just managed it works smarter, so you can focus on what matters most.
-            </p>
-          </div>
-
-          {/* MISSION */}
-          <div
-            data-aos="fade-left"
-            data-aos-offset="300"
-            data-aos-easing="ease-in-sine"
-            className="w-full lg:w-[50%] flex flex-col gap-2"
-          >
-            <div className="flex gap-4 items-center mb-2">
-              <span>
-                <svg className="w-[28px]" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <g clip-path="url(#clip0_14_773)">
-                        <path d="M30.2818 25.1575L35.7346 19.7047C36.6957 18.7439 37.2354 17.4406 37.2354 16.0815V5.72223C37.2354 4.3072 38.3826 3.16016 39.7975 3.16016C41.2125 3.16016 42.3597 4.3072 42.3597 5.72223V19.7108C42.3597 21.7086 41.6592 23.6433 40.3802 25.1781L33.8194 33.051V37.3212H21.863V29.8682C21.863 27.6033 22.7627 25.4311 24.3642 23.8295L31.8007 16.3926C32.8011 15.3922 34.4232 15.392 35.4237 16.3924C36.4243 17.3929 36.4244 19.0151 35.4239 20.0157L30.2818 25.1575Z" stroke="#4F9748" stroke-width="2" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M13.4442 25.1575L7.99147 19.7047C7.03043 18.7439 6.49061 17.4406 6.49061 16.0815V5.72223C6.49061 4.3072 5.34347 3.16016 3.92853 3.16016C2.51358 3.16016 1.36646 4.3072 1.36646 5.72223V19.7108C1.36646 21.7086 2.06684 23.6433 3.34592 25.1781L9.9067 33.051V37.3212H21.8631V29.8682C21.8631 27.6033 20.9633 25.4311 19.3619 23.8295L11.9255 16.3926C10.925 15.3922 9.30291 15.392 8.30233 16.3924C7.30176 17.3929 7.30167 19.0151 8.30216 20.0157L13.4442 25.1575Z" stroke="#4F9748" stroke-width="2" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M35.5275 42.4455H21.863V37.3213H35.5275V42.4455Z" stroke="#4F9748" stroke-width="2" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M21.8631 42.4455H8.19873V37.3213H21.8631V42.4455Z" stroke="#4F9748" stroke-width="2" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M21.8632 3.80791L20.5782 2.52302C18.9225 0.867326 16.2382 0.867326 14.5824 2.52302C12.9266 4.17881 12.9266 6.86318 14.5824 8.51896L21.8632 15.7997L29.1438 8.51896C30.7997 6.86318 30.7997 4.17881 29.1438 2.52302C27.4881 0.867326 24.8037 0.867326 23.1481 2.52302L21.8632 3.80791Z" stroke="#4F9748" stroke-width="2" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-                        </g>
-                        <defs>
-                        <clipPath id="clip0_14_773">
-                        <rect width="44" height="44" fill="white"/>
-                        </clipPath>
-                        </defs>
-                        </svg>
-              </span>
-              <h2 className="text-[18px] font-bold text-black">OUR MISSION</h2>
+            <div className="mt-5 space-y-4 text-[17px] leading-relaxed text-neutral-600">
+              <p>
+                At CLN Logistics, we make logistics simple, smooth and stress-free for our customers. We take care of
+                every part of the supply chain, from moving cargo and coordinating partners to handling documents and
+                sharing information, so you always know what is happening with your shipments.
+              </p>
+              <p>
+                By choosing the best routes, transportation methods and partners, we help your business save time,
+                reduce costs and keep goods moving. With CLN Logistics, your supply chain is not just managed, it works
+                smarter, so you can focus on what matters most.
+              </p>
             </div>
-            <p className="text-[16px] font-light text-justify text-black whitespace-pre-line">
-              We provide our customers with full control and visibility both in choosing the best-in-class service providers and in managing their own supply chains. Our reward comes from the satisfaction of our customers, their customers, associates and we strive to become a trust link in our customers business success.
+          </article>
+
+          <article data-aos="fade-up" data-aos-delay="120" className="rounded-2xl border-l-4 border-[#EE3A23] bg-white p-7 shadow-sm md:p-9">
+            <div className="flex items-center gap-3 text-[#EE3A23]">
+              <TargetIcon />
+              <h2 className="text-2xl font-bold text-neutral-900">Our mission</h2>
+            </div>
+            <p className="mt-5 text-[17px] leading-relaxed text-neutral-600">
+              We give our customers full control and visibility, both in choosing the best service providers and in
+              managing their own supply chains. Our reward is the satisfaction of our customers, their customers and our
+              associates, and we strive to be a trusted link in our customers’ business success.
             </p>
-          </div>
+          </article>
         </div>
       </section>
 
       {/* BANNER */}
-      <section className="w-full h-fit overflow-hidden">
-        <div className="relative flex justify-center items-center w-full h-[25vh] md:h-[40vh] lg:h-[50vh]">
-          <img
-            src={banner_4}
-            alt="Banner"
-            className="absolute inset-0 w-full h-full object-cover object-center"
-          />
-          <div className="absolute inset-0 bg-black/40"></div>
-          <div
-            data-aos="fade-up"
-            data-aos-offset="300"
-            data-aos-easing="ease-in-sine"
-            className="relative text-center px-4"
-          >
-            <h1 className="text-white text-[22px] md:text-[44px] font-playwrite-nz">
+      <section className="w-full overflow-hidden">
+        <div className="relative flex h-[32vh] w-full items-center justify-center md:h-[44vh] lg:h-[52vh]">
+          <img src={banner_4} alt="" className="absolute inset-0 h-full w-full object-cover object-center" />
+          <div className="absolute inset-0 bg-black/45" />
+          <div data-aos="fade-up" className="relative px-4 text-center">
+            <h2 className="font-playwrite-nz text-[24px] leading-snug text-white md:text-[44px]">
               Trust <span className="text-[#4fb748]">US</span>
               <br />
               To Handle
               <br />
               <span className="text-[#4fb748]">Your Shipment</span>
-            </h1>
+            </h2>
+          </div>
+        </div>
+        <div className="h-1.5 w-full bg-gradient-to-r from-[#EE3A23] to-[#4fb748]" />
+      </section>
+
+      {/* AGRICULTURE */}
+      <section className="w-full overflow-hidden bg-white">
+        <div className="mx-auto grid max-w-screen-xl items-center gap-10 px-4 py-14 md:px-8 md:py-20 md:grid-cols-[320px_minmax(0,1fr)] lg:gap-16">
+          <div data-aos="fade-up" className="mx-auto w-full max-w-[320px] rounded-2xl bg-gradient-to-b from-neutral-100 to-[#4F9748]/40 p-3">
+            <img src={poster_1} alt="Sample agriculture shipments handled by CLN" className="w-full rounded-xl object-cover object-center" />
+          </div>
+          <div data-aos="fade-up" data-aos-delay="120">
+            <h2 className="text-3xl font-bold leading-tight tracking-tight text-neutral-900 md:text-4xl">
+              Your trusted logistics partner in the agriculture industry
+            </h2>
+            <p className="mt-5 max-w-[62ch] text-[17px] leading-relaxed text-neutral-600">
+              CLN Logistics handles shipments for our customers from A to Z, with full follow-up, feedback and
+              responsibility. We have successfully handled shipments of different commodities and delivery times, as
+              shown in the poster.
+            </p>
           </div>
         </div>
       </section>
 
-      {/* DIVIDER */}
-      <div className="w-full h-[5px] bg-gradient-to-l from-white to-[#4F9748]" />
-
-      {/* SAMPLE SHIPMENT */}
-      <section className="flex flex-col md:flex-row w-full h-fit overflow-hidden p-3 xl:max-w-screen-xl mx-auto gap-3">
-        <div
-          data-aos="fade-right"
-          data-aos-offset="300"
-          data-aos-easing="ease-in-sine"
-          className="w-[300px] mx-auto bg-gradient-to-b from-white to-[#4F9748] p-2 rounded-lg"
-        >
-          <img
-            src={poster_1}
-            alt="Sample Shipment"
-            className="w-full h-full object-cover object-center"
-          />
-        </div>
-        <div
-          data-aos="fade-left"
-          data-aos-offset="300"
-          data-aos-easing="ease-in-sine"
-          className="w-full md:w-[70%] px-3 flex flex-col justify-start"
-        >
-          <h2 className="text-[18px] font-bold text-black">Your Trusted Logistics in Agriculture Industry</h2>
-          <p className="text-[16px] font-light text-justify text-black hyphens-auto mt-2">
-            CLN Logistics has a full capability in handling shipment for Our customers from A to Z with full correspondence of backup, feedback, and responsibility. We have successfully handled Our customersʼ shipments with different commodities and delivery times, as illustrated in the attached images.
-          </p>
+      {/* FCL / LCL */}
+      <section className="w-full overflow-hidden bg-neutral-50">
+        <div className="mx-auto max-w-screen-xl px-4 py-14 md:px-8 md:py-20">
+          <div data-aos="fade-up" className="flex items-center gap-3">
+            <span className="h-8 w-1 rounded-full bg-[#4F9748]" aria-hidden="true" />
+            <h2 className="text-2xl font-bold text-neutral-900 md:text-3xl">FCL and LCL shipping</h2>
+          </div>
+          <div data-aos="fade-up" data-aos-delay="120" className="mx-auto mt-8 max-w-4xl overflow-hidden rounded-2xl bg-white p-3 shadow-sm md:p-5">
+            <img src={lcl} alt="FCL and LCL shipping" className="h-auto w-full object-contain" />
+          </div>
         </div>
       </section>
 
-          {/* FCL - LCL SHIPPING */}
-      <section className="flex flex-col md:flex-row w-full h-fit overflow-hidden p-3 xl:max-w-screen-xl mx-auto gap-3">
-        <div className="flex items-start gap-2">
-          <div className="w-1 h-6 bg-[#4F9748] rounded-full" />
-          <span className="text-[16px] font-semibold text-[#4F9748] uppercase tracking-wider">FCL</span>
-        </div>      
-        <div
-          data-aos="fade-right"
-          data-aos-offset="300"
-          data-aos-easing="ease-in-sine"
-          className="w-full md:w-[70%] mx-auto px-3 flex flex-col justify-start"
-        >
-          <img
-            src={lcl}
-            alt="Sample Shipment"
-            className="w-full h-full object-cover object-center"
-          />
-        </div>
-      </section>
+      {/* GLOBAL NETWORK */}
+      <div className="w-full overflow-hidden bg-white">
+        <GlobalNetwork />
+      </div>
     </>
   );
 };

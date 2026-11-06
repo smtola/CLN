@@ -154,6 +154,8 @@ const Navbar: React.FC = () => {
               onClick={() => setMobileOpen(!mobileOpen)}
               className="p-2 rounded-xl text-[#4F9748] bg-[#4F9748]/8 hover:bg-[#4F9748]/15 transition-colors"
               aria-label="Toggle menu"
+              aria-expanded={mobileOpen}
+              aria-controls="mobile-menu"
             >
               {mobileOpen ? (
                 <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none"
@@ -193,7 +195,7 @@ const Navbar: React.FC = () => {
               <li key={item.link} className="flex items-stretch">
                 <NavLink to={item.link}
                   className={({ isActive }) =>
-                    `relative flex items-center px-4 text-[13px] lg:text-[14.5px] font-medium text-white transition-colors duration-200 uppercase tracking-wide whitespace-nowrap
+                    `relative flex items-center px-3 xl:px-4 text-[13px] xl:text-[14.5px] font-medium text-white transition-colors duration-200 uppercase tracking-wide whitespace-nowrap
                     after:absolute after:left-4 after:right-4 after:bottom-0 after:h-[2.5px] after:rounded-full after:bg-[#EE3A23] after:transition-transform after:duration-200
                     ${isActive ? "after:scale-x-100" : "after:scale-x-0 hover:after:scale-x-100"} hover:bg-white/10`
                   }>
@@ -205,7 +207,7 @@ const Navbar: React.FC = () => {
             {/* Services dropdown */}
             <li className="relative group flex items-stretch">
               <NavLink to="/services"
-                className={`relative flex items-center gap-1.5 px-4 text-[13px] lg:text-[14.5px] font-medium text-white transition-colors duration-200 uppercase tracking-wide whitespace-nowrap
+                className={`relative flex items-center gap-1.5 px-3 xl:px-4 text-[13px] xl:text-[14.5px] font-medium text-white transition-colors duration-200 uppercase tracking-wide whitespace-nowrap
                   after:absolute after:left-4 after:right-4 after:bottom-0 after:h-[2.5px] after:rounded-full after:bg-[#EE3A23] after:transition-transform after:duration-200
                   ${isServicesActive ? "after:scale-x-100" : "after:scale-x-0 group-hover:after:scale-x-100"} hover:bg-white/10`}>
                 Services
@@ -236,7 +238,7 @@ const Navbar: React.FC = () => {
             {/* Products dropdown */}
             <li className="relative group flex items-stretch">
               <NavLink to="/products"
-                className={`relative flex items-center gap-1.5 px-4 text-[13px] lg:text-[14.5px] font-medium text-white transition-colors duration-200 uppercase tracking-wide whitespace-nowrap
+                className={`relative flex items-center gap-1.5 px-3 xl:px-4 text-[13px] xl:text-[14.5px] font-medium text-white transition-colors duration-200 uppercase tracking-wide whitespace-nowrap
                   after:absolute after:left-4 after:right-4 after:bottom-0 after:h-[2.5px] after:rounded-full after:bg-[#EE3A23] after:transition-transform after:duration-200
                   ${isProductsActive ? "after:scale-x-100" : "after:scale-x-0 group-hover:after:scale-x-100"} hover:bg-white/10`}>
                 Products
@@ -267,7 +269,7 @@ const Navbar: React.FC = () => {
               <li key={item.link} className="flex items-stretch">
                 <NavLink to={item.link}
                   className={({ isActive }) =>
-                    `relative flex items-center px-4 text-[13px] lg:text-[14.5px] font-medium text-white transition-colors duration-200 uppercase tracking-wide whitespace-nowrap
+                    `relative flex items-center px-3 xl:px-4 text-[13px] xl:text-[14.5px] font-medium text-white transition-colors duration-200 uppercase tracking-wide whitespace-nowrap
                     after:absolute after:left-4 after:right-4 after:bottom-0 after:h-[2.5px] after:rounded-full after:bg-[#EE3A23] after:transition-transform after:duration-200
                     ${isActive ? "after:scale-x-100" : "after:scale-x-0 hover:after:scale-x-100"} hover:bg-white/10`
                   }>
@@ -279,7 +281,7 @@ const Navbar: React.FC = () => {
               <button
                 onClick={() => setShowServiceModal(true)}
                 type="button"
-                className="relative flex items-center px-4 text-[13px] lg:text-[14.5px] font-medium text-white transition-colors duration-200 uppercase tracking-wide whitespace-nowrap
+                className="relative flex items-center px-3 xl:px-4 text-[13px] xl:text-[14.5px] font-medium text-white transition-colors duration-200 uppercase tracking-wide whitespace-nowrap
                   after:absolute after:left-4 after:right-4 after:bottom-0 after:h-[2.5px] after:rounded-full after:bg-[#EE3A23] after:transition-transform after:duration-200
                   after:scale-x-0 hover:after:scale-x-100 hover:bg-white/10"
               >
@@ -296,6 +298,7 @@ const Navbar: React.FC = () => {
 
         {/* ── Mobile drawer ── */}
         <div
+          id="mobile-menu"
           className={`lg:hidden overflow-hidden transition-all duration-300 ease-in-out ${mobileOpen ? "max-h-[600px] opacity-100" : "max-h-0 opacity-0"}`}
         >
           <div className="bg-[#437d3d] border-t border-white/15">

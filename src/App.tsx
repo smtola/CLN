@@ -1,21 +1,34 @@
+import { lazy, Suspense } from "react"
 import { Routes, Route, useLocation } from "react-router-dom"
-import Home from "./pages/home/Home"
 import Navbar from "./components/navbar/Navbar"
 import Footer from "./components/footer"
-import AboutCLN from "./pages/about-us/AboutUs"
-import Service from "./pages/services/Service"
-import Products from "./pages/products/Product"
-import SignupPage from "./pages/auth/SignupPage"
-import VerifyEmail from "./pages/auth/VerifyEmail"
-import LoginPage from "./pages/auth/Login"
-import VerifyOTPPage from "./pages/auth/VerifyOTPPage"
 import ProtectedRoute from "./auth/ProtectedRoute"
-import AdminPenal from "./admin/AdminPenal"
-import PriceApp from "./pages/price/App"
-import ForgetPassword from "./pages/auth/ForgetPassword"
-import ResetPassword from "./pages/auth/ResetPassword"
-import FreightQuotePage from "./pages/price/pages/FreightQuotePage"
-import ContactUs from "./pages/contact-us/contact-us"
+
+// Phase 6: every route is code-split so the homepage no longer ships admin/price/auth code
+const importHome = () => import("./pages/home/Home")
+const Home = lazy(importHome)
+// Landing on "/" starts the Home chunk download right away instead of after the router resolves
+if (typeof window !== "undefined" && window.location.pathname === "/") void importHome()
+const AboutCLN = lazy(() => import("./pages/about-us/AboutUs"))
+const Service = lazy(() => import("./pages/services/Service"))
+const Products = lazy(() => import("./pages/products/Product"))
+const SignupPage = lazy(() => import("./pages/auth/SignupPage"))
+const VerifyEmail = lazy(() => import("./pages/auth/VerifyEmail"))
+const LoginPage = lazy(() => import("./pages/auth/Login"))
+const VerifyOTPPage = lazy(() => import("./pages/auth/VerifyOTPPage"))
+const AdminPenal = lazy(() => import("./admin/AdminPenal"))
+const PriceApp = lazy(() => import("./pages/price/App"))
+const ForgetPassword = lazy(() => import("./pages/auth/ForgetPassword"))
+const ResetPassword = lazy(() => import("./pages/auth/ResetPassword"))
+const FreightQuotePage = lazy(() => import("./pages/price/pages/FreightQuotePage"))
+const ContactUs = lazy(() => import("./pages/contact-us/contact-us"))
+
+const RouteFallback = () => (
+  <div role="status" aria-live="polite" className="flex min-h-[60svh] items-center justify-center">
+    <span className="h-10 w-10 animate-spin rounded-full border-4 border-cln-mist border-t-cln-green" />
+    <span className="sr-only">Loading…</span>
+  </div>
+)
 
 function App() {
   const location = useLocation();
@@ -27,6 +40,7 @@ function App() {
       {/* Hide Navbar for Admin and Price routes */}
       {!isAdminRoute && !isPriceRoute && <Navbar/>}
       
+      <Suspense fallback={<RouteFallback />}>
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<Home/>}/>
@@ -102,6 +116,7 @@ function App() {
           }
         />
       </Routes>
+      </Suspense>
 
       {/* Hide Footer for Admin and Price routes */}
       {!isAdminRoute && !isPriceRoute && <Footer/>}

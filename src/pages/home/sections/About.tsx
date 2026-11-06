@@ -5,8 +5,7 @@ export default function About() {
     <section id="about" aria-labelledby="about-title" className="bg-white py-section">
       <div className="cln-shell grid items-center gap-12 lg:grid-cols-2">
         <div className="relative">
-          <img data-clip src="/assets/image/poster_1.png" alt="CLN Cambodia office" loading="lazy" width={1200} height={900} className="aspect-[4/3] w-full rounded-3xl object-cover" />
-          <img data-clip src="/assets/image/banner.jpg" alt="CLN Cambodia team" loading="lazy" width={800} height={500} className="absolute -bottom-6 right-4 hidden w-1/2 rounded-2xl border-4 border-white object-cover shadow-xl sm:block" />
+          <img data-clip src="/assets/image/export_poster.png" alt="CLN Cambodia office" loading="lazy" width={1200} height={900} className="aspect-[4/3] w-full rounded-3xl object-cover" />
         </div>
         <div data-reveal>
           <p className="cln-eyebrow">About CLN</p>

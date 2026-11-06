@@ -8,7 +8,7 @@ export default function Ecosystem() {
   return (
     <section id="ecosystem" aria-labelledby="eco-title" className="bg-cln-charcoal py-section text-white">
       <div className="cln-shell">
-        <p data-reveal className="cln-eyebrow">Transportation ecosystem</p>
+        <p data-reveal className="cln-eyebrow !text-cln-green">Transportation ecosystem</p>
         <h2 id="eco-title" data-reveal className="mt-4 font-display text-headline font-extrabold">Move beyond. Connect everywhere.</h2>
       </div>
       <ul data-eco-list className="relative mt-12 flex snap-x snap-mandatory gap-4 overflow-x-auto px-gutter pb-6" tabIndex={0} aria-label="Transportation categories, scroll horizontally">

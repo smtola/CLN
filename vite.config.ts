@@ -16,7 +16,12 @@ export default defineConfig({
       react(),
       ViteSitemap({
         hostname: "https://clncambodia.com",
-        dynamicRoutes: routes.map(r => r.path),
+        // '/' comes from index.html automatically; listing it again produced a duplicate entry
+        dynamicRoutes: routes.map(r => r.path).filter(p => p !== '/'),
+        // Google's site-verification file is not a page
+        exclude: ['/googlec3c313caf97eb165'],
+        changefreq: 'weekly',
+        priority: { '/': 1.0, '*': 0.8 },
         generateRobotsTxt: false,
       }),
       createHtmlPlugin({
@@ -34,6 +39,9 @@ export default defineConfig({
       output: {
         manualChunks:{
           react: ['react', 'react-dom', 'react-router-dom'],
+          // Phase 6: gsap only loads with Home; admin-only libs (AWS SDK, charts) are left
+          // to Rollup so they stay inside the lazy admin chunks
+          gsap: ['gsap'],
         }
       },
     },

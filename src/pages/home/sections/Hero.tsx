@@ -5,7 +5,7 @@ import SplitWords from '../../../components/ui/SplitWords';
 export default function Hero() {
   return (
     <section id="hero" aria-labelledby="hero-title" className="relative isolate flex min-h-[calc(100svh-110px)] items-end overflow-hidden bg-cln-navy text-white">
-      <img src="/assets/image/bg_head.jpg" alt="" width={1920} height={1080} fetchPriority="high" className="absolute inset-0 -z-20 h-full w-full object-cover" data-parallax />
+      <img src="/assets/image/bg_head.webp" alt="" width={1920} height={1080} {...{ fetchpriority: 'high' }} className="absolute inset-0 -z-20 h-full w-full object-cover" data-parallax />
       <div className="absolute inset-0 -z-10 bg-gradient-to-t from-cln-navy via-cln-navy/70 to-cln-navy/30" />
       {/* Decorative route lines */}
       <svg aria-hidden="true" className="absolute inset-x-0 top-[12%] -z-10 h-1/2 w-full opacity-60" viewBox="0 0 1440 400" preserveAspectRatio="none" fill="none">
